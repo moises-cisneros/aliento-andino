@@ -98,9 +98,10 @@ class TutorRepository {
   }
 
   Future<bool> _isOnline() async {
-    if (_connectivity == null) return true;
+    final conn = _connectivity;
+    if (conn == null) return true;
     try {
-      return await _connectivity.isOnline;
+      return await conn.isOnline;
     } catch (_) {
       return true; // ante la duda, intentamos la nube
     }

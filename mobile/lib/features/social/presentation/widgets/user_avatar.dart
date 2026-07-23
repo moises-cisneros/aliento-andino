@@ -20,12 +20,12 @@ class UserAvatar extends StatelessWidget {
         imageUrl: url,
         imageBuilder: (_, provider) =>
             CircleAvatar(radius: radius, backgroundImage: provider),
-        placeholder: (_, _) => CircleAvatar(
+        placeholder: (ctx, url) => CircleAvatar(
           radius: radius,
           backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
           child: const CircularProgressIndicator(strokeWidth: 2),
         ),
-        errorWidget: (_, _, _) => _initialsAvatar(context, name),
+        errorWidget: (ctx, url, err) => _initialsAvatar(context, name),
       );
     }
     return _initialsAvatar(context, name);

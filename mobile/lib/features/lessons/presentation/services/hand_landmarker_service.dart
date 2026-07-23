@@ -56,7 +56,6 @@ class HandLandmarkerService {
         return HandLandmarkerPlugin.create(
           numHands: 2,
           minHandDetectionConfidence: 0.5,
-          delegate: HandLandmarkerDelegate.cpu,
         );
       } catch (e) {
         debugPrint('HandLandmarker: no se pudo crear el detector: $e');

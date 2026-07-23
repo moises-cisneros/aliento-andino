@@ -200,7 +200,7 @@ class LessonRepository {
         final path = '${dir.path}/lesson_audio_$lessonId${_audioExt(audioUrl)}';
         // Dio fresco: el audio vive en GCS, no en la API (sin interceptores).
         await Dio().download(audioUrl, path);
-        await _local.setAudioLocalPath(lessonId, path);
+        await _local?.setAudioLocalPath(lessonId, path);
       } catch (_) {
         // Audio opcional: ignorar fallos de descarga.
       }

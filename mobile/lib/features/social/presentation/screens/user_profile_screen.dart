@@ -379,7 +379,7 @@ class _UserProfileViewState extends State<_UserProfileView> {
                     : Image.network(
                         url,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => const Icon(Icons.broken_image),
+                        errorBuilder: (ctx, err, stack) => const Icon(Icons.broken_image),
                       ),
               ),
             );
