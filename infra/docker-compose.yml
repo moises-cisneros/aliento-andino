@@ -1,0 +1,120 @@
+# === PianoVision AI — Docker Compose (Producción VM) ===
+#
+# El pipeline de CI copia este archivo a ~/pianovision/ en la VM,
+# junto con nginx/. Ahí el `docker compose` pull-ea las imágenes
+# pre-construidas desde Artifact Registry.
+#
+# Uso en la VM:
+#   docker compose --env-file .env.production up -d
+#
+# Los `build:` solo se usan si alguien quiere construir manualmente
+# desde la raíz del repo:
+#   docker compose -f infra/docker-compose.yml build
+
+services:
+  # --- PostgreSQL ---
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- FastAPI Backend ---
+  backend:
+    image: ${DOCKER_REGISTRY}/pianovision-backend:${IMAGE_TAG:-latest}
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      SECRET_KEY: ${SECRET_KEY}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      VERTEX_PROJECT_ID: ${VERTEX_PROJECT_ID:-pianovision-prod-12345}
+      VERTEX_LOCATION: ${VERTEX_LOCATION:-us-central1}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      DEBUG: "false"
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  # --- Angular Web (admin panel) ---
+  web:
+    image: ${DOCKER_REGISTRY}/pianovision-web:${IMAGE_TAG:-latest}
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4000:80"
+
+  # --- Ollama (IA local) ---
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "127.0.0.1:11434:11434"
+    # Descomentar si la VM tiene GPU:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # --- Nginx Reverse Proxy ---
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - certbot_webroot:/var/www/certbot:ro
+      - certbot_certs:/etc/letsencrypt:ro
+
+  # --- Certbot (SSL automático) ---
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot_webroot:/var/www/certbot
+      - certbot_certs:/etc/letsencrypt
+    # Ejecutar manualmente la primera vez:
+    #   docker compose run --rm certbot certonly --webroot -w /var/www/certbot -d tu-dominio.com
+    # Renovación automática via cron en la VM:
+    #   0 3 * * * docker compose run --rm certbot renew && docker compose exec nginx nginx -s reload
+    entrypoint: "true"
+
+volumes:
+  pgdata:
+  ollama_data:
+  certbot_webroot:
+  certbot_certs:

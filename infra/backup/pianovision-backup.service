@@ -1,0 +1,10 @@
+[Unit]
+Description=PianoVision Postgres backup to GCS
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/pg_backup.sh
+StandardOutput=journal
+StandardError=journal

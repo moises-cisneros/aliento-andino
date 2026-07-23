@@ -1,0 +1,55 @@
+# === Secretos: NUNCA copiar al image ===
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+gcp-sa-key.json
+service-account*.json
+secrets/
+*-sa.json
+
+# === Git ===
+.git/
+.gitignore
+.github/
+
+# === Entorno virtual ===
+venv/
+.venv/
+
+# === Caches Python ===
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# === Tests (no necesarios en imagen prod) ===
+tests/
+
+# === IDE ===
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# === Docker (no copiar el propio Dockerfile) ===
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# === Docs y README ===
+*.md
+docs/
+
+# === Logs ===
+*.log
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini

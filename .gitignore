@@ -1,0 +1,67 @@
+# Entornos virtuales
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+!.env.production.example
+!.env.local.example
+*.pem
+*.key
+*.p12
+*.jks
+gcp-sa-key.json
+*-sa-key.json
+*-credentials.json
+deploy_key*
+service-account*.json
+backend/secrets/
+gemini-sa.json
+
+# Diagnostic / generated files
+all_errors.txt
+build_errors.txt
+REPORTE_DIAGNOSTICO.md
+
+# IDEs
+.idea/
+.vscode/
+.claude/
+*.swp
+*.swo
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node
+node_modules/
+dist/
+.angular/
+.cache/
+
+# Flutter
+build/
+.dart_tool/
+*.log
+
+# Android (Gradle/Kotlin)
+.gradle/
+.kotlin/
+local.properties
+
+# Root-level loose assets (use web/public/ or mobile/assets/ instead)
+/iconopiano.svg
+/iconopianoia.png

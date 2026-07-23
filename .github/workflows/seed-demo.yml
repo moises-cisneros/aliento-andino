@@ -1,0 +1,82 @@
+name: Seed demo (prod)
+
+# Ejecuta el seed histórico (~1 año) en PRODUCCIÓN dentro del contenedor backend
+# de la VM. Se dispara A MANO desde la pestaña Actions (workflow_dispatch).
+# Requiere que la imagen del backend ya incluya seed_history.py (se despliega con
+# un push a main).
+#
+# Modos:
+#   append (default, NO destructivo): agrega ~230 usuarios demo
+#       @demo.pianovision.net + su historia. Idempotente. Removible con:
+#       DELETE FROM users WHERE email LIKE '%@demo.pianovision.net';
+#   reset (DESTRUCTIVO): borra usuarios de demo y su actividad (PRESERVA los
+#       usuarios admin y el catálogo de lecciones/logros) y reseedea limpio.
+#
+# Guard de confirmación: para 'append' escribí SEED; para 'reset' escribí RESET.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Modo de seed"
+        required: true
+        type: choice
+        default: append
+        options:
+          - append
+          - reset
+      confirm:
+        description: "Confirmación: 'SEED' para append, 'RESET' para reset"
+        required: true
+        default: ""
+
+env:
+  VM_HOST: ${{ secrets.VM_HOST }}
+  VM_USER: ${{ secrets.VM_USER }}
+
+jobs:
+  seed:
+    name: Seed demo data (${{ github.event.inputs.mode }})
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard de confirmación
+        run: |
+          MODE="${{ github.event.inputs.mode }}"
+          CONFIRM="${{ github.event.inputs.confirm }}"
+          if [ "$MODE" = "reset" ] && [ "$CONFIRM" != "RESET" ]; then
+            echo "❌ Modo reset (DESTRUCTIVO) requiere escribir exactamente 'RESET'."
+            exit 1
+          fi
+          if [ "$MODE" = "append" ] && [ "$CONFIRM" != "SEED" ]; then
+            echo "❌ Modo append requiere escribir exactamente 'SEED'."
+            exit 1
+          fi
+          echo "✅ Confirmado. Modo: $MODE"
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H $VM_HOST >> ~/.ssh/known_hosts
+
+      - name: Run seed on VM
+        run: |
+          ssh -i ~/.ssh/deploy_key $VM_USER@$VM_HOST << 'EOF'
+            set -e
+            cd ~/pianovision
+            SEED_LOG=/tmp/pv_seed_demo.log
+            : > "$SEED_LOG"
+            # '< /dev/null' es crítico para que 'exec -T' no se coma el heredoc.
+            # SEED_MODE lo interpola GitHub (input choice: append|reset).
+            docker compose --env-file .env.production exec -T -e SEED_MODE=${{ github.event.inputs.mode }} \
+              backend python seed_history.py < /dev/null >> "$SEED_LOG" 2>&1 \
+              || echo "[seed-demo] exit $?" >> "$SEED_LOG"
+            echo "===== INICIO SEED LOG ====="
+            cat "$SEED_LOG"
+            echo "===== FIN SEED LOG ====="
+          EOF
+
+      - name: Cleanup SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

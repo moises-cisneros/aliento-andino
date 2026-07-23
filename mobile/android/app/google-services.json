@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "85165749876",
+    "project_id": "pianovision-ai",
+    "storage_bucket": "pianovision-ai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:85165749876:android:8a6195381cc3383240c321",
+        "android_client_info": {
+          "package_name": "com.pianovision.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "85165749876-fttcpknkrnmhr7v7nn7m737o3f3e7cnq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbj6KDKYsDF31eb7iCg-WlzLttCTouYqY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "85165749876-fttcpknkrnmhr7v7nn7m737o3f3e7cnq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

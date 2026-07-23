@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "description": "Base de conocimiento del asistente offline de PianoVision AI (Vivi). Cada entrada tiene varias formulaciones (q), una respuesta (a) y, opcionalmente, una acción de UI (navigate_to / highlight_element) que reusa el ejecutor del tutor.",
+  "entries": [
+    {
+      "id": "registro",
+      "q": ["como me registro", "crear una cuenta nueva", "registrarme en la app", "como creo mi usuario"],
+      "a": "Para crear tu cuenta, en la pantalla de inicio tocá 'Registrarme' y completá nombre, email y contraseña. Después podés entrar con tu email y contraseña."
+    },
+    {
+      "id": "recuperar_password",
+      "q": ["olvide mi contraseña", "recuperar contraseña", "no puedo entrar a mi cuenta", "restablecer clave", "se me olvido la clave y no entro", "no me acuerdo mi contraseña"],
+      "a": "Si olvidaste tu contraseña, en la pantalla de inicio de sesión tocá '¿Olvidaste tu contraseña?' y te enviaremos un correo con un enlace para restablecerla."
+    },
+    {
+      "id": "evaluacion_diagnostica",
+      "q": ["que es la evaluacion diagnostica", "como sabe la app mi nivel", "test de nivel inicial", "para que sirve el cuestionario del inicio"],
+      "a": "La evaluación diagnóstica es un cuestionario corto que hacés al empezar. Con tus respuestas la app calcula tu nivel y te arma una ruta de aprendizaje personalizada."
+    },
+    {
+      "id": "ruta_aprendizaje",
+      "q": ["donde veo mi ruta de aprendizaje", "que lecciones me toca hacer", "mi plan de estudio", "por donde sigo"],
+      "a": "Tu ruta de aprendizaje muestra las lecciones recomendadas según tu nivel, en orden. La encontrás en la pantalla principal de Lecciones; seguí la siguiente lección destacada."
+    },
+    {
+      "id": "explorar_lecciones",
+      "q": ["como busco lecciones", "donde encuentro canciones para practicar", "explorar el catalogo de lecciones", "filtrar lecciones por dificultad"],
+      "a": "En la pestaña Lecciones podés buscar por nombre y filtrar por categoría y dificultad. Tocá una tarjeta de lección para abrirla y empezar.",
+      "action": {"tool": "highlight_element", "args": {"target": "lessons_search", "route": "/lessons"}}
+    },
+    {
+      "id": "practicar_leccion",
+      "q": ["como practico una leccion", "empezar a tocar una cancion", "como inicio una practica", "modo leccion guiada"],
+      "a": "Abrí una lección desde Lecciones y tocá 'Practicar'. En el modo guiado la app te marca la nota a tocar paso a paso; también tenés práctica libre y modo entrenamiento."
+    },
+    {
+      "id": "modo_entrenamiento",
+      "q": ["como cambio la velocidad bpm", "practicar solo una mano", "repetir un fragmento", "modo entrenamiento con parametros", "como pongo el tempo mas lento o mas rapido", "cambiar la velocidad de la cancion para practicar"],
+      "a": "En el modo entrenamiento podés ajustar la velocidad (BPM), elegir mano izquierda o derecha y repetir en bucle un fragmento, para practicar enfocado."
+    },
+    {
+      "id": "guardar_leccion",
+      "q": ["como guardo una leccion", "guardar una publicacion", "marcar como guardado", "donde veo lo que guarde", "guardar esta cancion para despues", "guardar canciones para mas tarde"],
+      "a": "Tocá el ícono de marcador (bookmark) en una lección o publicación para guardarla. Después las encontrás en Perfil → Guardados.",
+      "action": {"tool": "navigate_to", "args": {"route": "/social/saved"}}
+    },
+    {
+      "id": "progreso",
+      "q": ["donde veo mi progreso", "mi score promedio", "cuantas sesiones hice", "mi avance", "donde miro mi puntaje y mis sesiones", "mi rendimiento y cuanto practique"],
+      "a": "En 'Mi Progreso' ves tu score promedio, sesiones totales, racha y tu actividad semanal. Llegás desde Perfil → Mi progreso.",
+      "action": {"tool": "navigate_to", "args": {"route": "/progress"}}
+    },
+    {
+      "id": "rachas",
+      "q": ["que es la racha", "como mantengo mi racha", "racha de practica diaria", "cuantos dias seguidos llevo"],
+      "a": "La racha cuenta los días seguidos que practicás. Practicá al menos una lección por día para no perderla. La ves en Mi Progreso y en Rankings → Rachas."
+    },
+    {
+      "id": "rankings",
+      "q": ["como veo el ranking", "tabla de posiciones", "en que puesto estoy", "ranking semanal"],
+      "a": "En Rankings ves la tabla de posiciones Global, Semanal y por Rachas, con tu posición y tus puntos (XP). Cambiá de pestaña arriba.",
+      "action": {"tool": "highlight_element", "args": {"target": "rankings_tabs", "route": "/rankings"}}
+    },
+    {
+      "id": "xp_niveles",
+      "q": ["que es el xp", "como subo de nivel", "para que sirven los puntos", "como gano puntos"],
+      "a": "Ganás XP (puntos) al completar lecciones y practicar. Acumular XP te sube de nivel y mejora tu posición en el ranking. Mirá tu XP en Mi XP, dentro de Perfil."
+    },
+    {
+      "id": "logros",
+      "q": ["donde veo mis logros", "que son las medallas", "como desbloqueo logros", "mis trofeos"],
+      "a": "Los logros son medallas que desbloqueás al cumplir metas (rachas, lecciones completadas, etc.). Los ves en 'Mis logros', desde Perfil o Rankings.",
+      "action": {"tool": "navigate_to", "args": {"route": "/achievements"}}
+    },
+    {
+      "id": "crear_publicacion",
+      "q": ["como publico algo", "crear una publicacion", "compartir mi avance", "subir un post", "subir una publicacion a la comunidad", "publicar en social"],
+      "a": "En la pestaña Social tocá el botón de crear (+) para hacer una publicación: escribí tu texto, usá #hashtags o @menciones y compartila con la comunidad.",
+      "action": {"tool": "highlight_element", "args": {"target": "create_post_button", "route": "/social"}}
+    },
+    {
+      "id": "seguir_usuarios",
+      "q": ["como sigo a alguien", "seguir a otro usuario", "como consigo seguidores", "dejar de seguir", "que hago para que la gente me siga", "conseguir que me sigan"],
+      "a": "Entrá al perfil de un usuario y tocá 'Seguir'. Para encontrar gente, usá el buscador de la pestaña Social. Verás sus publicaciones en tu feed de Siguiendo."
+    },
+    {
+      "id": "hashtags_menciones",
+      "q": ["como uso hashtags", "que hace la arroba", "mencionar a un usuario", "para que sirve el numeral"],
+      "a": "Escribí #tema para etiquetar tu publicación (podés tocar un #hashtag para ver el feed de ese tema) y @usuario para mencionar a alguien, que recibirá una notificación."
+    },
+    {
+      "id": "comentar_like",
+      "q": ["como comento una publicacion", "dar me gusta", "responder un comentario", "como doy like"],
+      "a": "En cada publicación tocá el corazón para dar me gusta, y el ícono de comentario para comentar o responder a otros comentarios."
+    },
+    {
+      "id": "editar_perfil",
+      "q": ["como edito mi perfil", "cambiar mi foto", "modificar mi nombre o bio", "actualizar mi informacion"],
+      "a": "Entrá a Perfil y tocá 'Editar perfil' (o tu avatar) para cambiar tu nombre, foto y biografía.",
+      "action": {"tool": "navigate_to", "args": {"route": "/edit-profile"}}
+    },
+    {
+      "id": "configuracion",
+      "q": ["donde esta la configuracion", "ajustes de la app", "como cambio mis preferencias", "settings"],
+      "a": "La Configuración está en Perfil, en el ícono de engranaje arriba a la derecha (o en el menú 'Configuración'). Ahí ajustás tus preferencias y notificaciones.",
+      "action": {"tool": "highlight_element", "args": {"target": "profile_settings", "route": "/profile"}}
+    },
+    {
+      "id": "notificaciones",
+      "q": ["como activo las notificaciones", "recordatorios de practica", "no me llegan avisos", "configurar notificaciones push"],
+      "a": "Activá o ajustá las notificaciones desde Perfil → Configuración. Ahí podés habilitar los recordatorios de práctica y los avisos de la comunidad."
+    },
+    {
+      "id": "modo_offline",
+      "q": ["puedo usar la app sin internet", "como descargo lecciones", "practicar sin conexion", "modo offline"],
+      "a": "Sí. Descargá una lección desde su pantalla para tenerla disponible sin internet, y usá los ejercicios básicos preempaquetados. Tu progreso se sincroniza cuando vuelva la conexión."
+    },
+    {
+      "id": "deteccion_acordes",
+      "q": ["como detecta los acordes", "la app reconoce lo que toco", "deteccion de notas con ia", "como sabe si toco bien"],
+      "a": "PianoVision usa el micrófono para analizar el audio: detecta las notas y acordes que tocás con un modelo de IA y te da retroalimentación de tu precisión en tiempo real."
+    },
+    {
+      "id": "postura_manos",
+      "q": ["analiza mi postura", "como corrijo la posicion de mis manos", "deteccion de postura con la camara", "tecnica de manos"],
+      "a": "En el modo de práctica, la cámara puede analizar la postura de tus manos y mostrarte alertas visuales para corregir la técnica y evitar lesiones."
+    },
+    {
+      "id": "que_es_vivi",
+      "q": ["quien es vivi", "para que sirve el asistente", "como pido ayuda", "que podes hacer"],
+      "a": "Soy Vivi, tu asistente de PianoVision. Te ayudo a usar la app: puedo explicarte funciones, llevarte a una pantalla o resaltar un botón. Preguntame lo que necesites."
+    }
+  ]
+}

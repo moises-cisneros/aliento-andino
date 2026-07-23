@@ -1,0 +1,39 @@
+# === PianoVision AI - Dependencias del backend ===
+
+# Framework web
+fastapi[standard]>=0.115.0
+uvicorn[standard]>=0.30.0
+
+# ORM y base de datos
+sqlalchemy[asyncio]>=2.0.0
+asyncpg>=0.29.0
+
+# Validación y configuración  
+pydantic[email]>=2.0.0
+pydantic-settings>=2.0.0
+
+# Autenticación y seguridad
+PyJWT>=2.8.0
+bcrypt>=4.0.0
+
+# Google OAuth (verificación oficial de ID tokens)
+google-auth>=2.29.0
+requests>=2.31.0
+
+# Rate limiting
+slowapi>=0.1.9
+
+# Form data (login forms)
+python-multipart>=0.0.9
+
+# Email SMTP async
+aiosmtplib>=3.0.0
+
+# Migraciones de base de datos
+alembic>=1.13.0
+
+# Gemini via Vertex AI
+google-cloud-aiplatform>=1.71.0
+
+# Push notifications (Firebase Cloud Messaging)
+firebase-admin>=6.5.0

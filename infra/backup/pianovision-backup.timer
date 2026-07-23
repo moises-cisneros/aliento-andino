@@ -1,0 +1,10 @@
+[Unit]
+Description=Backup diario de Postgres a GCS (03:00 UTC)
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 UTC
+Persistent=true
+RandomizedDelaySec=15min
+
+[Install]
+WantedBy=timers.target
