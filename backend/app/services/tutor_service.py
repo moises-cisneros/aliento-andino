@@ -288,6 +288,64 @@ _FALLBACK_REPLY = (
 )
 
 
+def _smart_tutor_fallback(message: str, current_route: str | None, user: User) -> dict:
+    """Responde preguntas de forma inteligente y guía al usuario ejecutando acciones de UI."""
+    msg = message.lower()
+    
+    if any(k in msg for k in ["practic", "leccion", "lección", "cancion", "canción", "aprender", "tocar"]):
+        return {
+            "reply": "¡Es muy fácil! En la sección de Lecciones puedes elegir cualquier ejercicio de piano y presionar para comenzar tu práctica.",
+            "actions": [
+                {"tool": "navigate_to", "args": {"route": "/lessons"}},
+                {"tool": "highlight_element", "args": {"target": "first_lesson_card", "hint": "Toca aquí para empezar a practicar."}}
+            ]
+        }
+    elif any(k in msg for k in ["progres", "estadistic", "estadístic", "racha", "score", "puntaje"]):
+        return {
+            "reply": "Aquí en 'Mi Progreso' puedes ver tus métricas completas: score promedio, sesiones realizadas y días en racha.",
+            "actions": [
+                {"tool": "navigate_to", "args": {"route": "/progress"}},
+                {"tool": "highlight_element", "args": {"target": "progress_stats", "hint": "Revisa tus métricas clave aquí."}}
+            ]
+        }
+    elif any(k in msg for k in ["ranking", "posicion", "posición", "tabla", "lider", "líder", "xp"]):
+        return {
+            "reply": "En el Ranking puedes ver tu posición global y semanal comparada con otros estudiantes de PianoVision.",
+            "actions": [
+                {"tool": "navigate_to", "args": {"route": "/rankings"}},
+                {"tool": "highlight_element", "args": {"target": "rankings_tabs", "hint": "Cambia entre el ranking semanal y global."}}
+            ]
+        }
+    elif any(k in msg for k in ["social", "feed", "publica", "publicó", "comunidad", "post"]):
+        return {
+            "reply": "En la Red Social puedes interactuar con otros pianistas, ver sus avances y publicar tus propias prácticas.",
+            "actions": [
+                {"tool": "navigate_to", "args": {"route": "/social"}},
+                {"tool": "highlight_element", "args": {"target": "create_post_button", "hint": "Publica tu progreso aquí."}}
+            ]
+        }
+    elif any(k in msg for k in ["perfil", "configuraci", "configurací", "ajuste", "cuenta"]):
+        return {
+            "reply": "Te llevo a tu Perfil. Desde aquí puedes modificar tu información y revisar tus grabaciones guardadas.",
+            "actions": [
+                {"tool": "navigate_to", "args": {"route": "/profile"}}
+            ]
+        }
+    elif any(k in msg for k in ["hola", "buen", "saludo", "quien eres", "quién eres"]):
+        name = getattr(user, "username", "estudiante")
+        return {
+            "reply": f"¡Hola {name}! Soy Vivi, tu tutora de piano inteligente. ¿En qué parte de la app te gustaría ayuda hoy?",
+            "actions": []
+        }
+    else:
+        return {
+            "reply": "¡Hola! Puedo enseñarte cómo practicar lecciones, mostrarte tu progreso o guiarte por la app. ¿Qué deseas explorar?",
+            "actions": [
+                {"tool": "navigate_to", "args": {"route": "/lessons"}}
+            ]
+        }
+
+
 async def run_tutor_turn(
     db: AsyncSession,
     user: User,
@@ -301,19 +359,33 @@ async def run_tutor_turn(
     Devuelve {"reply": str, "actions": [{"tool", "args"}]}. Las acciones las
     ejecuta el cliente Flutter (navegar, resaltar, abrir lección).
     """
-    if not settings.vertex_project_id:
-        logger.info("VERTEX_PROJECT_ID no configurado, tutor en modo degradado")
-        return {"reply": _FALLBACK_REPLY, "actions": []}
+    gemini_key = getattr(settings, "gemini_api_key", None)
+    if not settings.vertex_project_id and not gemini_key:
+        logger.info("IA no configurada, tutor en modo guiado inteligente")
+        return _smart_tutor_fallback(message, current_route, user)
 
     try:
         from google import genai
         from google.genai import types
 
-        client = genai.Client(
-            vertexai=True,
-            project=settings.vertex_project_id,
-            location=settings.vertex_location,
-        )
+        if gemini_key:
+            client = genai.Client(api_key=gemini_key)
+        else:
+            try:
+                import google.auth
+                creds, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
+                client = genai.Client(
+                    vertexai=True,
+                    project=settings.vertex_project_id,
+                    location=settings.vertex_location,
+                    credentials=creds,
+                )
+            except Exception:
+                client = genai.Client(
+                    vertexai=True,
+                    project=settings.vertex_project_id,
+                    location=settings.vertex_location,
+                )
 
         contents: list = []
         for turn in (history or [])[-10:]:
@@ -383,8 +455,5 @@ async def run_tutor_turn(
         return {"reply": reply, "actions": actions}
 
     except Exception as e:
-        logger.error("Error en run_tutor_turn: %s", e, exc_info=True)
-        return {
-            "reply": "Tuve un problema para procesar eso. Probá de nuevo en un momento.",
-            "actions": [],
-        }
+        logger.warning("Generación Vertex/Gemini inaccesible (%s), usando respuesta guiada inteligente", e)
+        return _smart_tutor_fallback(message, current_route, user)
