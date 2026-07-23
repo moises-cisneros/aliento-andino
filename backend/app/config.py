@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     google_client_id: str = ""
 
     # CORS - orígenes permitidos (configurar en .env para producción)
-    cors_origins: list[str] = []
+    cors_origins: list[str] | str = []
 
     @field_validator("cors_origins", mode="before")
     @classmethod
