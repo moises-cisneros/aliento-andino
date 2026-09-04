@@ -25,8 +25,8 @@ COPY --from=builder /install /usr/local
 # Copiar código fuente
 COPY . .
 
-# Hacer ejecutable el entrypoint
-RUN chmod +x entrypoint.sh
+# Asegurar saltos de línea LF y hacer ejecutable el entrypoint
+RUN sed -i 's/\r$//' entrypoint.sh && chmod +x entrypoint.sh
 
 # Crear usuario no-root para seguridad
 RUN adduser --disabled-password --gecos "" appuser
