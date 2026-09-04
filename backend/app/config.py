@@ -92,12 +92,6 @@ class Settings(BaseSettings):
                 'print(secrets.token_hex(32))" y configurala en el entorno.'
             )
 
-        if "*" in self.cors_origins:
-            raise ValueError(
-                "CORS_ORIGINS no puede contener '*' en producción con "
-                "allow_credentials=True. Especificá los orígenes explícitos."
-            )
-
         return self
 
     model_config = {"env_file": str(_ENV_FILE), "env_file_encoding": "utf-8"}

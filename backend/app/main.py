@@ -151,8 +151,8 @@ app = FastAPI(
     title="PianoVision AI API",
     description="API de autenticación y servicios para PianoVision AI",
     version="0.1.0",
-    docs_url="/docs" if settings.debug else None,
-    redoc_url="/redoc" if settings.debug else None,
+    docs_url="/docs",
+    redoc_url="/redoc",
     lifespan=lifespan,
 )
 
@@ -170,7 +170,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-        if not settings.debug:
+        if not settings.debug and not request.url.path.startswith(("/docs", "/openapi.json", "/redoc")):
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
             response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https:; connect-src 'self'"
         return response
@@ -179,13 +179,18 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 app.add_middleware(SecurityHeadersMiddleware)
 
 # Configurar CORS para Angular (web) y Flutter (mobile)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "Accept"],
-)
+cors_kwargs = {
+    "allow_methods": ["*"],
+    "allow_headers": ["*"],
+}
+if "*" in settings.cors_origins or not settings.cors_origins:
+    cors_kwargs["allow_origin_regex"] = r"^https?://.*"
+    cors_kwargs["allow_credentials"] = True
+else:
+    cors_kwargs["allow_origins"] = settings.cors_origins
+    cors_kwargs["allow_credentials"] = True
+
+app.add_middleware(CORSMiddleware, **cors_kwargs)
 
 # Registrar routers
 app.include_router(auth.router)
