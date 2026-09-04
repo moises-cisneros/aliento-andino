@@ -68,23 +68,6 @@ services:
     ports:
       - "127.0.0.1:4000:80"
 
-  # --- Ollama (IA local) ---
-  ollama:
-    image: ollama/ollama:latest
-    restart: unless-stopped
-    volumes:
-      - ollama_data:/root/.ollama
-    ports:
-      - "127.0.0.1:11434:11434"
-    # Descomentar si la VM tiene GPU:
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
-
   # --- Nginx Reverse Proxy ---
   nginx:
     image: nginx:alpine
@@ -115,6 +98,5 @@ services:
 
 volumes:
   pgdata:
-  ollama_data:
   certbot_webroot:
   certbot_certs:
