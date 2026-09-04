@@ -19,6 +19,16 @@ class Settings(BaseSettings):
     # Base de datos PostgreSQL (DEBE configurarse en .env)
     database_url: str
 
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def assemble_db_connection(cls, v: str) -> str:
+        if isinstance(v, str):
+            if v.startswith("postgres://"):
+                return v.replace("postgres://", "postgresql+asyncpg://", 1)
+            elif v.startswith("postgresql://") and not v.startswith("postgresql+asyncpg://"):
+                return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
+
     # JWT (DEBE configurarse en .env)
     secret_key: str
     algorithm: str = "HS256"
