@@ -17,17 +17,15 @@ class AppConfig {
         '85165749876-fttcpknkrnmhr7v7nn7m737o3f3e7cnq.apps.googleusercontent.com',
   );
 
-  // URL base del API (configurar via --dart-define en producción)
+  // URL base del API (configurable via --dart-define en compilación)
   static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
 
-  /// URL base del API según la plataforma.
-  /// Si se configura API_BASE_URL via --dart-define, usa ese valor.
-  /// Si no, usa los defaults de desarrollo local.
+  /// URL base del API.
+  /// Apunta al backend desplegado en http://vientoapp.duckdns.org/api por defecto.
+  /// Si se provee API_BASE_URL via --dart-define, usa ese valor.
   static String get apiBaseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
-    if (kIsWeb) return 'http://localhost:8000/api';
-    if (Platform.isAndroid) return 'http://10.0.2.2:8000/api';
-    return 'http://localhost:8000/api'; // iOS, macOS, desktop
+    return 'http://vientoapp.duckdns.org/api';
   }
 
   // Endpoints de autenticación
