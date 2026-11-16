@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# Pre-push hook: Impide pushes directos a main o staging.
+# Todo cambio debe entrar a main exclusivamente a traves de Pull Requests.
+
+while read local_ref local_sha remote_ref remote_sha
+do
+	if [ "$remote_ref" = "refs/heads/main" ] || [ "$remote_ref" = "refs/heads/staging" ]; then
+		# Ignorar borrado de ramas remotas
+		if [ "$local_ref" = "(delete)" ] || [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+			continue
+		fi
+
+		echo ""
+		echo "❌ [GIT GUARD] PUSH DIRECTO A '$remote_ref' BLOQUEADO."
+		echo "Esta terminantemente prohibido hacer push directo a main o staging."
+		echo "Todo cambio debe ingresar exclusivamente mediante un Pull Request."
+		echo ""
+		echo "Pasos requeridos:"
+		echo "  1. Crea una rama para tu sub-issue: git checkout -b <tipo>/<numero-subissue>-<descripcion>"
+		echo "  2. Haz push de tu rama: git push -u origin <tipo>/<numero-subissue>-<descripcion>"
+		echo "  3. Abre un Pull Request hacia main con el template oficial (incluyendo 'Closes #<id-subissue>')."
+		echo ""
+		exit 1
+	fi
+done
+
+exit 0

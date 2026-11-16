@@ -42,15 +42,18 @@ cd mobile && flutter run
 ## 2. Flujo de Trabajo
 
 ```text
-Issue ──► Rama ──► Commits ──► Pull Request ──► Revisión ──► Squash Merge ──► Deploy
+Sub-issue (GitHub) ──► Rama feat/<id>-<desc> ──► Commits atómicos ──► Pull Request ──► Squash & Merge ──► Cierre de Sub-issue y HU
 ```
 
 1. **Todo cambio nace de un Issue**: No se aceptan ramas ni PRs huérfanos.
-2. Te asignas el issue y creas la rama desde `main` o `staging` actualizado.
-3. Trabajas con commits atómicos de tamaño moderado (~400 líneas).
-4. Abres un Pull Request que referencia el issue (`Closes #12`).
-5. Se verifica que todos los checks automáticos de CI estén en verde.
-6. Se integra mediante **Squash and Merge** y se elimina la rama de trabajo.
+2. **Una sub-issue = Una rama = Un PR**: Cada subtarea técnica de una HU se desarrolla en su propia rama y se cierra mediante su propio PR hacia `main`.
+3. **Prohibición de push directo a `main`**: `main` y `staging` son ramas protegidas. Ningún commit ingresa directamente; el hook local `.husky/pre-push` y las reglas del repositorio bloquean cualquier push directo.
+4. Creas la rama desde `main` actualizado (`git checkout -b <tipo>/<id-subissue>-<desc>`).
+5. Trabajas con commits atómicos de tamaño moderado (~400 líneas).
+6. Abres un Pull Request que referencia la sub-issue (`Closes #<id-subissue> · Refs #<id-hu>`).
+7. Se verifica que todos los checks automáticos de CI estén en verde.
+8. Se integra mediante **Squash and Merge** y se elimina la rama de trabajo.
+9. La Historia de Usuario madre se cierra cuando todas sus sub-issues están resueltas (en la última PR o vía `.github/workflows/close-parent-hu.yml`).
 
 ---
 
@@ -153,6 +156,14 @@ Seguimos la convención de [Conventional Commits](https://www.conventionalcommit
 - **Tamaño Óptimo**: Menos de 400 líneas modificadas por unidad revisable.
 - **Título**: Mismo formato de un Conventional Commit (será el mensaje del squash commit).
 - **Descripción**: Utiliza automáticamente la plantilla [`.github/pull_request_template.md`](.github/pull_request_template.md).
+- **Cierre de Sub-issues**:
+  - Cada PR **debe** incluir obligatoriamente `Closes #<id-subissue>` en la descripción para que GitHub la cierre al fusionar.
+  - Ejemplo: `Closes #9 · Refs #8`
+- **Cierre de Historias de Usuario (Issues Madres / HU)**:
+  - Una HU madre agrupa sus sub-issues técnicas (ver [`docs/SPRINTS_AND_USER_STORIES.md`](docs/SPRINTS_AND_USER_STORIES.md)).
+  - La HU se cierra cuando **todas sus subtareas están completadas**:
+    1. **Vía la última PR**: La PR de la última sub-issue pendiente añade `Closes #<id-hu>` junto a su propia sub-issue (ej. `Closes #11` y `Closes #8`).
+    2. **Automático vía GitHub Actions**: Si no se cerró en la PR, el workflow [`.github/workflows/close-parent-hu.yml`](.github/workflows/close-parent-hu.yml) audita las casillas completadas de la HU y la cierra automáticamente.
 - **Condiciones de Fusión (Merge)**:
   - 100% de los checks de CI en verde (`CI passed`, `Commits & attribution`).
   - Conversaciones resueltas.

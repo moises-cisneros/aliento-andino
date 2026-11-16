@@ -2,7 +2,16 @@
 
 <!-- 2-4 lines describing the objective and architectural impact. -->
 
-Closes #<!-- sub-issue --> · Refs #<!-- HU madre --> · RF-<!-- XX -->
+<!-- OBLIGATORIO: Número de la sub-issue que cierra esta PR -->
+
+Closes #<!-- SUB_ISSUE_ID -->
+
+<!-- OBLIGATORIO: Referencia a la Historia de Usuario madre -->
+
+Refs #<!-- HU_MADRE_ID --> · RF-<!-- XX -->
+
+<!-- OPCIONAL: Si esta PR resuelve la última subtarea de la HU madre, descomentar la siguiente línea: -->
+<!-- Closes #<HU_MADRE_ID> -->
 
 ## How to test
 
@@ -10,6 +19,8 @@ Closes #<!-- sub-issue --> · Refs #<!-- HU madre --> · RF-<!-- XX -->
 
 ## Checklist
 
+- [ ] PR abierta hacia `main` desde una rama dedicada (`feat/`, `fix/`, etc. - nunca push directo a `main`)
+- [ ] Resuelve una sub-issue atómica (~400 líneas) con su número enlazado en `Closes #`
 - [ ] Linters pass with 0 errors and 0 warnings (`ruff`, `flutter analyze` or `pnpm lint`)
 - [ ] Format check is clean (`pnpm format:check`)
 - [ ] Tests for the affected area pass (`pytest`, `flutter test` or `pnpm test`), with a new or updated test covering the change

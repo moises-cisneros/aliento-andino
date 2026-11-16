@@ -131,6 +131,33 @@ Para trabajar con precisión quirúrgica y evitar suposiciones, usá estrictamen
     - `user.name`: `moises-cisneros`
     - `user.email`: `moisescisnerosdl@gmail.com`
 12. **Metodología ODD**: Implementar mediante Organic Driven Development con Gentle AI. Explorar antes de escribir y mantener un radio de impacto controlado.
+13. **Prohibición Absoluta de Commits/Push Directos a `main`**: Está terminantemente prohibido commitear o pushear directamente a `main` (o `staging`). Todo cambio debe realizarse en una rama dedicada (`<tipo>/<numero-subissue>-<descripcion>`), y cada sub-issue debe cerrarse obligatoriamente mediante un Pull Request (`Closes #<subissue>`). Las issues madres (Historias de Usuario / HUs) se cierran cuando todas sus tareas/sub-issues estén resueltas (vía la última PR con `Closes #<hu>` o mediante la automatización `.github/workflows/close-parent-hu.yml`).
+
+---
+
+## Flujo de Ramas, Sub-issues y Pull Requests
+
+```text
+Sub-issue (GitHub) ──► Rama feat/<id>-<desc> ──► Commits atómicos ──► Pull Request ──► Squash & Merge ──► Cierre de Sub-issue y HU
+```
+
+1. **Una Rama y un PR por Sub-issue**:
+   - Cada tarea técnica de una HU (`SUB-XX-X`) se trabaja en una rama propia creada desde `main` actualizado:
+     `git checkout -b feat/<subissue-id>-<descripcion-corta>`
+   - Se implementan los cambios en unidades revisables (~400 líneas) con sus tests y documentación.
+   - Se sube la rama y se abre el Pull Request hacia `main`.
+2. **Cierre Automático de Sub-issues**:
+   - La descripción del PR debe incluir obligatoriamente la directiva de cierre:
+     `Closes #<subissue-id>` (ej. `Closes #9`).
+   - Al fusionar el PR (Squash and Merge), GitHub cierra automáticamente la sub-issue correspondiente.
+3. **Cierre de Historias de Usuario (Issues Madres / HU)**:
+   - Una HU madre agrupa múltiples sub-issues técnicas (ej. `HU-01 #8` contiene `#9`, `#10` y `#11`).
+   - Se cierra formalmente solo cuando **todas sus sub-issues están resueltas**:
+     - **Vía la última PR de la HU**: El PR de la última subtarea pendiente añade `Closes #<id-hu>` junto con su sub-issue (ej. `Closes #11` y `Closes #8`).
+     - **Vía Automatización GitHub Actions**: Si no se cerró en la última PR, el workflow [`.github/workflows/close-parent-hu.yml`](.github/workflows/close-parent-hu.yml) verifica que todas las casillas del checklist en la issue madre estén completadas (`- [x]`) y la cierra automáticamente con comentario explicativo.
+4. **Protección Local de Git**:
+   - El hook [`.husky/pre-push`](.husky/pre-push) bloquea automáticamente cualquier intento de `git push origin main`.
+   - Si un agente o desarrollador intenta hacer push a `main`, el hook aborta la operación y exige crear una rama de feature y PR.
 
 ---
 

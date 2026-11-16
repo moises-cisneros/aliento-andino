@@ -1,0 +1,28 @@
+name: Close Parent HU
+
+# Se dispara cuando un sub-issue o issue se cierra o edita, o cuando un PR se fusiona (cierra).
+# Revisa si la Historia de Usuario madre tiene todas sus subtareas resueltas y la cierra automáticamente.
+
+on:
+  issues:
+    types: [closed, edited]
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  issues: write
+
+jobs:
+  check-parent-hu:
+    name: Check & close completed HUs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Run parent HU completion check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: node scripts/auto-close-parent-hu.mjs
