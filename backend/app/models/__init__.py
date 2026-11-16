@@ -1,5 +1,6 @@
 from app.models.user import User
 from app.models.lesson import Category, Lesson, NoteSequence, PracticeSession
+from app.models.fingering import FingeringChart
 from app.models.social import (
     Post, Comment, Like, Follow, Report, CommentLike, SavedPost,
 )
@@ -12,6 +13,7 @@ from app.models.ai_usage import AiUsageLog
 
 __all__ = [
     "User", "Category", "Lesson", "NoteSequence", "PracticeSession",
+    "FingeringChart",
     "Post", "Comment", "Like", "Follow", "Report",
     "CommentLike", "SavedPost",
     "Hashtag", "PostHashtag",

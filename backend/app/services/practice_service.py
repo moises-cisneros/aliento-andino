@@ -42,6 +42,10 @@ async def submit_practice(
         expected_tempo=lesson.tempo_bpm,
         tempo_accuracy=tempo_accuracy,
         total_time_seconds=data.total_time_seconds,
+        cents_deviation_avg=data.cents_deviation_avg,
+        breath_control_score=data.breath_control_score,
+        posture_score=data.posture_score,
+        instrument_used=data.instrument_used,
         errors_detail=data.errors_detail,
         completed=data.completed,
     )

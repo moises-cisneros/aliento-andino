@@ -65,11 +65,11 @@ class NoteSequenceCreate(BaseModel):
     note: str = Field(max_length=10)
     duration: float = Field(gt=0)
     is_rest: bool = False
-    finger: int | None = Field(None, ge=1, le=5)
-    hand: str | None = None
     velocity: int = Field(default=80, ge=0, le=127)
-    is_chord: bool = False
-    chord_group: int | None = None
+    # Viento andino (monofónico)
+    breath_mark: bool = False
+    articulation: str | None = Field(None, max_length=20)
+    fingering_chart_id: uuid.UUID | None = None
 
     @field_validator("note")
     @classmethod
@@ -84,13 +84,6 @@ class NoteSequenceCreate(BaseModel):
             )
         return v
 
-    @field_validator("hand")
-    @classmethod
-    def validate_hand(cls, v: str | None) -> str | None:
-        if v is not None and v not in ("left", "right", "both"):
-            raise ValueError("hand debe ser 'left', 'right' o 'both'")
-        return v
-
 
 class NoteSequenceResponse(BaseModel):
     """Schema de respuesta de una nota."""
@@ -99,11 +92,10 @@ class NoteSequenceResponse(BaseModel):
     note: str
     duration: float
     is_rest: bool
-    finger: int | None = None
-    hand: str | None = None
     velocity: int
-    is_chord: bool
-    chord_group: int | None = None
+    breath_mark: bool = False
+    articulation: str | None = None
+    fingering_chart_id: uuid.UUID | None = None
 
     model_config = {"from_attributes": True}
 
@@ -118,7 +110,10 @@ class LessonCreate(BaseModel):
     difficulty: str
     tempo_bpm: int = Field(ge=40, le=200)
     time_signature: str = "4/4"
-    key_signature: str = "C"
+    key_signature: str = "G"
+    instrument: str = "quena"
+    breath_marks: list | None = None
+    articulation_patterns: list | None = None
     thumbnail_url: str | None = None
     audio_preview_url: str | None = None
     duration_seconds: int | None = None
@@ -134,6 +129,14 @@ class LessonCreate(BaseModel):
             raise ValueError(f"difficulty debe ser uno de: {allowed}")
         return v
 
+    @field_validator("instrument")
+    @classmethod
+    def validate_instrument(cls, v: str) -> str:
+        allowed = ("quena", "zampona", "tarka", "flauta")
+        if v not in allowed:
+            raise ValueError(f"instrument debe ser uno de: {allowed}")
+        return v
+
 
 class LessonUpdate(BaseModel):
     """Schema para editar lección (sin notas)."""
@@ -144,6 +147,9 @@ class LessonUpdate(BaseModel):
     tempo_bpm: int | None = Field(None, ge=40, le=200)
     time_signature: str | None = None
     key_signature: str | None = None
+    instrument: str | None = None
+    breath_marks: list | None = None
+    articulation_patterns: list | None = None
     thumbnail_url: str | None = None
     audio_preview_url: str | None = None
     duration_seconds: int | None = None
@@ -176,6 +182,9 @@ class LessonResponse(BaseModel):
     tempo_bpm: int
     time_signature: str
     key_signature: str
+    instrument: str = "quena"
+    breath_marks: list | None = None
+    articulation_patterns: list | None = None
     genre: str | None = None
     artist: str | None = None
     thumbnail_url: str | None = None
@@ -232,6 +241,11 @@ class PracticeSubmitRequest(BaseModel):
     missed_notes: int = Field(ge=0)
     average_tempo: float = Field(ge=0)
     total_time_seconds: float = Field(ge=0)
+    # Viento andino: métricas de la evaluación multimodal (opcionales)
+    cents_deviation_avg: float | None = None
+    breath_control_score: float | None = Field(None, ge=0, le=100)
+    posture_score: float | None = Field(None, ge=0, le=100)
+    instrument_used: str | None = None
     errors_detail: list[dict] | None = None
     completed: bool = True
 

@@ -1,10 +1,10 @@
-"""Modelos de usuario y refresh token para PianoVision AI."""
+"""Modelos de usuario y refresh token para Aliento Andino."""
 
 import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -74,6 +74,15 @@ class User(Base):
 
     # Nivel auto-declarado durante el onboarding ("beginner", "intermediate", "advanced")
     skill_level: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
+    # Viento andino: instrumento principal y secundarios, perfil de calibración
+    # de soplo ("Soplo Suave") y nivel de embocadura.
+    primary_instrument: Mapped[str | None] = mapped_column(
+        String(20), nullable=True
+    )  # "quena" | "zampona" | "tarka" | "flauta"
+    secondary_instruments: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    breath_capacity_profile: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    embouchure_level: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     # Preferencias de notificaciones (default ambas en True)
     notifications_push_enabled: Mapped[bool] = mapped_column(Boolean, default=True)

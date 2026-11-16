@@ -1,4 +1,4 @@
-"""Modelos de lecciones, categorías, notas y sesiones de práctica para PianoVision AI."""
+"""Modelos de lecciones, categorías, notas y sesiones de práctica para Aliento Andino."""
 
 import uuid
 from datetime import datetime
@@ -50,7 +50,7 @@ class Category(Base):
 
 
 class Lesson(Base):
-    """Lección/ejercicio de piano con metadatos y configuración musical."""
+    """Lección/ejercicio de viento andino con metadatos y configuración musical."""
 
     __tablename__ = "lessons"
 
@@ -69,7 +69,14 @@ class Lesson(Base):
     )  # "principiante", "intermedio", "avanzado"
     tempo_bpm: Mapped[int] = mapped_column(Integer, nullable=False)
     time_signature: Mapped[str] = mapped_column(String(10), default="4/4")
-    key_signature: Mapped[str] = mapped_column(String(10), default="C")
+    key_signature: Mapped[str] = mapped_column(String(10), default="G")
+    # Viento andino: instrumento al que pertenece la lección, marcas de
+    # respiración (posiciones en compases) y patrones de articulación.
+    instrument: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default="quena", index=True
+    )  # "quena" | "zampona" | "tarka" | "flauta"
+    breath_marks: Mapped[list | None] = mapped_column(JSON, nullable=True)
+    articulation_patterns: Mapped[list | None] = mapped_column(JSON, nullable=True)
     # Metadatos de catálogo: género musical y autor/compositor (para filtrar y
     # explorar canciones). Nullable: los ejercicios técnicos no tienen autor.
     genre: Mapped[str | None] = mapped_column(String(40), nullable=True, index=True)
@@ -138,16 +145,26 @@ class NoteSequence(Base):
         Float, nullable=False
     )  # beats: 1.0=negra, 0.5=corchea, 2.0=blanca
     is_rest: Mapped[bool] = mapped_column(Boolean, default=False)
-    finger: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    hand: Mapped[str | None] = mapped_column(
-        String(10), nullable=True
-    )  # "left", "right", "both"
     velocity: Mapped[int] = mapped_column(Integer, default=80)
-    is_chord: Mapped[bool] = mapped_column(Boolean, default=False)
-    chord_group: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Viento andino (monofónico): marca de respiración, articulación y
+    # referencia a la digitación. Se eliminan los campos de teclado
+    # (finger/hand/is_chord/chord_group) por no aplicar a instrumentos
+    # monofónicos de viento.
+    breath_mark: Mapped[bool] = mapped_column(Boolean, default=False)
+    articulation: Mapped[str | None] = mapped_column(
+        String(20), nullable=True
+    )  # "ligado", "staccato", "acento", ...
+    fingering_chart_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("fingering_charts.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
-    # Relación
+    # Relaciones
     lesson: Mapped["Lesson"] = relationship("Lesson", back_populates="notes")
+    fingering_chart: Mapped["FingeringChart | None"] = relationship(
+        "FingeringChart", lazy="selectin"
+    )
 
     def __repr__(self) -> str:
         return f"<NoteSequence pos={self.position} note={self.note}>"
@@ -188,6 +205,11 @@ class PracticeSession(Base):
     expected_tempo: Mapped[int] = mapped_column(Integer, nullable=False)
     tempo_accuracy: Mapped[float] = mapped_column(Float, nullable=False)
     total_time_seconds: Mapped[float] = mapped_column(Float, nullable=False)
+    # Viento andino: métricas de la ejecución multimodal (on-device).
+    cents_deviation_avg: Mapped[float | None] = mapped_column(Float, nullable=True)
+    breath_control_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    posture_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    instrument_used: Mapped[str | None] = mapped_column(String(20), nullable=True)
     errors_detail: Mapped[list | None] = mapped_column(JSON, nullable=True)
     ai_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
     completed: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -203,5 +225,6 @@ class PracticeSession(Base):
         return f"<PracticeSession user={self.user_id} lesson={self.lesson_id} score={self.score}>"
 
 
-# Importar User para que las relaciones funcionen
+# Importar User y FingeringChart para que las relaciones funcionen
 from app.models.user import User  # noqa: E402, F401
+from app.models.fingering import FingeringChart  # noqa: E402, F401
