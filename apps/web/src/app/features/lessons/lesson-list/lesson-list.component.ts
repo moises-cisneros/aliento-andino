@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import {
   LucidePlus,
   LucideSearch,
@@ -11,11 +12,14 @@ import {
   LucideTrash2,
   LucideChevronLeft,
   LucideChevronRight,
+  LucideSliders,
 } from '@lucide/angular';
 
 import { LessonService } from '../../../core/services/lesson.service';
+import { LessonAdminService } from '../../../core/services/lesson-admin.service';
 import { CategoryService } from '../../../core/services/category.service';
 import { Lesson } from '../../../core/models/lesson.model';
+import { LessonFormDialogComponent } from '../lesson-form-dialog/lesson-form-dialog.component';
 
 @Component({
   selector: 'app-lesson-list',
@@ -23,6 +27,7 @@ import { Lesson } from '../../../core/models/lesson.model';
   imports: [
     CommonModule,
     FormsModule,
+    MatDialogModule,
     LucidePlus,
     LucideSearch,
     LucidePencil,
@@ -30,14 +35,20 @@ import { Lesson } from '../../../core/models/lesson.model';
     LucideTrash2,
     LucideChevronLeft,
     LucideChevronRight,
+    LucideSliders,
   ],
   template: `
     <div class="lesson-list">
       <div class="header-row">
-        <h2>Lecciones</h2>
-        <button class="btn btn-primary" (click)="navigateToCreate()">
-          <svg lucidePlus [size]="16"></svg> Nueva Lección
-        </button>
+        <div>
+          <h2>Lecciones Musicales Andinas</h2>
+          <p class="subtitle">Gestión curricular de repertorio para Quena, Zampoña y Tarka</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-primary" (click)="openCreateDialog()">
+            <svg lucidePlus [size]="16"></svg> Nueva Lección
+          </button>
+        </div>
       </div>
 
       <!-- Filtros -->
@@ -52,6 +63,15 @@ import { Lesson } from '../../../core/models/lesson.model';
             />
             <svg lucideSearch [size]="16" class="input-trail-icon"></svg>
           </div>
+        </div>
+
+        <div class="form-group filter-field">
+          <select class="form-select" [(ngModel)]="selectedInstrument" (change)="applyFilters()">
+            <option value="">Todos los instrumentos</option>
+            <option value="quena">Quena</option>
+            <option value="zampona">Zampoña (Siku)</option>
+            <option value="tarka">Tarka</option>
+          </select>
         </div>
 
         <div class="form-group filter-field">
@@ -79,6 +99,7 @@ import { Lesson } from '../../../core/models/lesson.model';
           <thead>
             <tr>
               <th>Título</th>
+              <th>Instrumento</th>
               <th>Categoría</th>
               <th>Dificultad</th>
               <th>BPM</th>
@@ -92,7 +113,17 @@ import { Lesson } from '../../../core/models/lesson.model';
           <tbody>
             @for (l of lessonService.lessons(); track l.id) {
               <tr>
-                <td>{{ l.title }}</td>
+                <td>
+                  <strong>{{ l.title }}</strong>
+                  @if (l.genre) {
+                    <span class="genre-tag">{{ l.genre }}</span>
+                  }
+                </td>
+                <td>
+                  <span class="chip-instrument" [class]="'instrument-' + (l.instrument || 'quena')">
+                    {{ l.instrument || 'quena' | uppercase }}
+                  </span>
+                </td>
                 <td>{{ l.category_name || '—' }}</td>
                 <td>
                   <span class="chip" [class]="'chip-' + l.difficulty">
@@ -110,7 +141,7 @@ import { Lesson } from '../../../core/models/lesson.model';
                 </td>
                 <td>
                   <div class="action-buttons">
-                    <button class="btn-icon" title="Editar" (click)="navigateToEdit(l.id)">
+                    <button class="btn-icon" title="Editar en Diálogo" (click)="openEditDialog(l)">
                       <svg lucidePencil [size]="16"></svg>
                     </button>
                     <button class="btn-icon" title="Editar Notas" (click)="navigateToNotes(l.id)">
@@ -158,8 +189,14 @@ import { Lesson } from '../../../core/models/lesson.model';
         margin-bottom: 20px;
       }
       .header-row h2 {
-        color: var(--text-secondary);
+        color: var(--text-primary);
         margin: 0;
+        font-size: 1.5rem;
+      }
+      .subtitle {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin: 4px 0 0 0;
       }
 
       .filters-row {
@@ -169,7 +206,7 @@ import { Lesson } from '../../../core/models/lesson.model';
         flex-wrap: wrap;
       }
       .filter-field {
-        min-width: 180px;
+        min-width: 170px;
       }
 
       .input-wrapper {
@@ -184,9 +221,37 @@ import { Lesson } from '../../../core/models/lesson.model';
         pointer-events: none;
       }
 
+      .genre-tag {
+        display: block;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        font-weight: normal;
+      }
+
+      .chip-instrument {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+      }
+      .instrument-quena {
+        background: rgba(6, 182, 212, 0.15);
+        color: #06b6d4;
+      }
+      .instrument-zampona {
+        background: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+      }
+      .instrument-tarka {
+        background: rgba(139, 92, 246, 0.15);
+        color: #8b5cf6;
+      }
+
       .action-buttons {
         display: flex;
-        gap: 2px;
+        gap: 4px;
       }
 
       .chip-principiante {
@@ -206,11 +271,14 @@ import { Lesson } from '../../../core/models/lesson.model';
 })
 export class LessonListComponent implements OnInit {
   readonly lessonService = inject(LessonService);
+  readonly lessonAdminService = inject(LessonAdminService);
   readonly categoryService = inject(CategoryService);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
 
   searchTerm = '';
+  selectedInstrument = '';
   selectedCategory = '';
   selectedDifficulty = '';
   pageSize = 10;
@@ -247,12 +315,44 @@ export class LessonListComponent implements OnInit {
     this.loadData();
   }
 
+  openCreateDialog(): void {
+    const dialogRef = this.dialog.open(LessonFormDialogComponent, {
+      width: '880px',
+      maxHeight: '90vh',
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.loadData();
+      }
+    });
+  }
+
+  openEditDialog(lesson: Lesson): void {
+    const dialogRef = this.dialog.open(LessonFormDialogComponent, {
+      width: '880px',
+      maxHeight: '90vh',
+      data: { lesson },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        this.loadData();
+      }
+    });
+  }
+
   navigateToCreate(): void {
-    this.router.navigate(['/admin/lessons/new']);
+    this.openCreateDialog();
   }
 
   navigateToEdit(id: string): void {
-    this.router.navigate(['/admin/lessons', id, 'edit']);
+    const lesson = this.lessonService.lessons().find((l) => l.id === id);
+    if (lesson) {
+      this.openEditDialog(lesson);
+    } else {
+      this.router.navigate(['/admin/lessons', id, 'edit']);
+    }
   }
 
   navigateToNotes(id: string): void {

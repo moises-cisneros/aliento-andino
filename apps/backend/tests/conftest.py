@@ -102,3 +102,35 @@ async def auth_headers(client: AsyncClient, test_user: User):
     data = response.json()
     assert "access_token" in data, f"Login failed: {data}"
     return {"Authorization": f"Bearer {data['access_token']}"}
+
+
+@pytest_asyncio.fixture
+async def admin_user(db_session: AsyncSession):
+    """Create an admin user and return it."""
+    user = User(
+        id=uuid.uuid4(),
+        email="admin@example.com",
+        username="adminuser",
+        full_name="Admin User",
+        hashed_password=hash_password("AdminPass123"),
+        auth_provider="local",
+        is_active=True,
+        is_verified=True,
+        is_admin=True,
+    )
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+    return user
+
+
+@pytest_asyncio.fixture
+async def admin_headers(client: AsyncClient, admin_user: User):
+    """Get auth headers for the admin user."""
+    response = await client.post(
+        "/api/auth/login",
+        json={"email": "admin@example.com", "password": "AdminPass123"},
+    )
+    data = response.json()
+    assert "access_token" in data, f"Login failed: {data}"
+    return {"Authorization": f"Bearer {data['access_token']}"}
