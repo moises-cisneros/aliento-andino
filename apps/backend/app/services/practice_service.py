@@ -5,6 +5,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import distinct, func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -63,6 +64,52 @@ async def submit_practice(
     # Cargar relación lesson para el router
     session.lesson = lesson
     return session
+
+
+async def submit_practice_session(
+    db: AsyncSession, user_id: uuid.UUID, request: PracticeSubmitRequest
+) -> tuple[PracticeSession, dict | None]:
+    """Registrar una sesión de práctica de forma idempotente.
+
+    Persiste la sesión y actualiza XP y racha del usuario en la misma
+    transacción del `db` recibido (el commit lo hace quien llama).
+
+    Devuelve `(sesión, xp_result)`. `xp_result` es `None` cuando `client_id` ya
+    estaba registrado: se devuelve la sesión existente sin sumar XP otra vez.
+
+    Raises:
+        ValueError: la lección no existe o falta `client_id`.
+    """
+    from app.services import ranking_service
+
+    if request.client_id is None:
+        raise ValueError("client_id es obligatorio")
+
+    existing = await get_session_by_client_id(db, request.client_id, user_id)
+    if existing:
+        return existing, None
+
+    try:
+        # SAVEPOINT: si dos peticiones con el mismo client_id pasan la
+        # comprobación a la vez, el índice único rechaza a la perdedora sin
+        # arruinar la transacción exterior.
+        async with db.begin_nested():
+            session = await submit_practice(db, request, user_id)
+    except IntegrityError:
+        existing = await get_session_by_client_id(db, request.client_id, user_id)
+        if existing:
+            return existing, None
+        raise
+
+    xp_result = await ranking_service.process_practice_xp(
+        db=db,
+        user_id=user_id,
+        score=request.score,
+        difficulty=session.lesson.difficulty if session.lesson else "principiante",
+        is_completed=request.completed and request.score >= 70,
+        total_time_seconds=request.total_time_seconds,
+    )
+    return session, xp_result
 
 
 async def get_session_by_client_id(
