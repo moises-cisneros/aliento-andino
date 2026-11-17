@@ -458,4 +458,3 @@ class TestLessonsV1AdminCrud:
             headers=admin_headers,
         )
         assert response.status_code == 404
-
