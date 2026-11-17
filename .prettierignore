@@ -12,6 +12,7 @@ __pycache__/
 .git/
 .codegraph/
 coverage/
+.pytest_cache/
 .docusaurus/
 *.lock
 pnpm-lock.yaml

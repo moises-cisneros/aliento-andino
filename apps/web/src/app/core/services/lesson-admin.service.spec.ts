@@ -126,7 +126,9 @@ describe('LessonAdminService', () => {
       };
 
       service.createLesson(payload).subscribe({
-        next: () => fail('Se esperaba que falle con 403 Forbidden'),
+        next: () => {
+          throw new Error('Se esperaba que falle con 403 Forbidden');
+        },
         error: (error) => {
           expect(error.status).toBe(403);
           expect(service.isLoading()).toBe(false);

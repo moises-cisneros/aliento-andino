@@ -12,7 +12,6 @@ import {
   LucideTrash2,
   LucideChevronLeft,
   LucideChevronRight,
-  LucideSliders,
 } from '@lucide/angular';
 
 import { LessonService } from '../../../core/services/lesson.service';
@@ -35,7 +34,6 @@ import { LessonFormDialogComponent } from '../lesson-form-dialog/lesson-form-dia
     LucideTrash2,
     LucideChevronLeft,
     LucideChevronRight,
-    LucideSliders,
   ],
   template: `
     <div class="lesson-list">
