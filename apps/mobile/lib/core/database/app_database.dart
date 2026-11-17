@@ -25,6 +25,7 @@ class CachedLessons extends Table {
   TextColumn get categoryId => text()();
   TextColumn get title => text()();
   TextColumn get description => text().withDefault(const Constant(''))();
+  TextColumn get instrument => text().withDefault(const Constant('quena'))();
   TextColumn get difficulty => text()();
   IntColumn get tempoBpm => integer().withDefault(const Constant(0))();
   TextColumn get timeSignature => text().nullable()();
@@ -113,7 +114,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'aliento_andino'));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -125,6 +126,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 3) {
         await m.addColumn(pendingPractice, pendingPractice.isSynced);
+      }
+      if (from < 4) {
+        await m.addColumn(cachedLessons, cachedLessons.instrument);
       }
     },
   );
