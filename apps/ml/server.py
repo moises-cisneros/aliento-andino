@@ -1,12 +1,12 @@
 """
 Microservicio ML para Aliento Andino.
-Provee endpoints de inferencia acústica y matching semántico offline para soporte.
+Provee endpoints de inferencia acústica, modelos de acordes y matching semántico offline.
 """
+
 from __future__ import annotations
 
 import math
-import os
-from typing import List, Optional
+from typing import Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
@@ -50,6 +50,20 @@ class AcousticBenchmarkResponse(BaseModel):
     is_tuned: bool
     latency_ms: float
     status: str
+
+
+class PedagogicalFeedbackRequest(BaseModel):
+    prompt: str
+    instrument: Optional[str] = "quena"
+    max_tokens: Optional[int] = 128
+
+
+class PedagogicalFeedbackResponse(BaseModel):
+    feedback: str
+    instrument: str
+    latency_ms: float
+    status: str
+    model: str
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -97,9 +111,53 @@ def benchmark_pitch(req: AcousticBenchmarkRequest):
     )
 
 
+@app.post("/tutor/pedagogical-feedback", response_model=PedagogicalFeedbackResponse)
+def pedagogical_feedback(req: PedagogicalFeedbackRequest):
+    """Genera recomendaciones pedagógicas estructuradas en español andino para Quena, Zampoña y Tarka."""
+    valid_instruments = {"quena", "zampona", "tarka"}
+    inst = (req.instrument or "quena").lower()
+    if inst not in valid_instruments:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Instrumento '{req.instrument}' no soportado. Debe ser quena, zampona o tarka.",
+        )
+
+    lower_prompt = req.prompt.lower()
+    if "orificio" in lower_prompt or "digitacion" in lower_prompt:
+        feedback = "Asegúrate de cubrir completamente los orificios con la yema del dedo para evitar fugas de aire."
+    elif (
+        "desafinad" in lower_prompt
+        or "cents" in lower_prompt
+        or "afinacion" in lower_prompt
+    ):
+        feedback = "Controla el ángulo de la embocadura y mantén un soplo suave y constante para estabilizar la afinación."
+    elif (
+        "postura" in lower_prompt
+        or "hombros" in lower_prompt
+        or "espalda" in lower_prompt
+    ):
+        feedback = "Mantén la espalda erguida y los hombros relajados para permitir una respiración diafragmática fluida."
+    else:
+        feedback = "¡Buen esfuerzo! Recuerda mantener el flujo de aire constante y los hombros relajados."
+
+    return PedagogicalFeedbackResponse(
+        feedback=feedback,
+        instrument=inst,
+        latency_ms=45.2,
+        status="generated",
+        model="gemma-2-2b-int4-mock",
+    )
+
+
 @app.get("/")
 def root():
     return {
         "message": "Aliento Andino ML Service is running",
-        "endpoints": ["/health", "/docs", "/faq/match", "/pitch/benchmark"],
+        "endpoints": [
+            "/health",
+            "/docs",
+            "/faq/match",
+            "/pitch/benchmark",
+            "/tutor/pedagogical-feedback",
+        ],
     }
