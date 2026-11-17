@@ -60,6 +60,13 @@ build/app/outputs/flutter-apk/app-release.apk
 flutter test
 ```
 
+Con cobertura (mínimo 75% sobre `lib/`, sin archivos generados `*.g.dart`; es la barrera que aplica CI):
+
+```bash
+flutter test --coverage
+node ../../scripts/mobile-coverage.mjs coverage/lcov.info --min 75
+```
+
 ## Estructura del proyecto
 
 ```

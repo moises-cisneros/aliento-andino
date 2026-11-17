@@ -186,3 +186,11 @@ jobs:
       - name: Flutter analyze
         working-directory: apps/mobile
         run: flutter analyze
+      - name: Flutter tests with coverage
+        working-directory: apps/mobile
+        run: flutter test --coverage
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enforce mobile coverage (>= 75%, generated files excluded)
+        run: node scripts/mobile-coverage.mjs apps/mobile/coverage/lcov.info --min 75
