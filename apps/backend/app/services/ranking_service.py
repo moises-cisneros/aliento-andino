@@ -2,6 +2,7 @@
 
 import math
 import uuid
+from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy import and_, distinct, func, or_, select
@@ -81,6 +82,63 @@ async def get_or_create_user_xp(db: AsyncSession, user_id: uuid.UUID) -> UserXP:
     return user_xp
 
 
+@dataclass(frozen=True)
+class StreakUpdateResult:
+    """Resultado de registrar una práctica sobre la racha diaria."""
+
+    current_streak: int
+    streak_preserved_by_freeze: bool
+    freeze_consumed: bool
+
+
+async def update_user_streak(
+    db: AsyncSession, user_id: uuid.UUID, practice_datetime: datetime
+) -> StreakUpdateResult:
+    """Actualizar la racha diaria del usuario con la práctica en `practice_datetime`.
+
+    El día calendario es el de `practice_datetime` tal como llega: el llamador lo
+    expresa en la zona horaria local del usuario (un datetime naive se toma como local).
+    - Mismo día: no cambia nada (varias prácticas el mismo día no suman).
+    - Día consecutivo: +1.
+    - Salto de exactamente un día con congelador: +1 y consume un congelador.
+    - Cualquier otro salto: la racha vuelve a 1.
+    Cada 7 días de racha se gana un congelador (tope MAX_STREAK_FREEZES).
+    """
+    user_xp = await get_or_create_user_xp(db, user_id)
+    practice_day = practice_datetime.date()
+    last = user_xp.last_practice_date
+
+    advanced = True
+    preserved = False
+    consumed = False
+    if last is None:
+        user_xp.current_streak = 1
+        # Congelador de bienvenida: red de seguridad desde el primer día.
+        if user_xp.streak_freezes < 1:
+            user_xp.streak_freezes = 1
+    elif last == practice_day:
+        advanced = False
+    elif last == practice_day - timedelta(days=1):
+        user_xp.current_streak += 1
+    elif last == practice_day - timedelta(days=2) and user_xp.streak_freezes > 0:
+        user_xp.streak_freezes -= 1
+        user_xp.current_streak += 1
+        preserved = True
+        consumed = True
+    else:
+        user_xp.current_streak = 1  # Racha rota (2+ días o sin congelador)
+
+    if user_xp.current_streak > user_xp.longest_streak:
+        user_xp.longest_streak = user_xp.current_streak
+
+    if advanced and user_xp.current_streak % 7 == 0 and user_xp.streak_freezes < MAX_STREAK_FREEZES:
+        user_xp.streak_freezes += 1
+
+    user_xp.last_practice_date = practice_day
+    await db.flush()
+    return StreakUpdateResult(user_xp.current_streak, preserved, consumed)
+
+
 async def process_practice_xp(
     db: AsyncSession,
     user_id: uuid.UUID,
@@ -94,7 +152,6 @@ async def process_practice_xp(
     Retorna: {xp_earned, new_level, current_level, new_achievements}
     """
     user_xp = await get_or_create_user_xp(db, user_id)
-    today = datetime.now(UTC).date()
     current_monday = get_current_week_monday()
 
     # Resetear weekly_xp si cambió de semana
@@ -131,40 +188,8 @@ async def process_practice_xp(
         n = user_xp.total_practice_sessions
         user_xp.average_score = round(old_avg + (score - old_avg) / n, 2)
 
-    # Actualizar streak (con "congeladores" que protegen ante 1 día perdido).
-    streak_advanced = False
-    if user_xp.last_practice_date is None:
-        user_xp.current_streak = 1
-        streak_advanced = True
-        # Congelador de bienvenida: red de seguridad desde el primer día.
-        if user_xp.streak_freezes < 1:
-            user_xp.streak_freezes = 1
-    elif user_xp.last_practice_date == today:
-        pass  # Ya practicó hoy, no cambiar streak
-    elif user_xp.last_practice_date == today - timedelta(days=1):
-        user_xp.current_streak += 1
-        streak_advanced = True
-    elif user_xp.last_practice_date == today - timedelta(days=2) and user_xp.streak_freezes > 0:
-        # Faltó EXACTAMENTE un día: consumir un congelador y mantener la racha.
-        user_xp.streak_freezes -= 1
-        user_xp.current_streak += 1
-        streak_advanced = True
-    else:
-        user_xp.current_streak = 1  # Racha rota (2+ días o sin congelador)
-        streak_advanced = True
-
-    if user_xp.current_streak > user_xp.longest_streak:
-        user_xp.longest_streak = user_xp.current_streak
-
-    # Recompensa: cada 7 días de racha, +1 congelador (tope MAX_STREAK_FREEZES).
-    if (
-        streak_advanced
-        and user_xp.current_streak % 7 == 0
-        and user_xp.streak_freezes < MAX_STREAK_FREEZES
-    ):
-        user_xp.streak_freezes += 1
-
-    user_xp.last_practice_date = today
+    # Racha diaria con congeladores (día calendario UTC; ver update_user_streak).
+    await update_user_streak(db, user_id, datetime.now(UTC))
 
     # Actualizar xp_level en User
     result = await db.execute(select(User).where(User.id == user_id))
