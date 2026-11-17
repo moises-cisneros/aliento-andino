@@ -714,7 +714,7 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: items.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                separatorBuilder: (_, _) => const SizedBox(width: 10),
                 itemBuilder: (context, i) {
                   final l = items[i];
                   final premiumLocked = l.requiresPremium && !_isPremium;
