@@ -29,6 +29,7 @@ from app.routers import (
     admin_subscriptions,
     auth,
     challenges,
+    fingerings,
     lessons,
     notifications,
     practice,
@@ -193,6 +194,7 @@ app.add_middleware(
 # Registrar routers
 app.include_router(auth.router)
 app.include_router(lessons.router)
+app.include_router(fingerings.router)
 app.include_router(practice.router)
 app.include_router(admin_lessons.router)
 app.include_router(social.router)

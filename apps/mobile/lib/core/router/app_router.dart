@@ -22,6 +22,7 @@ import '../../features/lessons/presentation/screens/ear_training_screen.dart';
 import '../../features/lessons/presentation/screens/lesson_detail_screen.dart';
 import '../../features/lessons/presentation/screens/lesson_list_screen.dart';
 import '../../features/lessons/presentation/screens/lesson_player_screen.dart';
+import '../../features/lessons/presentation/screens/offline_lessons_screen.dart';
 import '../../features/lessons/presentation/screens/sight_reading_screen.dart';
 import '../../features/lessons/presentation/screens/theory_hub_screen.dart';
 import '../../features/lessons/presentation/screens/theory_quiz_screen.dart';
@@ -240,6 +241,10 @@ class AppRouter {
       GoRoute(
         path: '/achievements',
         builder: (context, state) => const AchievementsScreen(),
+      ),
+      GoRoute(
+        path: '/offline-lessons',
+        builder: (context, state) => const OfflineLessonsScreen(),
       ),
       GoRoute(
         path: '/lessons/:id/ranking',

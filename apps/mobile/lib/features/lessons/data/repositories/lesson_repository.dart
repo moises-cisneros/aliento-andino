@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/audio/instrument.dart';
 import '../../../../core/network/api_client.dart';
@@ -7,6 +6,7 @@ import '../datasources/local_lesson_datasource.dart';
 import '../models/category_model.dart';
 import '../models/lesson_model.dart';
 import '../models/note_sequence_model.dart';
+import '../services/lesson_download_service.dart';
 
 /// Repositorio de lecciones con soporte offline-first.
 ///
@@ -16,12 +16,15 @@ import '../models/note_sequence_model.dart';
 class LessonRepository {
   final ApiClient _apiClient;
   final LocalLessonDataSource? _local;
+  final LessonDownloadService? _downloads;
 
   const LessonRepository({
     required ApiClient apiClient,
     LocalLessonDataSource? local,
+    LessonDownloadService? downloads,
   }) : _apiClient = apiClient,
-       _local = local;
+       _local = local,
+       _downloads = downloads;
 
   /// Obtener catálogo de lecciones filtradas por instrumento andino y dificultad (SUB-04-B / HU-04).
   Future<List<LessonModel>> getLessons({
@@ -227,49 +230,30 @@ class LessonRepository {
 
   // ---------------- Offline ----------------
 
-  /// Descarga una lección (metadatos + secuencia de notas) y la marca como
-  /// disponible para practicar sin conexión.
-  Future<void> downloadLesson(String lessonId) async {
-    final response = await _apiClient.dio.get('/lessons/$lessonId');
-    final data = response.data as Map<String, dynamic>;
-    final lesson = LessonModel.fromJson(data);
-
-    var notes =
-        (data['notes'] as List<dynamic>?)
-            ?.map((e) => NoteSequenceModel.fromJson(e as Map<String, dynamic>))
-            .toList() ??
-        <NoteSequenceModel>[];
-
-    // Si el detalle no trajo notas, pedimos el endpoint de secuencia.
-    if (notes.isEmpty) {
-      notes = await getLessonSequence(lessonId);
-    }
-
-    await _local?.cacheLessonDetail(lesson, notes, markDownloaded: true);
-
-    // Descargar el audio de preview para reproducirlo offline (best-effort:
-    // si falla, la lección igual queda descargada para practicar).
-    final audioUrl = lesson.audioPreviewUrl;
-    if (_local != null && audioUrl != null && audioUrl.isNotEmpty) {
-      try {
-        final dir = await getApplicationDocumentsDirectory();
-        final path = '${dir.path}/lesson_audio_$lessonId${_audioExt(audioUrl)}';
-        // Dio fresco: el audio vive en GCS, no en la API (sin interceptores).
-        await Dio().download(audioUrl, path);
-        await _local.setAudioLocalPath(lessonId, path);
-      } catch (_) {
-        // Audio opcional: ignorar fallos de descarga.
-      }
-    }
+  /// Descarga una lección (notas + audio) y la marca como disponible para
+  /// practicar sin conexión. Todo o nada: ver [LessonDownloadService].
+  Future<void> downloadLesson(String lessonId) {
+    return _requireDownloads().downloadLesson(lessonId);
   }
 
-  String _audioExt(String url) {
-    final urlPath = Uri.parse(url).path;
-    final dot = urlPath.lastIndexOf('.');
-    if (dot != -1 && dot > urlPath.lastIndexOf('/')) {
-      return urlPath.substring(dot);
+  /// Elimina la lección descargada (base local y archivo de audio).
+  Future<void> deleteDownloadedLesson(String lessonId) {
+    return _requireDownloads().deleteDownloadedLesson(lessonId);
+  }
+
+  /// Descargas con el espacio que ocupan; detecta audios borrados a mano.
+  Future<OfflineDownloads> getOfflineDownloads() {
+    return _requireDownloads().listDownloads();
+  }
+
+  LessonDownloadService _requireDownloads() {
+    final service = _downloads;
+    if (service == null) {
+      throw StateError(
+        'LessonRepository was created without a download service',
+      );
     }
-    return '.mp3';
+    return service;
   }
 
   /// Lecciones descargadas para uso offline.

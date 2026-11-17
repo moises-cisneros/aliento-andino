@@ -43,6 +43,11 @@ export const routes: Routes = [
           import('./features/lessons/lessons.routes').then((m) => m.lessonsRoutes),
       },
       {
+        path: 'fingerings',
+        loadChildren: () =>
+          import('./features/fingerings/fingerings.routes').then((m) => m.fingeringsRoutes),
+      },
+      {
         path: 'moderation',
         loadChildren: () =>
           import('./features/moderation/moderation.routes').then((m) => m.moderationRoutes),

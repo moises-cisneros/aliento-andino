@@ -462,6 +462,18 @@ class $CachedLessonsTable extends CachedLessons
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _instrumentMeta = const VerificationMeta(
+    'instrument',
+  );
+  @override
+  late final GeneratedColumn<String> instrument = GeneratedColumn<String>(
+    'instrument',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('quena'),
+  );
   static const VerificationMeta _difficultyMeta = const VerificationMeta(
     'difficulty',
   );
@@ -665,6 +677,7 @@ class $CachedLessonsTable extends CachedLessons
     categoryId,
     title,
     description,
+    instrument,
     difficulty,
     tempoBpm,
     timeSignature,
@@ -723,6 +736,12 @@ class $CachedLessonsTable extends CachedLessons
           data['description']!,
           _descriptionMeta,
         ),
+      );
+    }
+    if (data.containsKey('instrument')) {
+      context.handle(
+        _instrumentMeta,
+        instrument.isAcceptableOrUnknown(data['instrument']!, _instrumentMeta),
       );
     }
     if (data.containsKey('difficulty')) {
@@ -884,6 +903,10 @@ class $CachedLessonsTable extends CachedLessons
         DriftSqlType.string,
         data['${effectivePrefix}description'],
       )!,
+      instrument: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}instrument'],
+      )!,
       difficulty: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}difficulty'],
@@ -966,6 +989,7 @@ class CachedLesson extends DataClass implements Insertable<CachedLesson> {
   final String categoryId;
   final String title;
   final String description;
+  final String instrument;
   final String difficulty;
   final int tempoBpm;
   final String? timeSignature;
@@ -988,6 +1012,7 @@ class CachedLesson extends DataClass implements Insertable<CachedLesson> {
     required this.categoryId,
     required this.title,
     required this.description,
+    required this.instrument,
     required this.difficulty,
     required this.tempoBpm,
     this.timeSignature,
@@ -1013,6 +1038,7 @@ class CachedLesson extends DataClass implements Insertable<CachedLesson> {
     map['category_id'] = Variable<String>(categoryId);
     map['title'] = Variable<String>(title);
     map['description'] = Variable<String>(description);
+    map['instrument'] = Variable<String>(instrument);
     map['difficulty'] = Variable<String>(difficulty);
     map['tempo_bpm'] = Variable<int>(tempoBpm);
     if (!nullToAbsent || timeSignature != null) {
@@ -1057,6 +1083,7 @@ class CachedLesson extends DataClass implements Insertable<CachedLesson> {
       categoryId: Value(categoryId),
       title: Value(title),
       description: Value(description),
+      instrument: Value(instrument),
       difficulty: Value(difficulty),
       tempoBpm: Value(tempoBpm),
       timeSignature: timeSignature == null && nullToAbsent
@@ -1105,6 +1132,7 @@ class CachedLesson extends DataClass implements Insertable<CachedLesson> {
       categoryId: serializer.fromJson<String>(json['categoryId']),
       title: serializer.fromJson<String>(json['title']),
       description: serializer.fromJson<String>(json['description']),
+      instrument: serializer.fromJson<String>(json['instrument']),
       difficulty: serializer.fromJson<String>(json['difficulty']),
       tempoBpm: serializer.fromJson<int>(json['tempoBpm']),
       timeSignature: serializer.fromJson<String?>(json['timeSignature']),
@@ -1132,6 +1160,7 @@ class CachedLesson extends DataClass implements Insertable<CachedLesson> {
       'categoryId': serializer.toJson<String>(categoryId),
       'title': serializer.toJson<String>(title),
       'description': serializer.toJson<String>(description),
+      'instrument': serializer.toJson<String>(instrument),
       'difficulty': serializer.toJson<String>(difficulty),
       'tempoBpm': serializer.toJson<int>(tempoBpm),
       'timeSignature': serializer.toJson<String?>(timeSignature),
@@ -1157,6 +1186,7 @@ class CachedLesson extends DataClass implements Insertable<CachedLesson> {
     String? categoryId,
     String? title,
     String? description,
+    String? instrument,
     String? difficulty,
     int? tempoBpm,
     Value<String?> timeSignature = const Value.absent(),
@@ -1179,6 +1209,7 @@ class CachedLesson extends DataClass implements Insertable<CachedLesson> {
     categoryId: categoryId ?? this.categoryId,
     title: title ?? this.title,
     description: description ?? this.description,
+    instrument: instrument ?? this.instrument,
     difficulty: difficulty ?? this.difficulty,
     tempoBpm: tempoBpm ?? this.tempoBpm,
     timeSignature: timeSignature.present
@@ -1217,6 +1248,9 @@ class CachedLesson extends DataClass implements Insertable<CachedLesson> {
       description: data.description.present
           ? data.description.value
           : this.description,
+      instrument: data.instrument.present
+          ? data.instrument.value
+          : this.instrument,
       difficulty: data.difficulty.present
           ? data.difficulty.value
           : this.difficulty,
@@ -1270,6 +1304,7 @@ class CachedLesson extends DataClass implements Insertable<CachedLesson> {
           ..write('categoryId: $categoryId, ')
           ..write('title: $title, ')
           ..write('description: $description, ')
+          ..write('instrument: $instrument, ')
           ..write('difficulty: $difficulty, ')
           ..write('tempoBpm: $tempoBpm, ')
           ..write('timeSignature: $timeSignature, ')
@@ -1297,6 +1332,7 @@ class CachedLesson extends DataClass implements Insertable<CachedLesson> {
     categoryId,
     title,
     description,
+    instrument,
     difficulty,
     tempoBpm,
     timeSignature,
@@ -1323,6 +1359,7 @@ class CachedLesson extends DataClass implements Insertable<CachedLesson> {
           other.categoryId == this.categoryId &&
           other.title == this.title &&
           other.description == this.description &&
+          other.instrument == this.instrument &&
           other.difficulty == this.difficulty &&
           other.tempoBpm == this.tempoBpm &&
           other.timeSignature == this.timeSignature &&
@@ -1347,6 +1384,7 @@ class CachedLessonsCompanion extends UpdateCompanion<CachedLesson> {
   final Value<String> categoryId;
   final Value<String> title;
   final Value<String> description;
+  final Value<String> instrument;
   final Value<String> difficulty;
   final Value<int> tempoBpm;
   final Value<String?> timeSignature;
@@ -1370,6 +1408,7 @@ class CachedLessonsCompanion extends UpdateCompanion<CachedLesson> {
     this.categoryId = const Value.absent(),
     this.title = const Value.absent(),
     this.description = const Value.absent(),
+    this.instrument = const Value.absent(),
     this.difficulty = const Value.absent(),
     this.tempoBpm = const Value.absent(),
     this.timeSignature = const Value.absent(),
@@ -1394,6 +1433,7 @@ class CachedLessonsCompanion extends UpdateCompanion<CachedLesson> {
     required String categoryId,
     required String title,
     this.description = const Value.absent(),
+    this.instrument = const Value.absent(),
     required String difficulty,
     this.tempoBpm = const Value.absent(),
     this.timeSignature = const Value.absent(),
@@ -1421,6 +1461,7 @@ class CachedLessonsCompanion extends UpdateCompanion<CachedLesson> {
     Expression<String>? categoryId,
     Expression<String>? title,
     Expression<String>? description,
+    Expression<String>? instrument,
     Expression<String>? difficulty,
     Expression<int>? tempoBpm,
     Expression<String>? timeSignature,
@@ -1445,6 +1486,7 @@ class CachedLessonsCompanion extends UpdateCompanion<CachedLesson> {
       if (categoryId != null) 'category_id': categoryId,
       if (title != null) 'title': title,
       if (description != null) 'description': description,
+      if (instrument != null) 'instrument': instrument,
       if (difficulty != null) 'difficulty': difficulty,
       if (tempoBpm != null) 'tempo_bpm': tempoBpm,
       if (timeSignature != null) 'time_signature': timeSignature,
@@ -1471,6 +1513,7 @@ class CachedLessonsCompanion extends UpdateCompanion<CachedLesson> {
     Value<String>? categoryId,
     Value<String>? title,
     Value<String>? description,
+    Value<String>? instrument,
     Value<String>? difficulty,
     Value<int>? tempoBpm,
     Value<String?>? timeSignature,
@@ -1495,6 +1538,7 @@ class CachedLessonsCompanion extends UpdateCompanion<CachedLesson> {
       categoryId: categoryId ?? this.categoryId,
       title: title ?? this.title,
       description: description ?? this.description,
+      instrument: instrument ?? this.instrument,
       difficulty: difficulty ?? this.difficulty,
       tempoBpm: tempoBpm ?? this.tempoBpm,
       timeSignature: timeSignature ?? this.timeSignature,
@@ -1530,6 +1574,9 @@ class CachedLessonsCompanion extends UpdateCompanion<CachedLesson> {
     }
     if (description.present) {
       map['description'] = Variable<String>(description.value);
+    }
+    if (instrument.present) {
+      map['instrument'] = Variable<String>(instrument.value);
     }
     if (difficulty.present) {
       map['difficulty'] = Variable<String>(difficulty.value);
@@ -1595,6 +1642,7 @@ class CachedLessonsCompanion extends UpdateCompanion<CachedLesson> {
           ..write('categoryId: $categoryId, ')
           ..write('title: $title, ')
           ..write('description: $description, ')
+          ..write('instrument: $instrument, ')
           ..write('difficulty: $difficulty, ')
           ..write('tempoBpm: $tempoBpm, ')
           ..write('timeSignature: $timeSignature, ')
@@ -3615,6 +3663,7 @@ typedef $$CachedLessonsTableCreateCompanionBuilder =
       required String categoryId,
       required String title,
       Value<String> description,
+      Value<String> instrument,
       required String difficulty,
       Value<int> tempoBpm,
       Value<String?> timeSignature,
@@ -3640,6 +3689,7 @@ typedef $$CachedLessonsTableUpdateCompanionBuilder =
       Value<String> categoryId,
       Value<String> title,
       Value<String> description,
+      Value<String> instrument,
       Value<String> difficulty,
       Value<int> tempoBpm,
       Value<String?> timeSignature,
@@ -3686,6 +3736,11 @@ class $$CachedLessonsTableFilterComposer
 
   ColumnFilters<String> get description => $composableBuilder(
     column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get instrument => $composableBuilder(
+    column: $table.instrument,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3804,6 +3859,11 @@ class $$CachedLessonsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get instrument => $composableBuilder(
+    column: $table.instrument,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get difficulty => $composableBuilder(
     column: $table.difficulty,
     builder: (column) => ColumnOrderings(column),
@@ -3912,6 +3972,11 @@ class $$CachedLessonsTableAnnotationComposer
 
   GeneratedColumn<String> get description => $composableBuilder(
     column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get instrument => $composableBuilder(
+    column: $table.instrument,
     builder: (column) => column,
   );
 
@@ -4028,6 +4093,7 @@ class $$CachedLessonsTableTableManager
                 Value<String> categoryId = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<String> description = const Value.absent(),
+                Value<String> instrument = const Value.absent(),
                 Value<String> difficulty = const Value.absent(),
                 Value<int> tempoBpm = const Value.absent(),
                 Value<String?> timeSignature = const Value.absent(),
@@ -4051,6 +4117,7 @@ class $$CachedLessonsTableTableManager
                 categoryId: categoryId,
                 title: title,
                 description: description,
+                instrument: instrument,
                 difficulty: difficulty,
                 tempoBpm: tempoBpm,
                 timeSignature: timeSignature,
@@ -4076,6 +4143,7 @@ class $$CachedLessonsTableTableManager
                 required String categoryId,
                 required String title,
                 Value<String> description = const Value.absent(),
+                Value<String> instrument = const Value.absent(),
                 required String difficulty,
                 Value<int> tempoBpm = const Value.absent(),
                 Value<String?> timeSignature = const Value.absent(),
@@ -4099,6 +4167,7 @@ class $$CachedLessonsTableTableManager
                 categoryId: categoryId,
                 title: title,
                 description: description,
+                instrument: instrument,
                 difficulty: difficulty,
                 tempoBpm: tempoBpm,
                 timeSignature: timeSignature,

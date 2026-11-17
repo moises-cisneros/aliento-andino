@@ -6,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../data/repositories/lesson_repository.dart';
+import '../../data/services/lesson_download_service.dart';
 
 /// Botón para descargar una lección y practicarla sin conexión.
 ///
@@ -49,6 +50,26 @@ class _LessonDownloadButtonState extends State<LessonDownloadButton> {
       });
       messenger.showSnackBar(
         const SnackBar(content: Text('Lección disponible sin conexión')),
+      );
+    } on InsufficientStorageException {
+      if (!mounted) return;
+      setState(() => _busy = false);
+      // Non-blocking: the app stays usable behind the dialog.
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Espacio insuficiente'),
+          content: const Text(
+            'No hay espacio libre para descargar esta lección. '
+            'Liberá almacenamiento e intentá de nuevo.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Entendido'),
+            ),
+          ],
+        ),
       );
     } catch (_) {
       if (!mounted) return;
