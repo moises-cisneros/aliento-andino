@@ -55,7 +55,7 @@ Esta tabla resume todos los ítems de trabajo del proyecto y enlaza directamente
 | **HU-01**  | [#8 Afinador Cromático de Aguja y Detección de Frecuencia Fundamental](https://github.com/moises-cisneros/aliento-andino/issues/8)             | `feature`   | `mobile`  |  8  | Sprint 1           | #4                 |
 | `SUB-01-A` | [#9 Buffer Circular de Audio en Dart/C++ a 44.1 kHz](https://github.com/moises-cisneros/aliento-andino/issues/9)                               | `sub-issue` | `mobile`  |  5  | Sprint 1           | #8                 |
 | `SUB-01-B` | [#10 Widget de Afinador con Aguja Visual, Estados Calado/Alto y Cents](https://github.com/moises-cisneros/aliento-andino/issues/10)            | `sub-issue` | `mobile`  |  3  | Sprint 1           | #9                 |
-| `SUB-01-C` | [#11 Endpoint de Calibración y Tolerancias por Instrumento](https://github.com/moises-cisneros/aliento-andino/issues/11)                       | `sub-issue` | `mobile`  |  2  | Sprint 1           | #7                 |
+| `SUB-01-C` | [#11 Endpoint de Calibración y Tolerancias por Instrumento](https://github.com/moises-cisneros/aliento-andino/issues/11)                       | `sub-issue` | `backend` |  2  | Sprint 1           | #7                 |
 | **HU-02**  | [#12 Calibración de Sensibilidad Respiratoria ("Soplo Suave")](https://github.com/moises-cisneros/aliento-andino/issues/12)                    | `feature`   | `mobile`  |  5  | Sprint 1           | #8                 |
 | `SUB-02-A` | [#13 Asistente Guiado de Medición Acústica Basal (3 Segundos)](https://github.com/moises-cisneros/aliento-andino/issues/13)                    | `sub-issue` | `mobile`  |  3  | Sprint 1           | #12                |
 | `SUB-02-B` | [#14 Algoritmo de Ajuste Dinámico de Umbral de Energía RMS](https://github.com/moises-cisneros/aliento-andino/issues/14)                       | `sub-issue` | `mobile`  |  2  | Sprint 1           | #13                |
@@ -315,10 +315,10 @@ Esta tabla resume todos los ítems de trabajo del proyecto y enlaza directamente
 - **Criterios de Aceptación**:
   1. CRUD completo de lecciones en Angular 21 (Standalone + Signals) con selector de instrumento, BPM y marcas visuales de respiración.
   2. Editor interactivo de notas donde se define tono, duración y digitación requerida.
-  3. Módulo administrativo gráfico para registrar y editar digitaciones por instrumento y nota (orificios/tubos a cubrir, digitaciones alternas) con validación de unicidad (**HU-31**).
+  3. Módulo administrativo gráfico para registrar y editar digitaciones por instrumento y nota (orificios/tubos a cubrir, digitaciones alternas) con validación de unicidad.
 - **Sub-issues Técnicos**:
   - `SUB-05-A` ([#23](https://github.com/moises-cisneros/aliento-andino/issues/23)): Formulario Angular para carga de partituras andinas y secuencias. (5 SP)
-  - `SUB-05-B` ([#55](https://github.com/moises-cisneros/aliento-andino/issues/55)): Catálogo y editor gráfico de digitaciones por instrumento (HU-31). (5 SP)
+  - `SUB-05-B` ([#55](https://github.com/moises-cisneros/aliento-andino/issues/55)): Catálogo y editor gráfico de digitaciones por instrumento. (5 SP)
 
 ---
 
