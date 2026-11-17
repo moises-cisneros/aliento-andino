@@ -133,21 +133,35 @@ class PracticeRepository {
     return PracticeSessionModel.fromJson(response.data as Map<String, dynamic>);
   }
 
-  /// Obtener historial de prácticas (la 1ª página sin filtro se cachea offline).
+  /// Obtener historial de prácticas, más recientes primero (la 1ª página sin
+  /// filtro se cachea offline).
+  ///
+  /// Sin [lessonId] usa `GET /api/v1/practice/history?page&size`. Con
+  /// [lessonId] usa el endpoint legacy, el único que filtra por lección.
+  ///
+  /// Con [offlineFallback] (por defecto) un fallo de red devuelve lo cacheado o
+  /// vacío para no romper la pantalla de Progreso. En `false` el error llega al
+  /// llamador (la pantalla de Historial lo muestra en vez de fingir "sin datos").
   Future<Map<String, dynamic>> getPracticeHistory({
     String? lessonId,
     int page = 1,
-    int limit = 20,
+    int size = 20,
+    bool offlineFallback = true,
   }) async {
     final isDefault = lessonId == null && page == 1;
     try {
-      final queryParams = <String, dynamic>{'page': page, 'limit': limit};
-      if (lessonId != null) queryParams['lesson_id'] = lessonId;
-
-      final response = await _apiClient.dio.get(
-        '/practice/history',
-        queryParameters: queryParams,
-      );
+      final Response<dynamic> response;
+      if (lessonId == null) {
+        response = await _apiClient.dio.get(
+          '/v1/practice/history',
+          queryParameters: {'page': page, 'size': size},
+        );
+      } else {
+        response = await _apiClient.dio.get(
+          '/practice/history',
+          queryParameters: {'page': page, 'limit': size, 'lesson_id': lessonId},
+        );
+      }
       final data = response.data as Map<String, dynamic>;
       final rawItems = data['items'] as List<dynamic>;
       if (isDefault) {
@@ -161,9 +175,11 @@ class PracticeRepository {
         'items': items,
         'total': data['total'],
         'page': data['page'],
+        'size': data['size'] ?? size,
         'pages': data['pages'],
       };
     } on DioException {
+      if (!offlineFallback) rethrow;
       // Offline: el historial es secundario; devolvemos lo cacheado o vacío
       // para no romper la pantalla de Progreso.
       List<PracticeSessionModel> items = [];
@@ -177,7 +193,13 @@ class PracticeRepository {
               .toList();
         }
       }
-      return {'items': items, 'total': items.length, 'page': 1, 'pages': 1};
+      return {
+        'items': items,
+        'total': items.length,
+        'page': 1,
+        'size': size,
+        'pages': 1,
+      };
     }
   }
 

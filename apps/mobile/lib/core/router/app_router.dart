@@ -32,6 +32,7 @@ import '../../features/lessons/presentation/screens/practice_screen.dart';
 import '../../features/lessons/presentation/screens/progress_screen.dart';
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/profile/presentation/screens/my_profile_screen.dart';
+import '../../features/profile/presentation/screens/practice_history_screen.dart';
 import '../../features/profile/presentation/screens/privacy_policy_screen.dart';
 import '../../features/profile/presentation/screens/recordings_list_screen.dart';
 import '../../features/profile/presentation/screens/settings_screen.dart';
@@ -226,6 +227,10 @@ class AppRouter {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/practice-history',
+        builder: (context, state) => const PracticeHistoryScreen(),
       ),
       GoRoute(
         path: '/recordings',

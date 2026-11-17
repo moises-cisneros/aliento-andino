@@ -17,6 +17,7 @@ class PracticeSessionModel {
   final bool completed;
   final String? createdAt;
   final String? lessonTitle;
+  final String? lessonInstrument;
 
   const PracticeSessionModel({
     required this.id,
@@ -36,6 +37,7 @@ class PracticeSessionModel {
     this.completed = true,
     this.createdAt,
     this.lessonTitle,
+    this.lessonInstrument,
   });
 
   factory PracticeSessionModel.fromJson(Map<String, dynamic> json) {
@@ -59,6 +61,7 @@ class PracticeSessionModel {
       completed: json['completed'] as bool? ?? true,
       createdAt: json['created_at'] as String?,
       lessonTitle: json['lesson_title'] as String?,
+      lessonInstrument: json['lesson_instrument'] as String?,
     );
   }
 
