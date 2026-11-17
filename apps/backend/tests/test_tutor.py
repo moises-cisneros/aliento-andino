@@ -12,13 +12,14 @@ class TestTutorEndpoint:
     async def test_chat_degraded_without_vertex(
         self, client: AsyncClient, auth_headers: dict, monkeypatch
     ):
-        # Sin Vertex configurado, el tutor responde en modo degradado (sin acciones)
-        # pero el endpoint nunca falla.
+        # Sin Vertex configurado, el tutor usa el fallback por reglas y el endpoint
+        # nunca falla. Un saludo no dispara acciones de UI (otras consultas sí
+        # navegan, ver `_smart_tutor_fallback`).
         monkeypatch.setattr(settings, "vertex_project_id", "")
         resp = await client.post(
             "/api/tutor/chat",
             headers=auth_headers,
-            json={"message": "¿cómo practico una lección?"},
+            json={"message": "hola"},
         )
         assert resp.status_code == 200, resp.text
         body = resp.json()
