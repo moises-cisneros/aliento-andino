@@ -189,6 +189,12 @@ class _MyProfileViewState extends State<_MyProfileView>
                           onTap: () => context.push('/progress'),
                         ),
                         ProfileMenuItem(
+                          key: const Key('profile_practice_history'),
+                          icon: Icons.history,
+                          title: 'Historial de prácticas',
+                          onTap: () => context.push('/practice-history'),
+                        ),
+                        ProfileMenuItem(
                           icon: Icons.leaderboard,
                           title: 'Rankings',
                           onTap: () => context.push('/rankings'),
