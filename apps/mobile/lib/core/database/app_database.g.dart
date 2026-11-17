@@ -2420,6 +2420,21 @@ class $PendingPracticeTable extends PendingPractice
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _isSyncedMeta = const VerificationMeta(
+    'isSynced',
+  );
+  @override
+  late final GeneratedColumn<bool> isSynced = GeneratedColumn<bool>(
+    'is_synced',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_synced" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     localId,
@@ -2435,6 +2450,7 @@ class $PendingPracticeTable extends PendingPractice
     errorsDetailJson,
     completed,
     createdAt,
+    isSynced,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2559,6 +2575,12 @@ class $PendingPracticeTable extends PendingPractice
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('is_synced')) {
+      context.handle(
+        _isSyncedMeta,
+        isSynced.isAcceptableOrUnknown(data['is_synced']!, _isSyncedMeta),
+      );
+    }
     return context;
   }
 
@@ -2620,6 +2642,10 @@ class $PendingPracticeTable extends PendingPractice
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      isSynced: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_synced'],
+      )!,
     );
   }
 
@@ -2644,6 +2670,10 @@ class PendingPracticeRow extends DataClass
   final String? errorsDetailJson;
   final bool completed;
   final DateTime createdAt;
+
+  /// `false` mientras la práctica espera ser enviada; `true` cuando el backend
+  /// ya la aceptó (la fila queda como registro local).
+  final bool isSynced;
   const PendingPracticeRow({
     required this.localId,
     required this.clientId,
@@ -2658,6 +2688,7 @@ class PendingPracticeRow extends DataClass
     this.errorsDetailJson,
     required this.completed,
     required this.createdAt,
+    required this.isSynced,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2677,6 +2708,7 @@ class PendingPracticeRow extends DataClass
     }
     map['completed'] = Variable<bool>(completed);
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['is_synced'] = Variable<bool>(isSynced);
     return map;
   }
 
@@ -2697,6 +2729,7 @@ class PendingPracticeRow extends DataClass
           : Value(errorsDetailJson),
       completed: Value(completed),
       createdAt: Value(createdAt),
+      isSynced: Value(isSynced),
     );
   }
 
@@ -2719,6 +2752,7 @@ class PendingPracticeRow extends DataClass
       errorsDetailJson: serializer.fromJson<String?>(json['errorsDetailJson']),
       completed: serializer.fromJson<bool>(json['completed']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      isSynced: serializer.fromJson<bool>(json['isSynced']),
     );
   }
   @override
@@ -2738,6 +2772,7 @@ class PendingPracticeRow extends DataClass
       'errorsDetailJson': serializer.toJson<String?>(errorsDetailJson),
       'completed': serializer.toJson<bool>(completed),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'isSynced': serializer.toJson<bool>(isSynced),
     };
   }
 
@@ -2755,6 +2790,7 @@ class PendingPracticeRow extends DataClass
     Value<String?> errorsDetailJson = const Value.absent(),
     bool? completed,
     DateTime? createdAt,
+    bool? isSynced,
   }) => PendingPracticeRow(
     localId: localId ?? this.localId,
     clientId: clientId ?? this.clientId,
@@ -2771,6 +2807,7 @@ class PendingPracticeRow extends DataClass
         : this.errorsDetailJson,
     completed: completed ?? this.completed,
     createdAt: createdAt ?? this.createdAt,
+    isSynced: isSynced ?? this.isSynced,
   );
   PendingPracticeRow copyWithCompanion(PendingPracticeCompanion data) {
     return PendingPracticeRow(
@@ -2801,6 +2838,7 @@ class PendingPracticeRow extends DataClass
           : this.errorsDetailJson,
       completed: data.completed.present ? data.completed.value : this.completed,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
     );
   }
 
@@ -2819,7 +2857,8 @@ class PendingPracticeRow extends DataClass
           ..write('totalTimeSeconds: $totalTimeSeconds, ')
           ..write('errorsDetailJson: $errorsDetailJson, ')
           ..write('completed: $completed, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('isSynced: $isSynced')
           ..write(')'))
         .toString();
   }
@@ -2839,6 +2878,7 @@ class PendingPracticeRow extends DataClass
     errorsDetailJson,
     completed,
     createdAt,
+    isSynced,
   );
   @override
   bool operator ==(Object other) =>
@@ -2856,7 +2896,8 @@ class PendingPracticeRow extends DataClass
           other.totalTimeSeconds == this.totalTimeSeconds &&
           other.errorsDetailJson == this.errorsDetailJson &&
           other.completed == this.completed &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.isSynced == this.isSynced);
 }
 
 class PendingPracticeCompanion extends UpdateCompanion<PendingPracticeRow> {
@@ -2873,6 +2914,7 @@ class PendingPracticeCompanion extends UpdateCompanion<PendingPracticeRow> {
   final Value<String?> errorsDetailJson;
   final Value<bool> completed;
   final Value<DateTime> createdAt;
+  final Value<bool> isSynced;
   const PendingPracticeCompanion({
     this.localId = const Value.absent(),
     this.clientId = const Value.absent(),
@@ -2887,6 +2929,7 @@ class PendingPracticeCompanion extends UpdateCompanion<PendingPracticeRow> {
     this.errorsDetailJson = const Value.absent(),
     this.completed = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.isSynced = const Value.absent(),
   });
   PendingPracticeCompanion.insert({
     this.localId = const Value.absent(),
@@ -2902,6 +2945,7 @@ class PendingPracticeCompanion extends UpdateCompanion<PendingPracticeRow> {
     this.errorsDetailJson = const Value.absent(),
     this.completed = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.isSynced = const Value.absent(),
   }) : clientId = Value(clientId),
        lessonId = Value(lessonId),
        score = Value(score),
@@ -2925,6 +2969,7 @@ class PendingPracticeCompanion extends UpdateCompanion<PendingPracticeRow> {
     Expression<String>? errorsDetailJson,
     Expression<bool>? completed,
     Expression<DateTime>? createdAt,
+    Expression<bool>? isSynced,
   }) {
     return RawValuesInsertable({
       if (localId != null) 'local_id': localId,
@@ -2940,6 +2985,7 @@ class PendingPracticeCompanion extends UpdateCompanion<PendingPracticeRow> {
       if (errorsDetailJson != null) 'errors_detail_json': errorsDetailJson,
       if (completed != null) 'completed': completed,
       if (createdAt != null) 'created_at': createdAt,
+      if (isSynced != null) 'is_synced': isSynced,
     });
   }
 
@@ -2957,6 +3003,7 @@ class PendingPracticeCompanion extends UpdateCompanion<PendingPracticeRow> {
     Value<String?>? errorsDetailJson,
     Value<bool>? completed,
     Value<DateTime>? createdAt,
+    Value<bool>? isSynced,
   }) {
     return PendingPracticeCompanion(
       localId: localId ?? this.localId,
@@ -2972,6 +3019,7 @@ class PendingPracticeCompanion extends UpdateCompanion<PendingPracticeRow> {
       errorsDetailJson: errorsDetailJson ?? this.errorsDetailJson,
       completed: completed ?? this.completed,
       createdAt: createdAt ?? this.createdAt,
+      isSynced: isSynced ?? this.isSynced,
     );
   }
 
@@ -3017,6 +3065,9 @@ class PendingPracticeCompanion extends UpdateCompanion<PendingPracticeRow> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (isSynced.present) {
+      map['is_synced'] = Variable<bool>(isSynced.value);
+    }
     return map;
   }
 
@@ -3035,7 +3086,8 @@ class PendingPracticeCompanion extends UpdateCompanion<PendingPracticeRow> {
           ..write('totalTimeSeconds: $totalTimeSeconds, ')
           ..write('errorsDetailJson: $errorsDetailJson, ')
           ..write('completed: $completed, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('isSynced: $isSynced')
           ..write(')'))
         .toString();
   }
@@ -4416,6 +4468,7 @@ typedef $$PendingPracticeTableCreateCompanionBuilder =
       Value<String?> errorsDetailJson,
       Value<bool> completed,
       Value<DateTime> createdAt,
+      Value<bool> isSynced,
     });
 typedef $$PendingPracticeTableUpdateCompanionBuilder =
     PendingPracticeCompanion Function({
@@ -4432,6 +4485,7 @@ typedef $$PendingPracticeTableUpdateCompanionBuilder =
       Value<String?> errorsDetailJson,
       Value<bool> completed,
       Value<DateTime> createdAt,
+      Value<bool> isSynced,
     });
 
 class $$PendingPracticeTableFilterComposer
@@ -4505,6 +4559,11 @@ class $$PendingPracticeTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSynced => $composableBuilder(
+    column: $table.isSynced,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4582,6 +4641,11 @@ class $$PendingPracticeTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isSynced => $composableBuilder(
+    column: $table.isSynced,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PendingPracticeTableAnnotationComposer
@@ -4645,6 +4709,9 @@ class $$PendingPracticeTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isSynced =>
+      $composableBuilder(column: $table.isSynced, builder: (column) => column);
 }
 
 class $$PendingPracticeTableTableManager
@@ -4697,6 +4764,7 @@ class $$PendingPracticeTableTableManager
                 Value<String?> errorsDetailJson = const Value.absent(),
                 Value<bool> completed = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<bool> isSynced = const Value.absent(),
               }) => PendingPracticeCompanion(
                 localId: localId,
                 clientId: clientId,
@@ -4711,6 +4779,7 @@ class $$PendingPracticeTableTableManager
                 errorsDetailJson: errorsDetailJson,
                 completed: completed,
                 createdAt: createdAt,
+                isSynced: isSynced,
               ),
           createCompanionCallback:
               ({
@@ -4727,6 +4796,7 @@ class $$PendingPracticeTableTableManager
                 Value<String?> errorsDetailJson = const Value.absent(),
                 Value<bool> completed = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<bool> isSynced = const Value.absent(),
               }) => PendingPracticeCompanion.insert(
                 localId: localId,
                 clientId: clientId,
@@ -4741,6 +4811,7 @@ class $$PendingPracticeTableTableManager
                 errorsDetailJson: errorsDetailJson,
                 completed: completed,
                 createdAt: createdAt,
+                isSynced: isSynced,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

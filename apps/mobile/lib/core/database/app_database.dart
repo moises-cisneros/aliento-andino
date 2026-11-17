@@ -82,6 +82,10 @@ class PendingPractice extends Table {
   TextColumn get errorsDetailJson => text().nullable()();
   BoolColumn get completed => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+
+  /// `false` mientras la práctica espera ser enviada; `true` cuando el backend
+  /// ya la aceptó (la fila queda como registro local).
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
 }
 
 /// Cache genérico de snapshots JSON (progreso, perfil) para mostrarlos offline.
@@ -109,7 +113,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'aliento_andino'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -118,6 +122,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.addColumn(cachedLessons, cachedLessons.audioLocalPath);
         await m.createTable(cachedSnapshots);
+      }
+      if (from < 3) {
+        await m.addColumn(pendingPractice, pendingPractice.isSynced);
       }
     },
   );
@@ -203,10 +210,12 @@ class AppDatabase extends _$AppDatabase {
     return into(pendingPractice).insert(row);
   }
 
+  /// Prácticas aún no aceptadas por el backend (`is_synced = false`).
   Future<List<PendingPracticeRow>> getPendingPractices() {
-    return (select(
-      pendingPractice,
-    )..orderBy([(t) => OrderingTerm(expression: t.createdAt)])).get();
+    return (select(pendingPractice)
+          ..where((t) => t.isSynced.equals(false))
+          ..orderBy([(t) => OrderingTerm(expression: t.createdAt)]))
+        .get();
   }
 
   Future<void> deletePending(int localId) async {
@@ -215,20 +224,30 @@ class AppDatabase extends _$AppDatabase {
     )..where((t) => t.localId.equals(localId))).go();
   }
 
+  /// Marca una práctica como aceptada por el backend (`is_synced = true`).
+  Future<void> markPracticeSynced(int localId) async {
+    await (update(pendingPractice)..where((t) => t.localId.equals(localId)))
+        .write(const PendingPracticeCompanion(isSynced: Value(true)));
+  }
+
   Future<int> pendingCount() async {
     final count = countAll();
-    final row = await (selectOnly(
-      pendingPractice,
-    )..addColumns([count])).getSingle();
+    final row =
+        await (selectOnly(pendingPractice)
+              ..addColumns([count])
+              ..where(pendingPractice.isSynced.equals(false)))
+            .getSingle();
     return row.read(count) ?? 0;
   }
 
   /// Stream del número de prácticas pendientes (para badges en la UI).
   Stream<int> watchPendingCount() {
     final count = countAll();
-    return (selectOnly(
-      pendingPractice,
-    )..addColumns([count])).map((row) => row.read(count) ?? 0).watchSingle();
+    return (selectOnly(pendingPractice)
+          ..addColumns([count])
+          ..where(pendingPractice.isSynced.equals(false)))
+        .map((row) => row.read(count) ?? 0)
+        .watchSingle();
   }
 
   // ---------------- Snapshots JSON (progreso/perfil offline) ----------------
