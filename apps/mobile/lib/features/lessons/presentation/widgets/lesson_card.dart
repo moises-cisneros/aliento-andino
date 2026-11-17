@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../data/models/lesson_model.dart';
 import 'difficulty_badge.dart';
+import 'offline_badge_widget.dart';
 
 /// Card de lección para la lista principal.
 class LessonCard extends StatelessWidget {
@@ -15,12 +16,16 @@ class LessonCard extends StatelessWidget {
   /// Bloqueada por ser contenido premium (usuario sin suscripción).
   final bool premiumLocked;
 
+  /// La lección está descargada y se puede practicar sin conexión.
+  final bool isDownloaded;
+
   const LessonCard({
     super.key,
     required this.lesson,
     required this.onTap,
     this.locked = false,
     this.premiumLocked = false,
+    this.isDownloaded = false,
   });
 
   @override
@@ -75,15 +80,25 @@ class LessonCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      lesson.title,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            lesson.title,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isDownloaded) ...[
+                          const SizedBox(width: 6),
+                          const OfflineBadgeWidget(isDownloaded: true),
+                        ],
+                      ],
                     ),
                     // Autor · género (si están), ej. "Beethoven · Clásica".
                     if (lesson.artist != null || lesson.genre != null) ...[

@@ -82,6 +82,14 @@ class OfflineLessonsDao {
     );
   }
 
+  /// Drops the offline package of [lessonId]. Returns the audio path it had,
+  /// so the caller can delete the file.
+  Future<String?> removeDownload(String lessonId) async {
+    final path = await _db.getAudioLocalPath(lessonId);
+    await _db.clearLessonDownload(lessonId);
+    return path;
+  }
+
   /// Persists a complete download atomically: lesson, notes, audio path and
   /// the downloaded mark land together or not at all.
   Future<void> saveDownload({
