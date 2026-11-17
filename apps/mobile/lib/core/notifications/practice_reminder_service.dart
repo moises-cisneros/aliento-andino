@@ -90,6 +90,49 @@ class PracticeReminderService {
     await _plugin.cancel(_reminderId);
   }
 
+  /// [SUB-20-A] Programa (o reprograma) el recordatorio diario a [time].
+  ///
+  /// Método del contrato de HU-20. Envoltura sobre [enable] con firma
+  /// `Future<void>`; si el permiso de notificaciones es rechazado no bloquea la
+  /// app (el llamador consulta [isEnabled] para reflejar el estado real).
+  Future<void> scheduleDailyReminder({required TimeOfDay time}) async {
+    await enable(time);
+  }
+
+  /// [SUB-20-A] Cancela el recordatorio diario. Método del contrato de HU-20.
+  Future<void> cancelDailyReminder() => disable();
+
+  /// [SUB-20-A] Formatea la hora del recordatorio como `HH:mm` (24 h).
+  ///
+  /// Función pura: no toca plugin ni zona horaria, por lo que es 100%
+  /// comprobable.
+  static String formatReminderTime(TimeOfDay time) {
+    final hh = time.hour.toString().padLeft(2, '0');
+    final mm = time.minute.toString().padLeft(2, '0');
+    return '$hh:$mm';
+  }
+
+  /// [SUB-20-A] Calcula el próximo instante de disparo del recordatorio para
+  /// [time] relativo a [now] (por defecto, el momento actual).
+  ///
+  /// Si la hora de hoy ya pasó (o es exactamente ahora) devuelve la de mañana;
+  /// en caso contrario, la de hoy. Es la misma regla que aplica [_nextInstanceOf]
+  /// sobre la zona horaria local, pero pura y determinista para pruebas.
+  static DateTime nextReminderInstance(TimeOfDay time, {DateTime? now}) {
+    final current = now ?? DateTime.now();
+    var scheduled = DateTime(
+      current.year,
+      current.month,
+      current.day,
+      time.hour,
+      time.minute,
+    );
+    if (!scheduled.isAfter(current)) {
+      scheduled = scheduled.add(const Duration(days: 1));
+    }
+    return scheduled;
+  }
+
   /// Reprograma en el arranque de la app si quedó activado (el SO puede limpiar
   /// las alarmas tras reinicios/updates). No vuelve a pedir permiso: el usuario
   /// ya lo concedió al activarlo.
