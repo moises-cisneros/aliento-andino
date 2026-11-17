@@ -329,3 +329,132 @@ class TestLessonsV1E2E:
         assert isinstance(detail["notes"], list)
         assert len(detail["notes"]) == chosen_lesson["notes_count"]
         assert detail["notes"][0]["note"] == "G4"
+
+
+class TestLessonsV1AdminCrud:
+    """Pruebas para endpoints administrativos de creación y edición (HU-05, SUB-05-A)."""
+
+    async def test_create_v1_lesson_as_admin_with_notes(
+        self, client: AsyncClient, admin_headers: dict, sample_category: Category
+    ):
+        payload = {
+            "title": "Virgenes del Sol - Quena Avanzada",
+            "description": "Estudio de digitaciones y velocidad en Quena.",
+            "instrument": "quena",
+            "category_id": str(sample_category.id),
+            "difficulty": "avanzado",
+            "tempo_bpm": 110,
+            "time_signature": "4/4",
+            "key_signature": "Am",
+            "genre": "Danza Andina",
+            "artist": "Jorge Bravo de Rueda",
+            "notes": [
+                {
+                    "position": 1,
+                    "note": "A4",
+                    "duration": 0.5,
+                    "is_rest": False,
+                    "velocity": 90,
+                },
+                {
+                    "position": 2,
+                    "note": "C5",
+                    "duration": 0.5,
+                    "is_rest": False,
+                    "velocity": 90,
+                },
+                {
+                    "position": 3,
+                    "note": "REST",
+                    "duration": 1.0,
+                    "is_rest": True,
+                    "velocity": 0,
+                },
+            ],
+        }
+
+        response = await client.post("/api/v1/lessons", json=payload, headers=admin_headers)
+        assert response.status_code == 201
+        data = response.json()
+        assert data["title"] == "Virgenes del Sol - Quena Avanzada"
+        assert data["instrument"] == "quena"
+        assert len(data["notes"]) == 3
+        assert data["notes"][0]["note"] == "A4"
+        assert data["notes"][2]["is_rest"] is True
+
+    async def test_create_v1_lesson_as_non_admin_fails_403(
+        self, client: AsyncClient, auth_headers: dict, sample_category: Category
+    ):
+        payload = {
+            "title": "Lección No Autorizada",
+            "description": "Intento de creación por usuario normal.",
+            "instrument": "tarka",
+            "category_id": str(sample_category.id),
+            "difficulty": "principiante",
+            "tempo_bpm": 80,
+            "notes": [],
+        }
+
+        response = await client.post("/api/v1/lessons", json=payload, headers=auth_headers)
+        assert response.status_code == 403
+
+    async def test_update_v1_lesson_as_admin(
+        self,
+        client: AsyncClient,
+        admin_headers: dict,
+        sample_catalog: dict[str, Lesson],
+    ):
+        lesson_id = str(sample_catalog["quena_basic"].id)
+        update_payload = {
+            "title": "Escala de Sol Mayor en Quena (Revisada)",
+            "tempo_bpm": 95,
+        }
+
+        response = await client.put(
+            f"/api/v1/lessons/{lesson_id}",
+            json=update_payload,
+            headers=admin_headers,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["title"] == "Escala de Sol Mayor en Quena (Revisada)"
+        assert data["tempo_bpm"] == 95
+
+    async def test_update_v1_lesson_with_new_notes(
+        self,
+        client: AsyncClient,
+        admin_headers: dict,
+        sample_catalog: dict[str, Lesson],
+    ):
+        lesson_id = str(sample_catalog["quena_basic"].id)
+        update_payload = {
+            "notes": [
+                {
+                    "position": 1,
+                    "note": "D5",
+                    "duration": 2.0,
+                    "is_rest": False,
+                }
+            ]
+        }
+
+        response = await client.put(
+            f"/api/v1/lessons/{lesson_id}",
+            json=update_payload,
+            headers=admin_headers,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["notes"]) == 1
+        assert data["notes"][0]["note"] == "D5"
+
+    async def test_update_v1_lesson_not_found_returns_404(
+        self, client: AsyncClient, admin_headers: dict
+    ):
+        random_id = str(uuid.uuid4())
+        response = await client.put(
+            f"/api/v1/lessons/{random_id}",
+            json={"title": "No existe"},
+            headers=admin_headers,
+        )
+        assert response.status_code == 404

@@ -6,11 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_admin, get_current_user
 from app.models.user import User
 from app.schemas.lesson import (
     CategoryWithCount,
+    LessonCreate,
     LessonListItem,
+    LessonUpdate,
     LessonWithNotes,
     NoteSequenceResponse,
     PaginatedResponse,
@@ -59,6 +61,68 @@ async def get_v1_lesson_detail(
         lesson_id=lesson_id,
         user_id=current_user.id,
     )
+
+
+@router.post("/api/v1/lessons", response_model=LessonWithNotes, status_code=status.HTTP_201_CREATED)
+async def create_v1_lesson(
+    data: LessonCreate,
+    db: AsyncSession = Depends(get_db),
+    admin: User = Depends(get_current_admin),
+) -> LessonWithNotes:
+    """Crear nueva lección andina con su secuencia de notas (requiere rol admin)."""
+    category = await lesson_service.get_category_by_id(db, data.category_id)
+    if not category:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La categoría especificada no existe",
+        )
+    try:
+        lesson = await lesson_service.create_lesson(db, data, admin.id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    detail = await lesson_service.get_lesson_detail(db, lesson.id)
+    if not detail:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error al recuperar la lección creada",
+        )
+    return detail
+
+
+@router.put("/api/v1/lessons/{lesson_id}", response_model=LessonWithNotes)
+async def update_v1_lesson(
+    lesson_id: uuid.UUID,
+    data: LessonUpdate,
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+) -> LessonWithNotes:
+    """Actualizar lección andina y opcionalmente reemplazar su secuencia de notas (requiere rol admin)."""
+    lesson = await lesson_service.get_lesson_by_id(db, lesson_id)
+    if not lesson:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lección no encontrada",
+        )
+    await lesson_service.update_lesson(db, lesson, data)
+    if data.notes is not None:
+        try:
+            await lesson_service.replace_lesson_notes(db, lesson_id, data.notes)
+            db.expire(lesson)
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
+            )
+    detail = await lesson_service.get_lesson_detail(db, lesson_id)
+    if not detail:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Lección no encontrada",
+        )
+    return detail
 
 
 # ===================== LEGACY API (/api/lessons) =====================

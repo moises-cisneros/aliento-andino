@@ -1,13 +1,19 @@
-/// Modelo de lección/ejercicio de piano.
+/// Modelo de lección musical andina (Quena, Zampoña, Tarka).
+export type AndeanInstrument = 'quena' | 'zampona' | 'tarka';
+export type LessonDifficulty = 'principiante' | 'intermedio' | 'avanzado';
+
 export interface Lesson {
   id: string;
   category_id: string;
   title: string;
   description: string;
-  difficulty: 'principiante' | 'intermedio' | 'avanzado';
+  instrument: AndeanInstrument;
+  difficulty: LessonDifficulty;
   tempo_bpm: number;
   time_signature: string;
   key_signature: string;
+  genre?: string | null;
+  artist?: string | null;
   thumbnail_url: string | null;
   audio_preview_url: string | null;
   duration_seconds: number | null;
@@ -21,16 +27,20 @@ export interface Lesson {
   updated_at: string | null;
   category_name: string | null;
   notes_count: number;
+  notes?: NoteSequence[];
 }
 
 export interface LessonCreate {
   category_id: string;
   title: string;
   description?: string;
-  difficulty: string;
+  instrument?: AndeanInstrument;
+  difficulty: LessonDifficulty | string;
   tempo_bpm: number;
   time_signature?: string;
   key_signature?: string;
+  genre?: string | null;
+  artist?: string | null;
   order?: number;
   is_premium?: boolean;
   notes?: NoteSequenceCreate[];
@@ -39,17 +49,21 @@ export interface LessonCreate {
 export interface LessonUpdate {
   title?: string;
   description?: string;
-  difficulty?: string;
+  instrument?: AndeanInstrument;
+  difficulty?: LessonDifficulty | string;
   tempo_bpm?: number;
   time_signature?: string;
   key_signature?: string;
+  genre?: string | null;
+  artist?: string | null;
   category_id?: string;
   order?: number;
   is_active?: boolean;
   is_premium?: boolean;
+  notes?: NoteSequenceCreate[];
 }
 
-/// Modelo de nota/secuencia musical.
+/// Modelo de nota/secuencia musical andina.
 export interface NoteSequence {
   id: string;
   lesson_id: string;
@@ -62,6 +76,8 @@ export interface NoteSequence {
   velocity: number;
   finger: number | null;
   hand: string | null;
+  has_breath_mark?: boolean;
+  fingering?: string | null;
   created_at: string;
 }
 
@@ -75,6 +91,8 @@ export interface NoteSequenceCreate {
   velocity?: number;
   finger?: number | null;
   hand?: string | null;
+  has_breath_mark?: boolean;
+  fingering?: string | null;
 }
 
 /// Respuesta paginada.

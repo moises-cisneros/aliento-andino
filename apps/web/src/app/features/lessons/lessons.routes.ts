@@ -34,5 +34,12 @@ export const lessonsRoutes: Routes = [
     loadComponent: () =>
       import('./notes-editor/notes-editor.component').then((m) => m.NotesEditorComponent),
   },
+  {
+    path: 'fingerings',
+    loadComponent: () =>
+      import('../fingerings/fingering-catalog/fingering-catalog.component').then(
+        (m) => m.FingeringCatalogComponent,
+      ),
+  },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];

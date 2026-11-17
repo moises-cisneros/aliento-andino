@@ -415,10 +415,13 @@ async def create_lesson(db: AsyncSession, data: LessonCreate, admin_id: uuid.UUI
         category_id=data.category_id,
         title=data.title,
         description=data.description,
+        instrument=data.instrument,
         difficulty=data.difficulty,
         tempo_bpm=data.tempo_bpm,
         time_signature=data.time_signature,
         key_signature=data.key_signature,
+        genre=data.genre,
+        artist=data.artist,
         thumbnail_url=data.thumbnail_url,
         audio_preview_url=data.audio_preview_url,
         duration_seconds=data.duration_seconds,
@@ -442,6 +445,7 @@ async def create_lesson(db: AsyncSession, data: LessonCreate, admin_id: uuid.UUI
 async def update_lesson(db: AsyncSession, lesson: Lesson, data: LessonUpdate) -> Lesson:
     """Actualizar datos de lección (sin notas)."""
     update_data = data.model_dump(exclude_unset=True)
+    update_data.pop("notes", None)
     for field, value in update_data.items():
         setattr(lesson, field, value)
     await db.flush()
