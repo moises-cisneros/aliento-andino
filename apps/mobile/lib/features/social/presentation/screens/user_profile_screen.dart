@@ -143,7 +143,9 @@ class _UserProfileViewState extends State<_UserProfileView> {
                           if (p.bio != null && p.bio!.isNotEmpty) ...[
                             const SizedBox(height: 10),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               child: Text(
                                 p.bio!,
                                 textAlign: TextAlign.center,
@@ -230,7 +232,12 @@ class _UserProfileViewState extends State<_UserProfileView> {
     );
   }
 
-  Widget _tabButton(BuildContext context, int index, IconData icon, String label) {
+  Widget _tabButton(
+    BuildContext context,
+    int index,
+    IconData icon,
+    String label,
+  ) {
     final cs = Theme.of(context).colorScheme;
     final selected = _tab == index;
     return Expanded(
@@ -281,7 +288,10 @@ class _UserProfileViewState extends State<_UserProfileView> {
           child: Center(
             child: Text(
               'Sin publicaciones aún',
-              style: TextStyle(color: Theme.of(context).hintColor, fontSize: 16),
+              style: TextStyle(
+                color: Theme.of(context).hintColor,
+                fontSize: 16,
+              ),
             ),
           ),
         ),
@@ -289,29 +299,26 @@ class _UserProfileViewState extends State<_UserProfileView> {
     }
     return [
       SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            if (index >= state.posts.length) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: CircularProgressIndicator(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          if (index >= state.posts.length) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.primary,
                 ),
-              );
-            }
-            final post = state.posts[index];
-            return PostCard(
-              post: post,
-              onTap: () => context.push('/social/post/${post.id}'),
-              onLike: () {},
-              onComment: () => context.push('/social/post/${post.id}'),
-              onUserTap: () {},
+              ),
             );
-          },
-          childCount: state.posts.length + (state.isLoadingMore ? 1 : 0),
-        ),
+          }
+          final post = state.posts[index];
+          return PostCard(
+            post: post,
+            onTap: () => context.push('/social/post/${post.id}'),
+            onLike: () {},
+            onComment: () => context.push('/social/post/${post.id}'),
+            onUserTap: () {},
+          );
+        }, childCount: state.posts.length + (state.isLoadingMore ? 1 : 0)),
       ),
     ];
   }
@@ -379,7 +386,8 @@ class _UserProfileViewState extends State<_UserProfileView> {
                     : Image.network(
                         url,
                         fit: BoxFit.cover,
-                        errorBuilder: (ctx, err, stack) => const Icon(Icons.broken_image),
+                        errorBuilder: (ctx, err, stack) =>
+                            const Icon(Icons.broken_image),
                       ),
               ),
             );

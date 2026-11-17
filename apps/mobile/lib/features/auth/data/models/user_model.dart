@@ -60,8 +60,10 @@ class UserModel extends UserEntity {
       isVerified: json['is_verified'] as bool? ?? false,
       authProvider: (json['auth_provider'] as String?) ?? 'local',
       skillLevel: json['skill_level'] as String?,
-      notificationsPushEnabled: json['notifications_push_enabled'] as bool? ?? true,
-      notificationsEmailEnabled: json['notifications_email_enabled'] as bool? ?? true,
+      notificationsPushEnabled:
+          json['notifications_push_enabled'] as bool? ?? true,
+      notificationsEmailEnabled:
+          json['notifications_email_enabled'] as bool? ?? true,
       isPremium: json['is_premium'] as bool? ?? false,
       subscriptionPlan: json['subscription_plan'] as String?,
       subscriptionExpiresAt: json['subscription_expires_at'] as String?,

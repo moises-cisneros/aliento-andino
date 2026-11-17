@@ -373,8 +373,7 @@ class AppRouter {
         loc == '/assessment-result';
 
     // Rutas públicas (no requieren auth)
-    final isPublicRoute =
-        loc == '/forgot-password' || loc == '/reset-password';
+    final isPublicRoute = loc == '/forgot-password' || loc == '/reset-password';
 
     // Mientras se verifica la sesión, mantener en splash
     if (isLoading && isOnSplash) return null;
@@ -384,8 +383,7 @@ class AppRouter {
     // porque son el flujo de "retomar evaluación" (Configuración → Mi nivel) de
     // un usuario logueado; redirigirlos rompía con un page-key duplicado al
     // chocar /social (ya en la pila) durante el push.
-    if (isAuth &&
-        (isOnSplash || isOnLoginOrRegister || loc == '/onboarding')) {
+    if (isAuth && (isOnSplash || isOnLoginOrRegister || loc == '/onboarding')) {
       return '/social';
     }
 

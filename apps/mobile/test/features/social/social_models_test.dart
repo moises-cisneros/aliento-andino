@@ -8,11 +8,7 @@ void main() {
     test('fromJson parsea is_saved_by_me e is_liked_by_me', () {
       final post = PostModel.fromJson({
         'id': 'p1',
-        'user': {
-          'id': 'u1',
-          'username': 'ana',
-          'full_name': 'Ana López',
-        },
+        'user': {'id': 'u1', 'username': 'ana', 'full_name': 'Ana López'},
         'content': 'Practicando #jazz con @luis',
         'post_type': 'text',
         'likes_count': 3,

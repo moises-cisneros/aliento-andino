@@ -44,8 +44,7 @@ class _FeedView extends StatefulWidget {
 
 class _FeedViewState extends State<_FeedView> with AutoRefreshOnResume {
   @override
-  void onAutoRefresh() =>
-      context.read<FeedBloc>().add(const FeedRefresh());
+  void onAutoRefresh() => context.read<FeedBloc>().add(const FeedRefresh());
 
   @override
   Widget build(BuildContext context) {
@@ -95,51 +94,77 @@ class _FeedViewState extends State<_FeedView> with AutoRefreshOnResume {
 
   Widget _buildFeedBody(BuildContext context) {
     return BlocBuilder<FeedBloc, FeedState>(
-        builder: (context, state) {
-          if (state is FeedLoading) {
-            return Center(
-              child: CircularProgressIndicator(
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            );
-          }
-          if (state is FeedError) {
-            return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (state.message == offlineMessage) ...[
-                    Icon(
-                      Icons.wifi_off_rounded,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      size: 48,
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  Text(
-                    state.message,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    textAlign: TextAlign.center,
+      builder: (context, state) {
+        if (state is FeedLoading) {
+          return Center(
+            child: CircularProgressIndicator(
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          );
+        }
+        if (state is FeedError) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (state.message == offlineMessage) ...[
+                  Icon(
+                    Icons.wifi_off_rounded,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    size: 48,
                   ),
                   const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () =>
-                        context.read<FeedBloc>().add(const FeedLoad()),
-                    child: const Text('Reintentar'),
+                ],
+                Text(
+                  state.message,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () =>
+                      context.read<FeedBloc>().add(const FeedLoad()),
+                  child: const Text('Reintentar'),
+                ),
+              ],
+            ),
+          );
+        }
+        if (state is FeedLoaded) {
+          if (state.posts.isEmpty) {
+            // En "Siguiendo" mostramos sugerencias + CTA; en las otras pestañas
+            // un vacío simple (no aplica "seguí a alguien").
+            if (state.mode != FeedMode.following) {
+              return ListView(
+                padding: const EdgeInsets.only(top: 64),
+                children: [
+                  Icon(
+                    Icons.feed_outlined,
+                    color: Theme.of(context).hintColor,
+                    size: 64,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No hay publicaciones aún',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
-              ),
-            );
-          }
-          if (state is FeedLoaded) {
-            if (state.posts.isEmpty) {
-              // En "Siguiendo" mostramos sugerencias + CTA; en las otras pestañas
-              // un vacío simple (no aplica "seguí a alguien").
-              if (state.mode != FeedMode.following) {
-                return ListView(
-                  padding: const EdgeInsets.only(top: 64),
+              );
+            }
+            return ListView(
+              padding: const EdgeInsets.only(top: 8, bottom: 24),
+              children: [
+                const SuggestedUsersRow(),
+                const SizedBox(height: 32),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.feed_outlined,
@@ -148,124 +173,98 @@ class _FeedViewState extends State<_FeedView> with AutoRefreshOnResume {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'No hay publicaciones aún',
-                      textAlign: TextAlign.center,
+                      'Tu feed está vacío',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Seguí a otros usuarios para ver sus publicaciones',
+                      style: TextStyle(color: Theme.of(context).hintColor),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () => context.push('/social/explore'),
+                      icon: const Icon(Icons.explore),
+                      label: const Text('Explorar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
                   ],
-                );
-              }
-              return ListView(
-                padding: const EdgeInsets.only(top: 8, bottom: 24),
-                children: [
-                  const SuggestedUsersRow(),
-                  const SizedBox(height: 32),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.feed_outlined,
-                        color: Theme.of(context).hintColor,
-                        size: 64,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Tu feed está vacío',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Seguí a otros usuarios para ver sus publicaciones',
-                        style: TextStyle(color: Theme.of(context).hintColor),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: () => context.push('/social/explore'),
-                        icon: const Icon(Icons.explore),
-                        label: const Text('Explorar'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            }
-
-            return RefreshIndicator(
-              color: Theme.of(context).colorScheme.primary,
-              onRefresh: () async {
-                context.read<FeedBloc>().add(const FeedRefresh());
-              },
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (scroll) {
-                  if (scroll.metrics.pixels >=
-                      scroll.metrics.maxScrollExtent - 200) {
-                    context.read<FeedBloc>().add(const FeedLoadMore());
-                  }
-                  return false;
-                },
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(top: 8, bottom: 80),
-                  itemCount: state.posts.length + (state.isLoadingMore ? 1 : 0),
-                  itemBuilder: (context, index) {
-                    if (index >= state.posts.length) {
-                      return Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(16),
-                          child: CircularProgressIndicator(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      );
-                    }
-                    final post = state.posts[index];
-                    final authState = context.read<AuthBloc>().state;
-                    final currentUserId = authState is AuthAuthenticated
-                        ? authState.user.id
-                        : null;
-                    final isOwn =
-                        currentUserId != null && post.user.id == currentUserId;
-                    return PostCard(
-                      post: post,
-                      onTap: () => context.push('/social/post/${post.id}'),
-                      onLike: () =>
-                          context.read<FeedBloc>().add(FeedToggleLike(post.id)),
-                      onComment: () => context.push('/social/post/${post.id}'),
-                      onUserTap: () =>
-                          context.push('/social/user/${post.user.id}'),
-                      onSave: () =>
-                          context.read<FeedBloc>().add(FeedToggleSave(post.id)),
-                      saveButtonKey: index == 0
-                          ? TutorTargets.keyFor('save_post_button')
-                          : null,
-                      onEdit: isOwn
-                          ? () => _showEditPostDialog(context, post)
-                          : null,
-                      onDelete: isOwn
-                          ? () => _confirmDeletePost(context, post.id)
-                          : null,
-                      onReport: isOwn
-                          ? null
-                          : () => _showReportDialog(context, postId: post.id),
-                    );
-                  },
                 ),
-              ),
+              ],
             );
           }
-          return const SizedBox.shrink();
-        },
-      );
+
+          return RefreshIndicator(
+            color: Theme.of(context).colorScheme.primary,
+            onRefresh: () async {
+              context.read<FeedBloc>().add(const FeedRefresh());
+            },
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (scroll) {
+                if (scroll.metrics.pixels >=
+                    scroll.metrics.maxScrollExtent - 200) {
+                  context.read<FeedBloc>().add(const FeedLoadMore());
+                }
+                return false;
+              },
+              child: ListView.builder(
+                padding: const EdgeInsets.only(top: 8, bottom: 80),
+                itemCount: state.posts.length + (state.isLoadingMore ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index >= state.posts.length) {
+                    return Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    );
+                  }
+                  final post = state.posts[index];
+                  final authState = context.read<AuthBloc>().state;
+                  final currentUserId = authState is AuthAuthenticated
+                      ? authState.user.id
+                      : null;
+                  final isOwn =
+                      currentUserId != null && post.user.id == currentUserId;
+                  return PostCard(
+                    post: post,
+                    onTap: () => context.push('/social/post/${post.id}'),
+                    onLike: () =>
+                        context.read<FeedBloc>().add(FeedToggleLike(post.id)),
+                    onComment: () => context.push('/social/post/${post.id}'),
+                    onUserTap: () =>
+                        context.push('/social/user/${post.user.id}'),
+                    onSave: () =>
+                        context.read<FeedBloc>().add(FeedToggleSave(post.id)),
+                    saveButtonKey: index == 0
+                        ? TutorTargets.keyFor('save_post_button')
+                        : null,
+                    onEdit: isOwn
+                        ? () => _showEditPostDialog(context, post)
+                        : null,
+                    onDelete: isOwn
+                        ? () => _confirmDeletePost(context, post.id)
+                        : null,
+                    onReport: isOwn
+                        ? null
+                        : () => _showReportDialog(context, postId: post.id),
+                  );
+                },
+              ),
+            ),
+          );
+        }
+        return const SizedBox.shrink();
+      },
+    );
   }
 
   Future<void> _showEditPostDialog(BuildContext context, PostModel post) async {

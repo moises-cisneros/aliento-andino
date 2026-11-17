@@ -23,14 +23,22 @@ class _SkillAssessmentScreenState extends State<SkillAssessmentScreen> {
         _Option(label: 'Nunca toqué', icon: Icons.star_border, points: 0),
         _Option(label: 'Menos de 6 meses', icon: Icons.timer, points: 1),
         _Option(label: 'Entre 6 meses y 2 años', icon: Icons.update, points: 2),
-        _Option(label: 'Más de 2 años', icon: Icons.workspace_premium, points: 3),
+        _Option(
+          label: 'Más de 2 años',
+          icon: Icons.workspace_premium,
+          points: 3,
+        ),
       ],
     ),
     _Question(
       title: '¿Sabés leer partituras?',
       options: [
         _Option(label: 'Para nada', icon: Icons.help_outline, points: 0),
-        _Option(label: 'Reconozco algunas notas', icon: Icons.lightbulb_outline, points: 1),
+        _Option(
+          label: 'Reconozco algunas notas',
+          icon: Icons.lightbulb_outline,
+          points: 1,
+        ),
         _Option(label: 'Sí, con tiempo', icon: Icons.menu_book, points: 2),
         _Option(label: 'Sí, fluido', icon: Icons.school, points: 3),
       ],
@@ -39,9 +47,17 @@ class _SkillAssessmentScreenState extends State<SkillAssessmentScreen> {
       title: '¿Conocés los acordes mayores y menores?',
       options: [
         _Option(label: 'No sé qué son', icon: Icons.question_mark, points: 0),
-        _Option(label: 'Sé los más básicos', icon: Icons.thumb_up_outlined, points: 1),
+        _Option(
+          label: 'Sé los más básicos',
+          icon: Icons.thumb_up_outlined,
+          points: 1,
+        ),
         _Option(label: 'Manejo varios', icon: Icons.queue_music, points: 2),
-        _Option(label: 'Conozco escalas e inversiones', icon: Icons.library_music, points: 3),
+        _Option(
+          label: 'Conozco escalas e inversiones',
+          icon: Icons.library_music,
+          points: 3,
+        ),
       ],
     ),
     _Question(
@@ -49,8 +65,16 @@ class _SkillAssessmentScreenState extends State<SkillAssessmentScreen> {
       options: [
         _Option(label: 'Todavía no', icon: Icons.back_hand, points: 0),
         _Option(label: 'Piezas muy simples', icon: Icons.front_hand, points: 1),
-        _Option(label: 'Sí, con ejercicios', icon: Icons.sign_language, points: 2),
-        _Option(label: 'Sin problema, piezas complejas', icon: Icons.piano, points: 3),
+        _Option(
+          label: 'Sí, con ejercicios',
+          icon: Icons.sign_language,
+          points: 2,
+        ),
+        _Option(
+          label: 'Sin problema, piezas complejas',
+          icon: Icons.piano,
+          points: 3,
+        ),
       ],
     ),
   ];

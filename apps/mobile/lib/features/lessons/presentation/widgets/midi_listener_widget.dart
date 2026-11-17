@@ -25,10 +25,7 @@ import '../bloc/practice/practice_state.dart';
 class MidiListenerWidget extends StatefulWidget {
   final MidiInputService service;
 
-  const MidiListenerWidget({
-    super.key,
-    required this.service,
-  });
+  const MidiListenerWidget({super.key, required this.service});
 
   @override
   State<MidiListenerWidget> createState() => _MidiListenerWidgetState();
@@ -76,7 +73,8 @@ class _MidiListenerWidgetState extends State<MidiListenerWidget> {
     final expMidi = noteNameToMidi(expected);
     if (expMidi == null) return;
 
-    final ok = e.midi == expMidi ||
+    final ok =
+        e.midi == expMidi ||
         (!state.octaveStrict && e.midi % 12 == expMidi % 12);
     if (ok) {
       context.read<PracticeBloc>().add(

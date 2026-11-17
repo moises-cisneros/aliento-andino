@@ -66,12 +66,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.lock_reset, size: 64, color: Theme.of(context).colorScheme.primary),
+          Icon(
+            Icons.lock_reset,
+            size: 64,
+            color: Theme.of(context).colorScheme.primary,
+          ),
           const SizedBox(height: 16),
           Text(
             'Ingresá tu email y te enviaremos instrucciones para restablecer tu contraseña.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 24),
           AuthTextField(
@@ -109,7 +115,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         Text(
           'Te enviamos un email con un código para restablecer tu contraseña. Revisá tu bandeja de entrada.',
           textAlign: TextAlign.center,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 16,
+          ),
         ),
         const SizedBox(height: 24),
         AuthButton(

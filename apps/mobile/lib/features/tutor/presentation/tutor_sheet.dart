@@ -7,6 +7,7 @@ import 'tutor_action_executor.dart';
 class TutorSheet extends StatefulWidget {
   final TutorRepository repository;
   final TutorActionExecutor executor;
+
   /// Ruta donde estaba el usuario al abrir el tutor (para que Vivi no navegue
   /// de más y pueda decir "ya estás acá").
   final String? currentRoute;
@@ -181,7 +182,10 @@ class _TutorSheetState extends State<TutorSheet> {
           ),
           if (_messages.isNotEmpty)
             IconButton(
-              icon: Icon(Icons.delete_outline, color: Theme.of(context).hintColor),
+              icon: Icon(
+                Icons.delete_outline,
+                color: Theme.of(context).hintColor,
+              ),
               tooltip: 'Limpiar conversación',
               onPressed: () =>
                   setState(() => widget.repository.clearConversation()),

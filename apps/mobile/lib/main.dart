@@ -55,7 +55,9 @@ void main() async {
 
   // Inicializar Firebase (FCM, etc.). No bloqueante si falla.
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     // Registrar el handler de notificaciones en background/terminado.
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   } catch (e) {
@@ -130,8 +132,9 @@ void main() async {
   final uploadService = UploadService(apiClient: apiClient);
 
   // Servicio de verificación de email
-  final emailVerificationService =
-      EmailVerificationService(apiClient: apiClient);
+  final emailVerificationService = EmailVerificationService(
+    apiClient: apiClient,
+  );
 
   // Servicio de notificaciones FCM
   final notificationService = NotificationService(apiClient: apiClient);

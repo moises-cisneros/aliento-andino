@@ -23,13 +23,21 @@ class ProfileStatsRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _StatItem(count: profile.postsCount, label: 'Posts', onTap: null),
-          Container(width: 1, height: 32, color: Theme.of(context).dividerColor),
+          Container(
+            width: 1,
+            height: 32,
+            color: Theme.of(context).dividerColor,
+          ),
           _StatItem(
             count: profile.followersCount,
             label: 'Seguidores',
             onTap: onFollowersTap,
           ),
-          Container(width: 1, height: 32, color: Theme.of(context).dividerColor),
+          Container(
+            width: 1,
+            height: 32,
+            color: Theme.of(context).dividerColor,
+          ),
           _StatItem(
             count: profile.followingCount,
             label: 'Siguiendo',
@@ -68,7 +76,10 @@ class _StatItem extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               label,
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12,
+              ),
             ),
           ],
         ),

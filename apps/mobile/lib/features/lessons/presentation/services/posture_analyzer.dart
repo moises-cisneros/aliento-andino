@@ -30,7 +30,8 @@ class PostureAnalyzer {
     var sum = 0.0;
     var n = 0;
     for (final f in _fingers) {
-      final chain = _d(lm[f[0]], lm[f[1]]) +
+      final chain =
+          _d(lm[f[0]], lm[f[1]]) +
           _d(lm[f[1]], lm[f[2]]) +
           _d(lm[f[2]], lm[f[3]]);
       if (chain <= 1e-6) continue;

@@ -53,7 +53,8 @@ class WeeklyChallengeModel {
     required this.completed,
   });
 
-  double get fraction => target <= 0 ? 0.0 : (progress / target).clamp(0.0, 1.0);
+  double get fraction =>
+      target <= 0 ? 0.0 : (progress / target).clamp(0.0, 1.0);
 
   factory WeeklyChallengeModel.fromJson(Map<String, dynamic> json) {
     return WeeklyChallengeModel(

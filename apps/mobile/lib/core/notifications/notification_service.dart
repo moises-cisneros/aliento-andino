@@ -36,7 +36,8 @@ class NotificationService {
     );
     await _localNotif
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(_androidChannel);
     _localNotifReady = true;
   }
@@ -85,7 +86,8 @@ class NotificationService {
         // (la vía que sí dispara el diálogo del sistema de forma confiable).
         final granted = await _localNotif
             .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin>()
+              AndroidFlutterLocalNotificationsPlugin
+            >()
             ?.requestNotificationsPermission();
         debugPrint('Permiso POST_NOTIFICATIONS (Android): $granted');
       } else {
@@ -169,10 +171,7 @@ class NotificationService {
     try {
       await _apiClient.dio.post(
         '/notifications/register-token',
-        data: {
-          'token': token,
-          'platform': Platform.isIOS ? 'ios' : 'android',
-        },
+        data: {'token': token, 'platform': Platform.isIOS ? 'ios' : 'android'},
       );
       _currentToken = token;
       debugPrint('Token FCM registrado: ${token.substring(0, 20)}...');

@@ -54,7 +54,9 @@ class TutorActionExecutor {
     // El elemento puede tardar unos frames en construirse tras navegar.
     RenderBox? box;
     for (var i = 0; i < 8; i++) {
-      final ro = TutorTargets.lookup(target)?.currentContext?.findRenderObject();
+      final ro = TutorTargets.lookup(
+        target,
+      )?.currentContext?.findRenderObject();
       if (ro is RenderBox && ro.attached && ro.hasSize) {
         box = ro;
         break;

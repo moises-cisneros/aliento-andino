@@ -15,7 +15,8 @@ class EmailVerificationBanner extends StatefulWidget {
   const EmailVerificationBanner({super.key});
 
   @override
-  State<EmailVerificationBanner> createState() => _EmailVerificationBannerState();
+  State<EmailVerificationBanner> createState() =>
+      _EmailVerificationBannerState();
 }
 
 class _EmailVerificationBannerState extends State<EmailVerificationBanner> {
@@ -37,10 +38,7 @@ class _EmailVerificationBannerState extends State<EmailVerificationBanner> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: AppTheme.error,
-        ),
+        SnackBar(content: Text('Error: $e'), backgroundColor: AppTheme.error),
       );
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -118,10 +116,7 @@ class _EmailVerificationBannerState extends State<EmailVerificationBanner> {
         if (detail is String) msg = detail;
       } catch (_) {}
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(msg),
-          backgroundColor: AppTheme.error,
-        ),
+        SnackBar(content: Text(msg), backgroundColor: AppTheme.error),
       );
     }
   }

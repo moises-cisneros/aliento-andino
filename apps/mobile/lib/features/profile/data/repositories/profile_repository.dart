@@ -34,7 +34,10 @@ class ProfileRepository {
 
       await _db?.putSnapshot('profile_me', jsonEncode(userData));
       await _db?.putSnapshot('profile_xp', jsonEncode(xpData));
-      await _db?.putSnapshot('profile_achievements', jsonEncode(achievementsRaw));
+      await _db?.putSnapshot(
+        'profile_achievements',
+        jsonEncode(achievementsRaw),
+      );
 
       return _buildProfile(userData, xpData, achievementsRaw);
     } on DioException {

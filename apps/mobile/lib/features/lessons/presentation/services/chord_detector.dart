@@ -23,7 +23,18 @@ class ChordDetector {
 
   // Notas musicales (A4 = 440Hz)
   static const List<String> _noteNames = [
-    'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
+    'C',
+    'C#',
+    'D',
+    'D#',
+    'E',
+    'F',
+    'F#',
+    'G',
+    'G#',
+    'A',
+    'A#',
+    'B',
   ];
 
   /// Frecuencias mínima/máxima a considerar (piano: C2 a C6).
@@ -88,12 +99,14 @@ class ChordDetector {
       final p = 0.5 * (alpha - gamma) / (alpha - 2 * beta + gamma);
       final freq = (i + p) * binWidth;
 
-      peaks.add(DetectedPitch(
-        frequency: freq,
-        magnitude: m,
-        note: _frequencyToNote(freq),
-        midi: _frequencyToMidi(freq),
-      ));
+      peaks.add(
+        DetectedPitch(
+          frequency: freq,
+          magnitude: m,
+          note: _frequencyToNote(freq),
+          midi: _frequencyToMidi(freq),
+        ),
+      );
     }
 
     // Eliminar armónicos: si hay un pico a 2f, 3f, 4f... de otro, descartar
@@ -190,8 +203,12 @@ class ChordDetector {
       }
       j ^= bit;
       if (i < j) {
-        final tr = real[i]; real[i] = real[j]; real[j] = tr;
-        final ti = imag[i]; imag[i] = imag[j]; imag[j] = ti;
+        final tr = real[i];
+        real[i] = real[j];
+        real[j] = tr;
+        final ti = imag[i];
+        imag[i] = imag[j];
+        imag[j] = ti;
       }
     }
     // Butterflies

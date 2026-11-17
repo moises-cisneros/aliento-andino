@@ -80,12 +80,7 @@ class LessonRepository {
         difficulty: difficulty,
       );
       if (cached != null && cached.isNotEmpty) {
-        return {
-          'items': cached,
-          'total': cached.length,
-          'page': 1,
-          'pages': 1,
-        };
+        return {'items': cached, 'total': cached.length, 'page': 1, 'pages': 1};
       }
       rethrow;
     }
@@ -100,7 +95,9 @@ class LessonRepository {
       final lesson = LessonModel.fromJson(data);
       final notes =
           (data['notes'] as List<dynamic>?)
-              ?.map((e) => NoteSequenceModel.fromJson(e as Map<String, dynamic>))
+              ?.map(
+                (e) => NoteSequenceModel.fromJson(e as Map<String, dynamic>),
+              )
               .toList() ??
           [];
       final userBestScore = (data['user_best_score'] as num?)?.toDouble();
@@ -164,7 +161,9 @@ class LessonRepository {
     } on DioException {
       // Fallback: lo descargado para offline es lo más útil de recomendar.
       final cached = await _local?.getLessons(onlyDownloaded: true);
-      if (cached != null && cached.isNotEmpty) return cached.take(limit).toList();
+      if (cached != null && cached.isNotEmpty) {
+        return cached.take(limit).toList();
+      }
       rethrow;
     }
   }

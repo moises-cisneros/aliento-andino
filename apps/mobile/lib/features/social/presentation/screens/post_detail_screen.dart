@@ -64,7 +64,11 @@ class _PostDetailViewState extends State<_PostDetailView> {
     });
   }
 
-  Future<void> _sharePost(String postId, String? content, String username) async {
+  Future<void> _sharePost(
+    String postId,
+    String? content,
+    String username,
+  ) async {
     final url = 'https://alientoandino.com/post/$postId';
     final text = content == null || content.isEmpty
         ? 'Mirá esta publicación de @$username en Aliento Andino 🎹\n$url'
@@ -134,8 +138,7 @@ class _PostDetailViewState extends State<_PostDetailView> {
                         Builder(
                           builder: (context) {
                             final authState = context.read<AuthBloc>().state;
-                            final currentUserId =
-                                authState is AuthAuthenticated
+                            final currentUserId = authState is AuthAuthenticated
                                 ? authState.user.id
                                 : null;
                             final isOwnPost =
@@ -245,10 +248,9 @@ class _PostDetailViewState extends State<_PostDetailView> {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withValues(alpha: 0.1),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -263,7 +265,9 @@ class _PostDetailViewState extends State<_PostDetailView> {
                                   child: Text(
                                     'Respondiendo a @$_replyingToUsername',
                                     style: TextStyle(
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -274,7 +278,9 @@ class _PostDetailViewState extends State<_PostDetailView> {
                                   child: Icon(
                                     Icons.close,
                                     size: 16,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
                                 ),
                               ],
@@ -287,7 +293,9 @@ class _PostDetailViewState extends State<_PostDetailView> {
                                 controller: _commentController,
                                 focusNode: _commentFocus,
                                 style: TextStyle(
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                                 decoration: InputDecoration(
                                   hintText: _replyingToUsername != null
@@ -297,9 +305,9 @@ class _PostDetailViewState extends State<_PostDetailView> {
                                     color: Theme.of(context).hintColor,
                                   ),
                                   filled: true,
-                                  fillColor: Theme.of(context)
-                                      .colorScheme
-                                      .surfaceContainerHigh,
+                                  fillColor: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHigh,
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 14,
                                     vertical: 10,
@@ -314,7 +322,8 @@ class _PostDetailViewState extends State<_PostDetailView> {
                             const SizedBox(width: 8),
                             BlocBuilder<PostDetailBloc, PostDetailState>(
                               builder: (context, s) {
-                                final submitting = s is PostDetailLoaded &&
+                                final submitting =
+                                    s is PostDetailLoaded &&
                                     s.isSubmittingComment;
                                 return IconButton(
                                   onPressed: submitting
@@ -339,16 +348,16 @@ class _PostDetailViewState extends State<_PostDetailView> {
                                           height: 20,
                                           child: CircularProgressIndicator(
                                             strokeWidth: 2,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
                                           ),
                                         )
                                       : Icon(
                                           Icons.send,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
                                         ),
                                 );
                               },

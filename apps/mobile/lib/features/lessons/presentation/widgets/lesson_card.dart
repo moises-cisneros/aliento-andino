@@ -32,136 +32,136 @@ class LessonCard extends StatelessWidget {
       child: Opacity(
         opacity: (locked || premiumLocked) ? 0.55 : 1.0,
         child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-          ),
-        ),
-        child: Row(
-          children: [
-            // Ícono / thumbnail
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Icon(Icons.music_note, color: accent, size: 28),
-                  if (premiumLocked)
-                    Positioned(
-                      top: 2,
-                      right: 2,
-                      child: Icon(
-                        Icons.workspace_premium,
-                        color: AppTheme.warning,
-                        size: 14,
-                      ),
-                    ),
-                ],
-              ),
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
             ),
-            const SizedBox(width: 14),
+          ),
+          child: Row(
+            children: [
+              // Ícono / thumbnail
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(Icons.music_note, color: accent, size: 28),
+                    if (premiumLocked)
+                      Positioned(
+                        top: 2,
+                        right: 2,
+                        child: Icon(
+                          Icons.workspace_premium,
+                          color: AppTheme.warning,
+                          size: 14,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 14),
 
-            // Info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    lesson.title,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  // Autor · género (si están), ej. "Beethoven · Clásica".
-                  if (lesson.artist != null || lesson.genre != null) ...[
-                    const SizedBox(height: 2),
+              // Info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      [lesson.artist, lesson.genre]
-                          .whereType<String>()
-                          .join(' · '),
+                      lesson.title,
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      DifficultyBadge(difficulty: lesson.difficulty),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.speed,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 3),
+                    // Autor · género (si están), ej. "Beethoven · Clásica".
+                    if (lesson.artist != null || lesson.genre != null) ...[
+                      const SizedBox(height: 2),
                       Text(
-                        '${lesson.tempoBpm} BPM',
+                        [
+                          lesson.artist,
+                          lesson.genre,
+                        ].whereType<String>().join(' · '),
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 12,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        DifficultyBadge(difficulty: lesson.difficulty),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.speed,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          '${lesson.tempoBpm} BPM',
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
 
-            // Estado: corona (premium), candado (ruta), score, o flecha
-            if (premiumLocked)
-              Icon(
-                Icons.workspace_premium,
-                color: AppTheme.warning,
-              )
-            else if (locked)
-              Icon(
-                Icons.lock_outline,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              )
-            else if (lesson.userBestScore != null) ...[
-              Column(
-                children: [
-                  Text(
-                    '${lesson.userBestScore!.toInt()}%',
-                    style: TextStyle(
-                      color: _scoreColor(lesson.userBestScore!),
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+              // Estado: corona (premium), candado (ruta), score, o flecha
+              if (premiumLocked)
+                Icon(Icons.workspace_premium, color: AppTheme.warning)
+              else if (locked)
+                Icon(
+                  Icons.lock_outline,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                )
+              else if (lesson.userBestScore != null) ...[
+                Column(
+                  children: [
+                    Text(
+                      '${lesson.userBestScore!.toInt()}%',
+                      style: TextStyle(
+                        color: _scoreColor(lesson.userBestScore!),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  Text(
-                    'mejor',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 10,
+                    Text(
+                      'mejor',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 10,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ] else
-              Icon(
-                Icons.chevron_right,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-          ],
-        ),
+                  ],
+                ),
+              ] else
+                Icon(
+                  Icons.chevron_right,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+            ],
+          ),
         ),
       ),
     );

@@ -48,16 +48,13 @@ class MelodyPlayer {
         onIndex?.call(start);
       } else {
         if (!note.isRest) {
-          _synth.play(note.note,
-              seconds: _toneSeconds(note.duration, beatMs));
+          _synth.play(note.note, seconds: _toneSeconds(note.duration, beatMs));
         }
         durBeats = note.duration;
         onIndex?.call(i);
         i++;
       }
-      await Future.delayed(
-        Duration(milliseconds: (durBeats * beatMs).round()),
-      );
+      await Future.delayed(Duration(milliseconds: (durBeats * beatMs).round()));
     }
 
     if (_playing && runId == _runId) {

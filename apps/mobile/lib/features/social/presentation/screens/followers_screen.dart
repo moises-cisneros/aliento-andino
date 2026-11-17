@@ -80,10 +80,7 @@ class _FollowersScreenState extends State<FollowersScreen>
     return s is AuthAuthenticated ? s.user.id : null;
   }
 
-  Future<void> _toggleFollow(
-    List<UserSummaryModel> list,
-    int index,
-  ) async {
+  Future<void> _toggleFollow(List<UserSummaryModel> list, int index) async {
     final user = list[index];
     final wasFollowing = user.isFollowedByMe ?? false;
     setState(() => list[index] = user.copyWith(isFollowedByMe: !wasFollowing));

@@ -30,7 +30,18 @@ const Map<String, String> _solfege = {
 };
 const List<String> _letters = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 const List<String> _noteNames = [
-  'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
+  'C',
+  'C#',
+  'D',
+  'D#',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'G#',
+  'A',
+  'A#',
+  'B',
 ];
 
 bool _isWhite(int m) => const [0, 2, 4, 5, 7, 9, 11].contains(m % 12);
@@ -102,12 +113,12 @@ class _SightReadingScreenState extends State<SightReadingScreen> {
   }
 
   NoteSequenceModel get _note => NoteSequenceModel(
-        id: '',
-        position: 0,
-        note: _noteName,
-        duration: 1,
-        hand: _treble ? 'right' : 'left',
-      );
+    id: '',
+    position: 0,
+    note: _noteName,
+    duration: 1,
+    hand: _treble ? 'right' : 'left',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -125,18 +136,29 @@ class _SightReadingScreenState extends State<SightReadingScreen> {
             child: Center(
               child: Row(
                 children: [
-                  Icon(Icons.local_fire_department,
-                      color: AppTheme.warning, size: 18),
+                  Icon(
+                    Icons.local_fire_department,
+                    color: AppTheme.warning,
+                    size: 18,
+                  ),
                   const SizedBox(width: 4),
-                  Text('$_streak',
-                      style: TextStyle(
-                          color: cs.onSurface, fontWeight: FontWeight.bold)),
+                  Text(
+                    '$_streak',
+                    style: TextStyle(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   Icon(Icons.star, color: cs.primary, size: 18),
                   const SizedBox(width: 4),
-                  Text('$_score',
-                      style: TextStyle(
-                          color: cs.onSurface, fontWeight: FontWeight.bold)),
+                  Text(
+                    '$_score',
+                    style: TextStyle(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -240,9 +262,10 @@ class _SightReadingScreenState extends State<SightReadingScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: const Text('Siguiente',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Siguiente',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ] else

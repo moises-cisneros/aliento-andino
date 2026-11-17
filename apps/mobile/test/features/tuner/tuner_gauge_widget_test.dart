@@ -4,7 +4,9 @@ import 'package:mobile/features/tuner/presentation/widgets/tuner_gauge_widget.da
 
 void main() {
   group('TunerGaugeWidget [SUB-01-B]', () {
-    testWidgets('renderiza nota, estado AFINADO y frecuencia en Hz', (tester) async {
+    testWidgets('renderiza nota, estado AFINADO y frecuencia en Hz', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(

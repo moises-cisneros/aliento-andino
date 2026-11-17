@@ -287,8 +287,8 @@ class _PremiumBanner extends StatelessWidget {
     final user = state is AuthAuthenticated
         ? state.user
         : state is AuthRegistered
-            ? state.user
-            : null;
+        ? state.user
+        : null;
     final isPremium = user?.isPremium ?? false;
 
     if (isPremium) {

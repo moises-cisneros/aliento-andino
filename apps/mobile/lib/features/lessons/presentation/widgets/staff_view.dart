@@ -120,10 +120,22 @@ class _Head {
 }
 
 const Map<String, int> _letterIndex = {
-  'C': 0, 'D': 1, 'E': 2, 'F': 3, 'G': 4, 'A': 5, 'B': 6,
+  'C': 0,
+  'D': 1,
+  'E': 2,
+  'F': 3,
+  'G': 4,
+  'A': 5,
+  'B': 6,
 };
 const Map<String, int> _letterSemi = {
-  'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11,
+  'C': 0,
+  'D': 2,
+  'E': 4,
+  'F': 5,
+  'G': 7,
+  'A': 9,
+  'B': 11,
 };
 final RegExp _noteRe = RegExp(r'^([A-G])([#b]?)(-?\d+)');
 
@@ -139,8 +151,8 @@ _Head? _parseHead(NoteSequenceModel n) {
   final accidental = acc == '#'
       ? 1
       : acc == 'b'
-          ? -1
-          : 0;
+      ? -1
+      : 0;
   var semi = _letterSemi[letter]!;
   if (acc == '#') semi++;
   if (acc == 'b') semi--;
@@ -149,8 +161,8 @@ _Head? _parseHead(NoteSequenceModel n) {
   final treble = n.hand == 'right'
       ? true
       : n.hand == 'left'
-          ? false
-          : midi >= 60;
+      ? false
+      : midi >= 60;
   return _Head(step, accidental, n.duration, treble);
 }
 
@@ -260,7 +272,9 @@ class _StaffPainter extends CustomPainter {
   double get _bassBottomY => _bassTopY + 4 * lineGap;
 
   double _noteY(int step, bool treble) {
-    if (treble) return _trebleBottomY - (step - _trebleBottomStep) * (lineGap / 2);
+    if (treble) {
+      return _trebleBottomY - (step - _trebleBottomStep) * (lineGap / 2);
+    }
     return _bassBottomY - (step - _bassBottomStep) * (lineGap / 2);
   }
 

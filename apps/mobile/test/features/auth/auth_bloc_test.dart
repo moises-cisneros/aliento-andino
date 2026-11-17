@@ -115,7 +115,9 @@ void main() {
         when(
           () => mockSecureStorage.getAccessToken(),
         ).thenAnswer((_) async => 'valid_token');
-        when(() => mockAuthRepository.getCurrentUser()).thenThrow(_networkError);
+        when(
+          () => mockAuthRepository.getCurrentUser(),
+        ).thenThrow(_networkError);
         when(
           () => mockSecureStorage.getUser(),
         ).thenAnswer((_) async => _cachedUserJson);
@@ -134,7 +136,9 @@ void main() {
         when(
           () => mockSecureStorage.getAccessToken(),
         ).thenAnswer((_) async => 'valid_token');
-        when(() => mockAuthRepository.getCurrentUser()).thenThrow(_networkError);
+        when(
+          () => mockAuthRepository.getCurrentUser(),
+        ).thenThrow(_networkError);
         when(() => mockSecureStorage.getUser()).thenAnswer((_) async => null);
       },
       build: buildBloc,

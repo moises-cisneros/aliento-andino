@@ -5,7 +5,9 @@ import 'package:record/record.dart';
 /// Excepción lanzada cuando el usuario deniega el permiso de micrófono.
 class PermissionDeniedException implements Exception {
   final String message;
-  const PermissionDeniedException([this.message = 'Permiso de micrófono denegado']);
+  const PermissionDeniedException([
+    this.message = 'Permiso de micrófono denegado',
+  ]);
 
   @override
   String toString() => 'PermissionDeniedException: $message';
@@ -14,7 +16,9 @@ class PermissionDeniedException implements Exception {
 /// Excepción lanzada ante fallos en la capa de hardware o inicialización del micrófono.
 class AudioHardwareException implements Exception {
   final String message;
-  const AudioHardwareException([this.message = 'Fallo de hardware o stream de audio no disponible']);
+  const AudioHardwareException([
+    this.message = 'Fallo de hardware o stream de audio no disponible',
+  ]);
 
   @override
   String toString() => 'AudioHardwareException: $message';
@@ -82,10 +86,11 @@ class AudioCaptureService {
   AudioCaptureService({
     AudioRecorder? recorder,
     int circularBufferCapacity = 4096,
-  })  : _customRecorder = recorder,
-        _circularBuffer = CircularAudioBuffer(capacity: circularBufferCapacity);
+  }) : _customRecorder = recorder,
+       _circularBuffer = CircularAudioBuffer(capacity: circularBufferCapacity);
 
-  AudioRecorder get _recorder => _customRecorder ?? (_internalRecorder ??= AudioRecorder());
+  AudioRecorder get _recorder =>
+      _customRecorder ?? (_internalRecorder ??= AudioRecorder());
 
   bool get isCapturing => _isCapturing;
   CircularAudioBuffer get circularBuffer => _circularBuffer;

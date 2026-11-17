@@ -100,7 +100,11 @@ class _NoteListenerWidgetState extends State<NoteListenerWidget> {
     final expected = state.currentExpectedNote;
     if (expected.toUpperCase() == 'REST') return;
 
-    final match = _matchesExpected(detected.note, expected, !state.octaveStrict);
+    final match = _matchesExpected(
+      detected.note,
+      expected,
+      !state.octaveStrict,
+    );
     if (match) {
       context.read<PracticeBloc>().add(
         PracticeNoteCorrect(state.currentPosition),
@@ -156,7 +160,8 @@ class _NoteListenerWidgetState extends State<NoteListenerWidget> {
       final now = DateTime.now();
       if (now.difference(_lastChordWrongEmitted) < _chordWrongCooldown) return;
       _lastChordWrongEmitted = now;
-      final played = result.match?.label ??
+      final played =
+          result.match?.label ??
           result.pitches.take(3).map((p) => p.note).join('+');
       final expectedLabel = group.map((n) => n.note).join('+');
       context.read<PracticeBloc>().add(
@@ -196,7 +201,13 @@ class _NoteListenerWidgetState extends State<NoteListenerWidget> {
     final accidental = m.group(2)!;
     final octave = int.parse(m.group(3)!);
     const letterToSemi = {
-      'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11,
+      'C': 0,
+      'D': 2,
+      'E': 4,
+      'F': 5,
+      'G': 7,
+      'A': 9,
+      'B': 11,
     };
     var semi = letterToSemi[letter]!;
     if (accidental == '#') semi++;
@@ -227,7 +238,8 @@ class _NoteListenerWidgetState extends State<NoteListenerWidget> {
     return BlocListener<PracticeBloc, PracticeState>(
       listener: (context, state) {
         if (state is PracticePlaying) {
-          final inChord = state.currentPosition < state.notes.length &&
+          final inChord =
+              state.currentPosition < state.notes.length &&
               state.notes[state.currentPosition].isChord;
           _detector.setChordDetectionEnabled(inChord);
         } else if (state is PracticeCompleted || state is PracticeError) {

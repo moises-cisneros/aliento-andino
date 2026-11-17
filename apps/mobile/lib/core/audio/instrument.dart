@@ -1,23 +1,11 @@
 /// Instrumentos de viento andino soportados en Aliento Andino.
-enum InstrumentType {
-  quena,
-  zampona,
-  tarka,
-}
+enum InstrumentType { quena, zampona, tarka }
 
 /// Instrumentos/timbres disponibles para el sintetizador ([ToneSynth]).
 ///
 /// Quena, Zampoña y Tarka son los instrumentos andinos canónicos principales.
 /// Se mantienen los restantes por compatibilidad con generadores de tono.
-enum Instrument {
-  quena,
-  zampona,
-  tarka,
-  piano,
-  electricPiano,
-  organ,
-  synth,
-}
+enum Instrument { quena, zampona, tarka, piano, electricPiano, organ, synth }
 
 /// Perfil sonoro de un instrumento.
 class InstrumentVoice {
@@ -42,8 +30,11 @@ class InstrumentVoice {
     // Piano
     Instrument.piano: InstrumentVoice([1.0, 0.5, 0.25], 3.2, 0.6),
     // Piano eléctrico
-    Instrument.electricPiano:
-        InstrumentVoice([1.0, 0.0, 0.15, 0.0, 0.08], 2.4, 0.6),
+    Instrument.electricPiano: InstrumentVoice(
+      [1.0, 0.0, 0.15, 0.0, 0.08],
+      2.4,
+      0.6,
+    ),
     // Órgano
     Instrument.organ: InstrumentVoice([1.0, 1.0, 0.6, 0.4], 0.05, 0.45),
     // Sintetizador

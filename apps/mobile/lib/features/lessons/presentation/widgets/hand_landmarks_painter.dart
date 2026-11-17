@@ -76,9 +76,9 @@ class HandLandmarksPainter extends CustomPainter {
     for (final hand in hands) {
       if (hand.landmarks.length < 21) continue;
       Offset p(int i) => Offset(
-            (hand.landmarks[i].x - 0.5) * w,
-            (hand.landmarks[i].y - 0.5) * h,
-          );
+        (hand.landmarks[i].x - 0.5) * w,
+        (hand.landmarks[i].y - 0.5) * h,
+      );
       for (final c in _connections) {
         canvas.drawLine(p(c[0]), p(c[1]), linePaint);
       }

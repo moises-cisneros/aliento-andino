@@ -131,8 +131,9 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<List<CachedCategory>> getCachedCategories() {
-    return (select(cachedCategories)
-      ..orderBy([(t) => OrderingTerm(expression: t.sortOrder)])).get();
+    return (select(
+      cachedCategories,
+    )..orderBy([(t) => OrderingTerm(expression: t.sortOrder)])).get();
   }
 
   // ---------------- Lecciones ----------------
@@ -203,8 +204,9 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<List<PendingPracticeRow>> getPendingPractices() {
-    return (select(pendingPractice)
-      ..orderBy([(t) => OrderingTerm(expression: t.createdAt)])).get();
+    return (select(
+      pendingPractice,
+    )..orderBy([(t) => OrderingTerm(expression: t.createdAt)])).get();
   }
 
   Future<void> deletePending(int localId) async {
@@ -215,17 +217,18 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> pendingCount() async {
     final count = countAll();
-    final row = await (selectOnly(pendingPractice)..addColumns([count]))
-        .getSingle();
+    final row = await (selectOnly(
+      pendingPractice,
+    )..addColumns([count])).getSingle();
     return row.read(count) ?? 0;
   }
 
   /// Stream del número de prácticas pendientes (para badges en la UI).
   Stream<int> watchPendingCount() {
     final count = countAll();
-    return (selectOnly(pendingPractice)..addColumns([count]))
-        .map((row) => row.read(count) ?? 0)
-        .watchSingle();
+    return (selectOnly(
+      pendingPractice,
+    )..addColumns([count])).map((row) => row.read(count) ?? 0).watchSingle();
   }
 
   // ---------------- Snapshots JSON (progreso/perfil offline) ----------------

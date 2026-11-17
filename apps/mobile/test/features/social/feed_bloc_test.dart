@@ -12,18 +12,21 @@ import 'package:mobile/features/social/presentation/bloc/feed/feed_state.dart';
 class MockSocialRepository extends Mock implements SocialRepository {}
 
 PostModel _post(String id) => PostModel(
-      id: id,
-      user: const UserSummaryModel(id: 'u1', username: 'ana', fullName: 'Ana'),
-      content: 'post $id',
-      postType: 'text',
-      likesCount: 0,
-      commentsCount: 0,
-      isLikedByMe: false,
-      createdAt: '2026-06-20T10:00:00Z',
-    );
+  id: id,
+  user: const UserSummaryModel(id: 'u1', username: 'ana', fullName: 'Ana'),
+  content: 'post $id',
+  postType: 'text',
+  likesCount: 0,
+  commentsCount: 0,
+  isLikedByMe: false,
+  createdAt: '2026-06-20T10:00:00Z',
+);
 
-Map<String, dynamic> _page(List<PostModel> items) =>
-    {'items': items, 'next_cursor': null, 'has_more': false};
+Map<String, dynamic> _page(List<PostModel> items) => {
+  'items': items,
+  'next_cursor': null,
+  'has_more': false,
+};
 
 void main() {
   late MockSocialRepository repo;
@@ -51,8 +54,9 @@ void main() {
       'FeedSwitchMode(recent) usa getRecentFeed (Fase 4)',
       setUp: () {
         when(() => repo.getFeed()).thenAnswer((_) async => _page([_post('1')]));
-        when(() => repo.getRecentFeed())
-            .thenAnswer((_) async => _page([_post('9'), _post('10')]));
+        when(
+          () => repo.getRecentFeed(),
+        ).thenAnswer((_) async => _page([_post('9'), _post('10')]));
       },
       build: () => FeedBloc(socialRepository: repo),
       act: (bloc) async {

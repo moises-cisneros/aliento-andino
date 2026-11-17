@@ -96,10 +96,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ..._benefits.map((b) => _benefitRow(cs, b.$1, b.$2)),
               const SizedBox(height: 24),
               if (snapshot.connectionState == ConnectionState.waiting)
-                const Center(child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: CircularProgressIndicator(),
-                ))
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
               else
                 ...plans.map((p) => _planCard(cs, p)),
               const SizedBox(height: 16),
@@ -306,7 +308,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 width: 18,
                 height: 18,
                 child: CircularProgressIndicator(
-                    strokeWidth: 2, color: cs.primary),
+                  strokeWidth: 2,
+                  color: cs.primary,
+                ),
               )
             : const Icon(Icons.card_giftcard),
         label: const Text('Probar 7 días gratis'),

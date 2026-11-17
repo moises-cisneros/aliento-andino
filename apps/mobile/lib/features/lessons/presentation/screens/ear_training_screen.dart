@@ -31,7 +31,18 @@ const List<(int, String)> _intervals = [
 ];
 
 const List<String> _noteNames = [
-  'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
+  'C',
+  'C#',
+  'D',
+  'D#',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'G#',
+  'A',
+  'A#',
+  'B',
 ];
 
 String _midiName(int m) => '${_noteNames[m % 12]}${m ~/ 12 - 1}';
@@ -104,8 +115,7 @@ class _EarTrainingScreenState extends State<EarTrainingScreen> {
     _play();
   }
 
-  String _nameFor(int semis) =>
-      _intervals.firstWhere((e) => e.$1 == semis).$2;
+  String _nameFor(int semis) => _intervals.firstWhere((e) => e.$1 == semis).$2;
 
   @override
   Widget build(BuildContext context) {
@@ -123,18 +133,29 @@ class _EarTrainingScreenState extends State<EarTrainingScreen> {
             child: Center(
               child: Row(
                 children: [
-                  Icon(Icons.local_fire_department,
-                      color: AppTheme.warning, size: 18),
+                  Icon(
+                    Icons.local_fire_department,
+                    color: AppTheme.warning,
+                    size: 18,
+                  ),
                   const SizedBox(width: 4),
-                  Text('$_streak',
-                      style: TextStyle(
-                          color: cs.onSurface, fontWeight: FontWeight.bold)),
+                  Text(
+                    '$_streak',
+                    style: TextStyle(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   Icon(Icons.star, color: cs.primary, size: 18),
                   const SizedBox(width: 4),
-                  Text('$_score',
-                      style: TextStyle(
-                          color: cs.onSurface, fontWeight: FontWeight.bold)),
+                  Text(
+                    '$_score',
+                    style: TextStyle(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -162,12 +183,18 @@ class _EarTrainingScreenState extends State<EarTrainingScreen> {
                   color: cs.primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.volume_up_rounded, color: cs.primary, size: 52),
+                child: Icon(
+                  Icons.volume_up_rounded,
+                  color: cs.primary,
+                  size: 52,
+                ),
               ),
             ),
             const SizedBox(height: 8),
-            Text('Tocá para escuchar de nuevo',
-                style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12)),
+            Text(
+              'Tocá para escuchar de nuevo',
+              style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+            ),
             const SizedBox(height: 28),
 
             // Opciones
@@ -244,8 +271,10 @@ class _EarTrainingScreenState extends State<EarTrainingScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: const Text('Siguiente',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Siguiente',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ] else

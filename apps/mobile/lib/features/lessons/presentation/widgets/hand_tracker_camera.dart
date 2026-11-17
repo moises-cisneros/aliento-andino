@@ -281,13 +281,13 @@ class _HandTrackerCameraState extends State<HandTrackerCamera>
   Widget _buildBadge() {
     final svc = _landmarker;
     Container box(Widget child) => Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.black54,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: child,
-        );
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black54,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: child,
+    );
 
     if (svc == null) {
       return box(

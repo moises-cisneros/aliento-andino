@@ -58,7 +58,10 @@ class PracticeRepository {
     };
 
     try {
-      final response = await _apiClient.dio.post('/practice/submit', data: body);
+      final response = await _apiClient.dio.post(
+        '/practice/submit',
+        data: body,
+      );
       final data = response.data as Map<String, dynamic>;
       return {
         'session': PracticeSessionModel.fromJson(
@@ -168,7 +171,9 @@ class PracticeRepository {
         final cached = await _db?.getSnapshot('practice_history');
         if (cached != null) {
           items = (jsonDecode(cached) as List<dynamic>)
-              .map((e) => PracticeSessionModel.fromJson(e as Map<String, dynamic>))
+              .map(
+                (e) => PracticeSessionModel.fromJson(e as Map<String, dynamic>),
+              )
               .toList();
         }
       }
@@ -196,7 +201,7 @@ class PracticeRepository {
 
   /// Obtener desafíos de la semana con el progreso del usuario (cacheado).
   Future<({List<WeeklyChallengeModel> challenges, int daysRemaining})>
-      getWeeklyChallenges() async {
+  getWeeklyChallenges() async {
     try {
       final response = await _apiClient.dio.get('/challenges/weekly');
       final data = response.data as Map<String, dynamic>;

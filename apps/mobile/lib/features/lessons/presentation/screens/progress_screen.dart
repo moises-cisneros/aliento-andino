@@ -388,8 +388,10 @@ class _WeeklyChallengesSection extends StatefulWidget {
 }
 
 class _WeeklyChallengesSectionState extends State<_WeeklyChallengesSection> {
-  late final Future<({List<WeeklyChallengeModel> challenges, int daysRemaining})>
-      _future;
+  late final Future<
+    ({List<WeeklyChallengeModel> challenges, int daysRemaining})
+  >
+  _future;
 
   @override
   void initState() {
@@ -416,7 +418,8 @@ class _WeeklyChallengesSectionState extends State<_WeeklyChallengesSection> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return FutureBuilder<
-        ({List<WeeklyChallengeModel> challenges, int daysRemaining})>(
+      ({List<WeeklyChallengeModel> challenges, int daysRemaining})
+    >(
       future: _future,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
@@ -452,10 +455,7 @@ class _WeeklyChallengesSectionState extends State<_WeeklyChallengesSection> {
                 Text(
                   'Resetea en ${data.daysRemaining} '
                   '${data.daysRemaining == 1 ? "día" : "días"}',
-                  style: const TextStyle(
-                    color: AppTheme.warning,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: AppTheme.warning, fontSize: 12),
                 ),
               ],
             ),

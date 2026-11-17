@@ -27,11 +27,13 @@ class CreatePostBloc extends Bloc<CreatePostEvent, CreatePostState> {
       );
       emit(CreatePostSuccess(post));
     } catch (e) {
-      emit(CreatePostError(
-        isConnectionError(e)
-            ? 'Necesitás conexión a internet para publicar.'
-            : e.toString(),
-      ));
+      emit(
+        CreatePostError(
+          isConnectionError(e)
+              ? 'Necesitás conexión a internet para publicar.'
+              : e.toString(),
+        ),
+      );
     }
   }
 }

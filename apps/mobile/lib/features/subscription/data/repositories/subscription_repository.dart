@@ -6,7 +6,7 @@ class SubscriptionRepository {
   final ApiClient _apiClient;
 
   const SubscriptionRepository({required ApiClient apiClient})
-      : _apiClient = apiClient;
+    : _apiClient = apiClient;
 
   Future<List<PlanModel>> getPlans() async {
     final response = await _apiClient.dio.get('/subscription/plans');

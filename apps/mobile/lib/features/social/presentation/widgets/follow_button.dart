@@ -33,7 +33,10 @@ class FollowButton extends StatelessWidget {
               ),
               child: Text(
                 'Siguiendo',
-                style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 13),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 13,
+                ),
               ),
             )
           : ElevatedButton(

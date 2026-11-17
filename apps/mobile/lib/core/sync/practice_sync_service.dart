@@ -74,7 +74,9 @@ class PracticeSyncService {
           if (status != null && status >= 400 && status < 500) {
             // El server rechazó el item (inválido/duplicado): lo descartamos
             // para que no bloquee la cola (poison-pill).
-            debugPrint('Sync: descartando práctica ${p.clientId} (HTTP $status)');
+            debugPrint(
+              'Sync: descartando práctica ${p.clientId} (HTTP $status)',
+            );
             await _db.deletePending(p.localId);
             continue;
           }

@@ -276,10 +276,7 @@ class NoteDetector {
       _chordBuffer.addAll(samples);
       // Mantener ventana rodante (descartar lo más viejo)
       if (_chordBuffer.length > _chordWindowSize * 2) {
-        _chordBuffer.removeRange(
-          0,
-          _chordBuffer.length - _chordWindowSize,
-        );
+        _chordBuffer.removeRange(0, _chordBuffer.length - _chordWindowSize);
       }
       final now = DateTime.now();
       if (_chordBuffer.length >= _chordWindowSize &&
@@ -321,7 +318,8 @@ class NoteDetector {
     try {
       final result = await _pitchDetector.getPitchFromFloatBuffer(samples);
       final freq = result.pitch;
-      final pitched = result.pitched &&
+      final pitched =
+          result.pitched &&
           result.probability >= _minConfidence &&
           freq >= _minFreq &&
           freq <= _maxFreq;
@@ -340,12 +338,14 @@ class NoteDetector {
       _silenceFrames = 0;
 
       final note = _frequencyToNote(freq);
-      _maybeEmit(DetectedNote(
-        note: note,
-        frequency: freq,
-        confidence: result.probability,
-        midiNumber: _frequencyToMidi(freq),
-      ));
+      _maybeEmit(
+        DetectedNote(
+          note: note,
+          frequency: freq,
+          confidence: result.probability,
+          midiNumber: _frequencyToMidi(freq),
+        ),
+      );
     } catch (e) {
       debugPrint('NoteDetector: error analizando buffer: $e');
     }
@@ -355,7 +355,18 @@ class NoteDetector {
   /// Usa A4=440Hz como referencia.
   String _frequencyToNote(double freq) {
     const noteNames = [
-      'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
+      'C',
+      'C#',
+      'D',
+      'D#',
+      'E',
+      'F',
+      'F#',
+      'G',
+      'G#',
+      'A',
+      'A#',
+      'B',
     ];
     final midi = _frequencyToMidi(freq);
     final noteIdx = midi % 12;

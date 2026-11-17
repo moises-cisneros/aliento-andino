@@ -125,7 +125,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 56, color: cs.onSurfaceVariant.withValues(alpha: 0.4)),
+          Icon(
+            icon,
+            size: 56,
+            color: cs.onSurfaceVariant.withValues(alpha: 0.4),
+          ),
           const SizedBox(height: 12),
           Text(msg, style: TextStyle(color: cs.onSurfaceVariant)),
         ],
@@ -191,9 +195,7 @@ class _NotificationTile extends StatelessWidget {
     final isUnread = !notification.isRead;
 
     return Material(
-      color: isUnread
-          ? cs.primary.withValues(alpha: 0.06)
-          : Colors.transparent,
+      color: isUnread ? cs.primary.withValues(alpha: 0.06) : Colors.transparent,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -208,7 +210,11 @@ class _NotificationTile extends StatelessWidget {
                   color: color.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(_iconForType(notification.type), color: color, size: 20),
+                child: Icon(
+                  _iconForType(notification.type),
+                  color: color,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -219,14 +225,19 @@ class _NotificationTile extends StatelessWidget {
                       notification.title,
                       style: TextStyle(
                         color: cs.onSurface,
-                        fontWeight: isUnread ? FontWeight.w700 : FontWeight.w500,
+                        fontWeight: isUnread
+                            ? FontWeight.w700
+                            : FontWeight.w500,
                         fontSize: 14,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       notification.body,
-                      style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+                      style: TextStyle(
+                        color: cs.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),

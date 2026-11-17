@@ -32,12 +32,13 @@ class _TunerGaugeWidgetState extends State<TunerGaugeWidget>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 100),
-    )..addListener(() {
-        setState(() {});
-      });
+    _controller =
+        AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 100),
+        )..addListener(() {
+          setState(() {});
+        });
   }
 
   @override
@@ -101,8 +102,8 @@ class _TunerGaugeWidgetState extends State<TunerGaugeWidget>
               const SizedBox(height: 4),
               Text(
                 widget.isSilent
-                  ? 'Toca una nota en tu instrumento'
-                  : '${widget.frequencyHz.toStringAsFixed(1)} Hz (${widget.cents > 0 ? "+" : ""}${widget.cents.toStringAsFixed(1)} cents)',
+                    ? 'Toca una nota en tu instrumento'
+                    : '${widget.frequencyHz.toStringAsFixed(1)} Hz (${widget.cents > 0 ? "+" : ""}${widget.cents.toStringAsFixed(1)} cents)',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,

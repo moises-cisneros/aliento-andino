@@ -26,55 +26,126 @@ class _Q {
 /// Banco de preguntas (teoría correcta). El índice `correct` apunta a la
 /// opción verdadera.
 const List<_Q> _bank = [
-  _Q('¿Cuántos semitonos hay en una octava?', ['7', '8', '10', '12'], 3,
-      'Una octava se divide en 12 semitonos iguales.'),
-  _Q('¿Cuántas teclas blancas hay en una octava?', ['5', '7', '8', '12'], 1,
-      'Do, Re, Mi, Fa, Sol, La, Si: 7 notas naturales.'),
-  _Q('La distancia entre Mi y Fa es de…',
-      ['un tono', 'un semitono', 'tono y medio', 'dos tonos'], 1,
-      'Mi–Fa y Si–Do son los dos pares de notas naturales separados por un semitono.'),
-  _Q('¿Cuántos sostenidos tiene la tonalidad de Sol mayor?',
-      ['0', '1', '2', '3'], 1, 'Sol mayor tiene un sostenido: Fa♯.'),
-  _Q('La figura que dura la mitad de una negra es la…',
-      ['redonda', 'blanca', 'corchea', 'semicorchea'], 2,
-      'La corchea vale media negra; dos corcheas equivalen a una negra.'),
-  _Q('Una redonda equivale a ¿cuántas negras?', ['2', '3', '4', '8'], 2,
-      'La redonda dura 4 tiempos en 4/4, es decir 4 negras.'),
-  _Q('El intervalo Do–Sol es una…',
-      ['3ª mayor', '4ª justa', '5ª justa', 'octava'], 2,
-      'De Do a Sol hay 7 semitonos: una quinta justa.'),
-  _Q('El intervalo Do–Mi es una…',
-      ['2ª mayor', '3ª menor', '3ª mayor', '4ª justa'], 2,
-      'De Do a Mi hay 4 semitonos: una tercera mayor.'),
-  _Q('¿Qué alteración SUBE un semitono a la nota?',
-      ['bemol (♭)', 'sostenido (♯)', 'becuadro (♮)', 'calderón'], 1,
-      'El sostenido sube medio tono; el bemol lo baja.'),
-  _Q('¿Qué símbolo CANCELA una alteración previa?',
-      ['sostenido (♯)', 'bemol (♭)', 'becuadro (♮)', 'ligadura'], 2,
-      'El becuadro devuelve la nota a su altura natural.'),
-  _Q('La clave de Sol se usa principalmente para notas…',
-      ['graves', 'agudas', 'percusión', 'silencios'], 1,
-      'La clave de Sol (segunda línea) se usa para el registro agudo.'),
-  _Q('La clave de Fa se usa principalmente para notas…',
-      ['agudas', 'graves', 'medias', 'corales'], 1,
-      'La clave de Fa (cuarta línea) cubre el registro grave.'),
-  _Q('¿Cuántas líneas tiene un pentagrama?', ['4', '5', '6', '7'], 1,
-      'El pentagrama tiene 5 líneas y 4 espacios.'),
-  _Q('El patrón de tonos de la escala mayor es…',
-      ['T-T-S-T-T-T-S', 'T-S-T-T-S-T-T', 'T-T-T-S-T-T-S', 'S-T-T-T-S-T-T'], 0,
-      'Mayor: tono-tono-semitono-tono-tono-tono-semitono.'),
-  _Q('¿Cuántos bemoles tiene Fa mayor?', ['0', '1', '2', '3'], 1,
-      'Fa mayor tiene un bemol: Si♭.'),
-  _Q('Una blanca dura ¿cuántos tiempos en 4/4?', ['1', '2', '3', '4'], 1,
-      'La blanca vale 2 tiempos (dos negras).'),
-  _Q('El compás 4/4 tiene ¿cuántos tiempos por compás?', ['2', '3', '4', '6'],
-      2, 'El numerador indica 4 tiempos por compás.'),
-  _Q('"Forte" (f) indica tocar…', ['suave', 'fuerte', 'rápido', 'lento'], 1,
-      'Forte = fuerte; piano = suave.'),
-  _Q('"Piano" (p) indica tocar…', ['fuerte', 'suave', 'agudo', 'grave'], 1,
-      'Piano = suave (de ahí el nombre del instrumento, "pianoforte").'),
-  _Q('"Allegro" indica un tempo…', ['muy lento', 'lento', 'rápido', 'libre'],
-      2, 'Allegro es un tempo rápido y alegre.'),
+  _Q(
+    '¿Cuántos semitonos hay en una octava?',
+    ['7', '8', '10', '12'],
+    3,
+    'Una octava se divide en 12 semitonos iguales.',
+  ),
+  _Q(
+    '¿Cuántas teclas blancas hay en una octava?',
+    ['5', '7', '8', '12'],
+    1,
+    'Do, Re, Mi, Fa, Sol, La, Si: 7 notas naturales.',
+  ),
+  _Q(
+    'La distancia entre Mi y Fa es de…',
+    ['un tono', 'un semitono', 'tono y medio', 'dos tonos'],
+    1,
+    'Mi–Fa y Si–Do son los dos pares de notas naturales separados por un semitono.',
+  ),
+  _Q(
+    '¿Cuántos sostenidos tiene la tonalidad de Sol mayor?',
+    ['0', '1', '2', '3'],
+    1,
+    'Sol mayor tiene un sostenido: Fa♯.',
+  ),
+  _Q(
+    'La figura que dura la mitad de una negra es la…',
+    ['redonda', 'blanca', 'corchea', 'semicorchea'],
+    2,
+    'La corchea vale media negra; dos corcheas equivalen a una negra.',
+  ),
+  _Q(
+    'Una redonda equivale a ¿cuántas negras?',
+    ['2', '3', '4', '8'],
+    2,
+    'La redonda dura 4 tiempos en 4/4, es decir 4 negras.',
+  ),
+  _Q(
+    'El intervalo Do–Sol es una…',
+    ['3ª mayor', '4ª justa', '5ª justa', 'octava'],
+    2,
+    'De Do a Sol hay 7 semitonos: una quinta justa.',
+  ),
+  _Q(
+    'El intervalo Do–Mi es una…',
+    ['2ª mayor', '3ª menor', '3ª mayor', '4ª justa'],
+    2,
+    'De Do a Mi hay 4 semitonos: una tercera mayor.',
+  ),
+  _Q(
+    '¿Qué alteración SUBE un semitono a la nota?',
+    ['bemol (♭)', 'sostenido (♯)', 'becuadro (♮)', 'calderón'],
+    1,
+    'El sostenido sube medio tono; el bemol lo baja.',
+  ),
+  _Q(
+    '¿Qué símbolo CANCELA una alteración previa?',
+    ['sostenido (♯)', 'bemol (♭)', 'becuadro (♮)', 'ligadura'],
+    2,
+    'El becuadro devuelve la nota a su altura natural.',
+  ),
+  _Q(
+    'La clave de Sol se usa principalmente para notas…',
+    ['graves', 'agudas', 'percusión', 'silencios'],
+    1,
+    'La clave de Sol (segunda línea) se usa para el registro agudo.',
+  ),
+  _Q(
+    'La clave de Fa se usa principalmente para notas…',
+    ['agudas', 'graves', 'medias', 'corales'],
+    1,
+    'La clave de Fa (cuarta línea) cubre el registro grave.',
+  ),
+  _Q(
+    '¿Cuántas líneas tiene un pentagrama?',
+    ['4', '5', '6', '7'],
+    1,
+    'El pentagrama tiene 5 líneas y 4 espacios.',
+  ),
+  _Q(
+    'El patrón de tonos de la escala mayor es…',
+    ['T-T-S-T-T-T-S', 'T-S-T-T-S-T-T', 'T-T-T-S-T-T-S', 'S-T-T-T-S-T-T'],
+    0,
+    'Mayor: tono-tono-semitono-tono-tono-tono-semitono.',
+  ),
+  _Q(
+    '¿Cuántos bemoles tiene Fa mayor?',
+    ['0', '1', '2', '3'],
+    1,
+    'Fa mayor tiene un bemol: Si♭.',
+  ),
+  _Q(
+    'Una blanca dura ¿cuántos tiempos en 4/4?',
+    ['1', '2', '3', '4'],
+    1,
+    'La blanca vale 2 tiempos (dos negras).',
+  ),
+  _Q(
+    'El compás 4/4 tiene ¿cuántos tiempos por compás?',
+    ['2', '3', '4', '6'],
+    2,
+    'El numerador indica 4 tiempos por compás.',
+  ),
+  _Q(
+    '"Forte" (f) indica tocar…',
+    ['suave', 'fuerte', 'rápido', 'lento'],
+    1,
+    'Forte = fuerte; piano = suave.',
+  ),
+  _Q(
+    '"Piano" (p) indica tocar…',
+    ['fuerte', 'suave', 'agudo', 'grave'],
+    1,
+    'Piano = suave (de ahí el nombre del instrumento, "pianoforte").',
+  ),
+  _Q(
+    '"Allegro" indica un tempo…',
+    ['muy lento', 'lento', 'rápido', 'libre'],
+    2,
+    'Allegro es un tempo rápido y alegre.',
+  ),
 ];
 
 const int _questionsPerRound = 10;
@@ -133,7 +204,9 @@ class _TheoryQuizScreenState extends State<TheoryQuizScreen> {
                 child: Text(
                   '${_index + 1}/${_questions.length}',
                   style: TextStyle(
-                      color: cs.onSurfaceVariant, fontWeight: FontWeight.bold),
+                    color: cs.onSurfaceVariant,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -191,7 +264,9 @@ class _TheoryQuizScreenState extends State<TheoryQuizScreen> {
                 onTap: () => _answer(i),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 16),
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: bg,
                     borderRadius: BorderRadius.circular(14),
@@ -203,13 +278,18 @@ class _TheoryQuizScreenState extends State<TheoryQuizScreen> {
                         child: Text(
                           q.options[i],
                           style: TextStyle(
-                              color: fg,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500),
+                            color: fg,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                       if (answered && isCorrect)
-                        Icon(Icons.check_circle, color: AppTheme.success, size: 20)
+                        Icon(
+                          Icons.check_circle,
+                          color: AppTheme.success,
+                          size: 20,
+                        )
                       else if (answered && isPicked)
                         Icon(Icons.cancel, color: cs.error, size: 20),
                     ],
@@ -234,8 +314,10 @@ class _TheoryQuizScreenState extends State<TheoryQuizScreen> {
                   Expanded(
                     child: Text(
                       q.explain,
-                      style:
-                          TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+                      style: TextStyle(
+                        color: cs.onSurfaceVariant,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ],
@@ -254,9 +336,13 @@ class _TheoryQuizScreenState extends State<TheoryQuizScreen> {
                   ),
                 ),
                 child: Text(
-                  _index + 1 >= _questions.length ? 'Ver resultado' : 'Siguiente',
-                  style:
-                      const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  _index + 1 >= _questions.length
+                      ? 'Ver resultado'
+                      : 'Siguiente',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -292,7 +378,9 @@ class _TheoryQuizScreenState extends State<TheoryQuizScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            good ? '¡Muy bien! Dominás estos conceptos.' : 'Seguí practicando, ¡vas a mejorar!',
+            good
+                ? '¡Muy bien! Dominás estos conceptos.'
+                : 'Seguí practicando, ¡vas a mejorar!',
             textAlign: TextAlign.center,
             style: TextStyle(color: cs.onSurfaceVariant, fontSize: 15),
           ),
@@ -309,8 +397,10 @@ class _TheoryQuizScreenState extends State<TheoryQuizScreen> {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Text('Jugar de nuevo',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Jugar de nuevo',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
           const SizedBox(height: 12),

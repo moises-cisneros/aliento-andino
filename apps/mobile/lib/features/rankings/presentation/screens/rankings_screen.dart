@@ -125,47 +125,49 @@ class _RankingsScreenState extends State<RankingsScreen>
             Expanded(
               child: BlocBuilder<RankingsBloc, RankingsState>(
                 builder: (context, state) {
-            if (state is RankingsLoading) {
-              return Center(
-                child: CircularProgressIndicator(
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              );
-            }
-            if (state is RankingsError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      state.message == offlineMessage
-                          ? Icons.wifi_off_rounded
-                          : Icons.error_outline,
-                      color: state.message == offlineMessage
-                          ? Theme.of(context).colorScheme.onSurfaceVariant
-                          : Theme.of(context).colorScheme.error,
-                      size: 48,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      state.message,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  if (state is RankingsLoading) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary,
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => _bloc.add(RankingsLoadGlobal()),
-                      child: const Text('Reintentar'),
-                    ),
-                  ],
-                ),
-              );
-            }
-            if (state is RankingsLoaded) {
-              return _buildLeaderboard(state);
-            }
-            return const SizedBox.shrink();
+                    );
+                  }
+                  if (state is RankingsError) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            state.message == offlineMessage
+                                ? Icons.wifi_off_rounded
+                                : Icons.error_outline,
+                            color: state.message == offlineMessage
+                                ? Theme.of(context).colorScheme.onSurfaceVariant
+                                : Theme.of(context).colorScheme.error,
+                            size: 48,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            state.message,
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () => _bloc.add(RankingsLoadGlobal()),
+                            child: const Text('Reintentar'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  if (state is RankingsLoaded) {
+                    return _buildLeaderboard(state);
+                  }
+                  return const SizedBox.shrink();
                 },
               ),
             ),

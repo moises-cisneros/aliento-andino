@@ -2,13 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/lessons/data/models/lesson_model.dart';
 import 'package:mobile/features/lessons/presentation/bloc/lessons/learning_path.dart';
 
-LessonModel _l(
-  String id,
-  String cat,
-  String diff,
-  int order, {
-  double? best,
-}) =>
+LessonModel _l(String id, String cat, String diff, int order, {double? best}) =>
     LessonModel(
       id: id,
       categoryId: cat,

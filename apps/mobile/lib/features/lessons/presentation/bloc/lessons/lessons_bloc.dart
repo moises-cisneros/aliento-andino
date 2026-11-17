@@ -23,8 +23,8 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
   String _query = '';
 
   LessonsBloc({required LessonRepository lessonRepository})
-      : _lessonRepository = lessonRepository,
-        super(const LessonsInitial()) {
+    : _lessonRepository = lessonRepository,
+      super(const LessonsInitial()) {
     on<LessonsLoadCategories>(_onLoadCategories);
     on<LessonsRefresh>(_onRefresh);
     on<LessonsLoadByCategory>(_onLoadByCategory);
@@ -111,23 +111,27 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
   }
 
   void _emit(Emitter<LessonsState> emit) {
-    final filtered = _all.where((l) {
-      if (_category != null && l.categoryId != _category) return false;
-      if (_difficulty != null && l.difficulty != _difficulty) return false;
-      if (_genre != null && l.genre != _genre) return false;
-      if (_query.isNotEmpty &&
-          !l.title.toLowerCase().contains(_query) &&
-          !l.description.toLowerCase().contains(_query)) {
-        return false;
-      }
-      return true;
-    }).toList()
-      // Orden de progresión: por dificultad y luego por 'order'.
-      ..sort((a, b) {
-        final r = LearningPath.difficultyRank(a.difficulty)
-            .compareTo(LearningPath.difficultyRank(b.difficulty));
-        return r != 0 ? r : a.order.compareTo(b.order);
-      });
+    final filtered =
+        _all.where((l) {
+            if (_category != null && l.categoryId != _category) return false;
+            if (_difficulty != null && l.difficulty != _difficulty) {
+              return false;
+            }
+            if (_genre != null && l.genre != _genre) return false;
+            if (_query.isNotEmpty &&
+                !l.title.toLowerCase().contains(_query) &&
+                !l.description.toLowerCase().contains(_query)) {
+              return false;
+            }
+            return true;
+          }).toList()
+          // Orden de progresión: por dificultad y luego por 'order'.
+          ..sort((a, b) {
+            final r = LearningPath.difficultyRank(
+              a.difficulty,
+            ).compareTo(LearningPath.difficultyRank(b.difficulty));
+            return r != 0 ? r : a.order.compareTo(b.order);
+          });
 
     emit(
       LessonsLoaded(

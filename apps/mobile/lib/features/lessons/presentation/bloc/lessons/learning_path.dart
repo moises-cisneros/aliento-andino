@@ -31,7 +31,9 @@ class LearningPath {
       (l.userBestScore ?? 0) >= masteryThreshold;
 
   static int _compare(LessonModel a, LessonModel b) {
-    final r = difficultyRank(a.difficulty).compareTo(difficultyRank(b.difficulty));
+    final r = difficultyRank(
+      a.difficulty,
+    ).compareTo(difficultyRank(b.difficulty));
     return r != 0 ? r : a.order.compareTo(b.order);
   }
 
@@ -53,7 +55,9 @@ class LearningPath {
       var reachedCurrent = false;
       for (final lesson in track) {
         if (reachedCurrent) {
-          locked.add(lesson.id); // todo lo posterior a la actual queda bloqueado
+          locked.add(
+            lesson.id,
+          ); // todo lo posterior a la actual queda bloqueado
         } else if (!isMastered(lesson)) {
           currents.add(lesson); // primera no dominada del track = actual
           reachedCurrent = true;

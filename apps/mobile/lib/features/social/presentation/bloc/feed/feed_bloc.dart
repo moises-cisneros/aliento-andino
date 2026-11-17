@@ -124,9 +124,7 @@ class FeedBloc extends Bloc<FeedEvent, FeedState> {
           hasMore = result['has_more'] as bool;
         case FeedMode.popular:
           _explorePage += 1;
-          final result = await _socialRepository.getExplore(
-            page: _explorePage,
-          );
+          final result = await _socialRepository.getExplore(page: _explorePage);
           newPosts = result['items'] as List<PostModel>;
           _explorePages = result['pages'] as int? ?? _explorePages;
           nextCursor = null;

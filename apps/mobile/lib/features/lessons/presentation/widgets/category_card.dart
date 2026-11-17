@@ -46,7 +46,9 @@ class CategoryCard extends StatelessWidget {
               : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? accent : Theme.of(context).colorScheme.surfaceContainerHighest,
+            color: isSelected
+                ? accent
+                : Theme.of(context).colorScheme.surfaceContainerHighest,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -55,14 +57,18 @@ class CategoryCard extends StatelessWidget {
           children: [
             Icon(
               _getIcon(),
-              color: isSelected ? accent : Theme.of(context).colorScheme.onSurfaceVariant,
+              color: isSelected
+                  ? accent
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
               size: 20,
             ),
             const SizedBox(width: 8),
             Text(
               category.name,
               style: TextStyle(
-                color: isSelected ? accent : Theme.of(context).colorScheme.onSurface,
+                color: isSelected
+                    ? accent
+                    : Theme.of(context).colorScheme.onSurface,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 fontSize: 14,
               ),
@@ -79,7 +85,9 @@ class CategoryCard extends StatelessWidget {
               child: Text(
                 '${category.lessonsCount}',
                 style: TextStyle(
-                  color: isSelected ? accent : Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: isSelected
+                      ? accent
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                   fontSize: 12,
                 ),
               ),

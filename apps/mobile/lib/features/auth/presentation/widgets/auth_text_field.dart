@@ -37,7 +37,10 @@ class AuthTextField extends StatelessWidget {
         labelText: label,
         hintText: hint,
         prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, color: Theme.of(context).colorScheme.onSurfaceVariant)
+            ? Icon(
+                prefixIcon,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              )
             : null,
         suffixIcon: suffixIcon,
       ),

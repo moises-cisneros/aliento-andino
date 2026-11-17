@@ -74,7 +74,8 @@ class PracticeBloc extends Bloc<PracticeEvent, PracticeState> {
       _handFilter = null;
       // Filtro de manos disponible solo si AMBAS manos tienen al menos una nota
       // tocable (no-silencio); si no, el selector no tendría sentido.
-      _handAvailable = _allNotes.any((n) => n.hand == 'left' && !n.isRest) &&
+      _handAvailable =
+          _allNotes.any((n) => n.hand == 'left' && !n.isRest) &&
           _allNotes.any((n) => n.hand == 'right' && !n.isRest);
       _notes = _filteredNotes();
       _currentPos = 0;
@@ -429,7 +430,9 @@ class PracticeBloc extends Bloc<PracticeEvent, PracticeState> {
   void _onComplete(PracticeComplete event, Emitter<PracticeState> emit) {
     _stopwatch.stop();
     final totalNotes = _notes.where((n) => !n.isRest).length;
-    final score = totalNotes > 0 ? ((_correctCount / totalNotes) * 100.0).clamp(0.0, 100.0) : 0.0;
+    final score = totalNotes > 0
+        ? ((_correctCount / totalNotes) * 100.0).clamp(0.0, 100.0)
+        : 0.0;
 
     emit(
       PracticeCompleted(

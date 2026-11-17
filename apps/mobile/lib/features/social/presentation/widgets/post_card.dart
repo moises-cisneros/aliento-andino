@@ -17,8 +17,10 @@ class PostCard extends StatelessWidget {
   final VoidCallback? onReport;
   final VoidCallback? onSave;
   final VoidCallback? onEdit;
+
   /// Líneas máximas del contenido antes de "Ver más" (null = sin límite).
   final int? contentMaxLines;
+
   /// Key opcional sobre el botón de guardar, para que el tutor IA lo resalte.
   final Key? saveButtonKey;
 
@@ -108,7 +110,9 @@ class PostCard extends StatelessWidget {
                             value: 'edit',
                             child: Text(
                               'Editar',
-                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                             ),
                           ),
                         if (onDelete != null)
@@ -116,7 +120,9 @@ class PostCard extends StatelessWidget {
                             value: 'delete',
                             child: Text(
                               'Eliminar',
-                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                             ),
                           ),
                         if (onReport != null)
@@ -124,7 +130,9 @@ class PostCard extends StatelessWidget {
                             value: 'report',
                             child: Text(
                               'Reportar',
-                              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                             ),
                           ),
                       ],

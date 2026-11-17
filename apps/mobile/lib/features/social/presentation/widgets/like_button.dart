@@ -28,7 +28,9 @@ class LikeButton extends StatelessWidget {
               child: Icon(
                 isLiked ? Icons.favorite : Icons.favorite_border,
                 key: ValueKey(isLiked),
-                color: isLiked ? Theme.of(context).colorScheme.error : Theme.of(context).hintColor,
+                color: isLiked
+                    ? Theme.of(context).colorScheme.error
+                    : Theme.of(context).hintColor,
                 size: 22,
               ),
             ),
@@ -36,7 +38,9 @@ class LikeButton extends StatelessWidget {
             Text(
               '$count',
               style: TextStyle(
-                color: isLiked ? Theme.of(context).colorScheme.error : Theme.of(context).hintColor,
+                color: isLiked
+                    ? Theme.of(context).colorScheme.error
+                    : Theme.of(context).hintColor,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),

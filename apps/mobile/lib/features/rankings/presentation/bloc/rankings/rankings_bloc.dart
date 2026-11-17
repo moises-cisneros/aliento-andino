@@ -36,11 +36,13 @@ class RankingsBloc extends Bloc<RankingsEvent, RankingsState> {
         ),
       );
     } catch (e) {
-      emit(RankingsError(
-        message: isConnectionError(e)
-            ? offlineMessage
-            : 'Error al cargar ranking global',
-      ));
+      emit(
+        RankingsError(
+          message: isConnectionError(e)
+              ? offlineMessage
+              : 'Error al cargar ranking global',
+        ),
+      );
     }
   }
 
@@ -61,11 +63,13 @@ class RankingsBloc extends Bloc<RankingsEvent, RankingsState> {
         ),
       );
     } catch (e) {
-      emit(RankingsError(
-        message: isConnectionError(e)
-            ? offlineMessage
-            : 'Error al cargar ranking de amigos',
-      ));
+      emit(
+        RankingsError(
+          message: isConnectionError(e)
+              ? offlineMessage
+              : 'Error al cargar ranking de amigos',
+        ),
+      );
     }
   }
 
@@ -88,11 +92,13 @@ class RankingsBloc extends Bloc<RankingsEvent, RankingsState> {
         ),
       );
     } catch (e) {
-      emit(RankingsError(
-        message: isConnectionError(e)
-            ? offlineMessage
-            : 'Error al cargar ranking semanal',
-      ));
+      emit(
+        RankingsError(
+          message: isConnectionError(e)
+              ? offlineMessage
+              : 'Error al cargar ranking semanal',
+        ),
+      );
     }
   }
 
@@ -114,11 +120,13 @@ class RankingsBloc extends Bloc<RankingsEvent, RankingsState> {
         ),
       );
     } catch (e) {
-      emit(RankingsError(
-        message: isConnectionError(e)
-            ? offlineMessage
-            : 'Error al cargar ranking de rachas',
-      ));
+      emit(
+        RankingsError(
+          message: isConnectionError(e)
+              ? offlineMessage
+              : 'Error al cargar ranking de rachas',
+        ),
+      );
     }
   }
 
@@ -131,11 +139,13 @@ class RankingsBloc extends Bloc<RankingsEvent, RankingsState> {
       final xpData = await rankingRepository.getMyXP();
       emit(MyXPLoaded(xpData: xpData));
     } catch (e) {
-      emit(RankingsError(
-        message: isConnectionError(e)
-            ? offlineMessage
-            : 'Error al cargar datos de XP',
-      ));
+      emit(
+        RankingsError(
+          message: isConnectionError(e)
+              ? offlineMessage
+              : 'Error al cargar datos de XP',
+        ),
+      );
     }
   }
 
@@ -155,11 +165,13 @@ class RankingsBloc extends Bloc<RankingsEvent, RankingsState> {
         ),
       );
     } catch (e) {
-      emit(RankingsError(
-        message: isConnectionError(e)
-            ? offlineMessage
-            : 'Error al cargar ranking de lección',
-      ));
+      emit(
+        RankingsError(
+          message: isConnectionError(e)
+              ? offlineMessage
+              : 'Error al cargar ranking de lección',
+        ),
+      );
     }
   }
 }

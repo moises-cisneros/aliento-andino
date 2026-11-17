@@ -49,7 +49,10 @@ class _ReportDialogState extends State<ReportDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
-      title: Text('Reportar', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+      title: Text(
+        'Reportar',
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -57,7 +60,10 @@ class _ReportDialogState extends State<ReportDialog> {
           children: [
             Text(
               'Selecciona un motivo:',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
             ),
             const SizedBox(height: 8),
             RadioGroup<String>(
@@ -107,7 +113,10 @@ class _ReportDialogState extends State<ReportDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Cancelar', style: TextStyle(color: Theme.of(context).hintColor)),
+          child: Text(
+            'Cancelar',
+            style: TextStyle(color: Theme.of(context).hintColor),
+          ),
         ),
         ElevatedButton(
           onPressed: _selectedReason != null
@@ -124,7 +133,10 @@ class _ReportDialogState extends State<ReportDialog> {
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
-          child: Text('Reportar', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+          child: Text(
+            'Reportar',
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+          ),
         ),
       ],
     );

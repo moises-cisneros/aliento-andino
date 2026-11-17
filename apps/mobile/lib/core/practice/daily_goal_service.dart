@@ -38,8 +38,7 @@ class DailyGoalService {
   }
 
   /// Suma minutos (se guardan como segundos) y devuelve el total de minutos.
-  Future<int> addMinutes(double minutes) =>
-      addSeconds((minutes * 60).round());
+  Future<int> addMinutes(double minutes) => addSeconds((minutes * 60).round());
 
   /// Suma segundos al total de hoy y devuelve el nuevo total en minutos. Al
   /// acumular segundos no se pierde el resto entre sesiones cortas.

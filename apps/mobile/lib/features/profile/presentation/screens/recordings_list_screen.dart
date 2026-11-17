@@ -17,8 +17,18 @@ class RecordingsListScreen extends StatefulWidget {
 
 class _RecordingsListScreenState extends State<RecordingsListScreen> {
   static const _months = [
-    'ene', 'feb', 'mar', 'abr', 'may', 'jun',
-    'jul', 'ago', 'sep', 'oct', 'nov', 'dic',
+    'ene',
+    'feb',
+    'mar',
+    'abr',
+    'may',
+    'jun',
+    'jul',
+    'ago',
+    'sep',
+    'oct',
+    'nov',
+    'dic',
   ];
 
   final RecordingsService _service = RecordingsService();
@@ -148,13 +158,13 @@ class _RecordingsListScreenState extends State<RecordingsListScreen> {
       body: _loading
           ? Center(child: CircularProgressIndicator(color: cs.primary))
           : _recordings.isEmpty
-              ? _buildEmpty(cs)
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                  itemCount: _recordings.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
-                  itemBuilder: (_, i) => _buildTile(_recordings[i]),
-                ),
+          ? _buildEmpty(cs)
+          : ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              itemCount: _recordings.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              itemBuilder: (_, i) => _buildTile(_recordings[i]),
+            ),
     );
   }
 
@@ -241,7 +251,11 @@ class _RecordingsListScreenState extends State<RecordingsListScreen> {
           ),
           IconButton(
             tooltip: 'Compartir',
-            icon: Icon(Icons.share_outlined, color: cs.onSurfaceVariant, size: 22),
+            icon: Icon(
+              Icons.share_outlined,
+              color: cs.onSurfaceVariant,
+              size: 22,
+            ),
             onPressed: () => _share(r),
           ),
           IconButton(

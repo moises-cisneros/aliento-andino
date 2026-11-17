@@ -29,24 +29,24 @@ class Recording {
   DateTime get date => DateTime.fromMillisecondsSinceEpoch(dateMillis);
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'lessonId': lessonId,
-        'lessonTitle': lessonTitle,
-        'dateMillis': dateMillis,
-        'score': score,
-        'durationMs': durationMs,
-        'filePath': filePath,
-      };
+    'id': id,
+    'lessonId': lessonId,
+    'lessonTitle': lessonTitle,
+    'dateMillis': dateMillis,
+    'score': score,
+    'durationMs': durationMs,
+    'filePath': filePath,
+  };
 
   factory Recording.fromJson(Map<String, dynamic> j) => Recording(
-        id: (j['id'] ?? '') as String,
-        lessonId: (j['lessonId'] ?? '') as String,
-        lessonTitle: (j['lessonTitle'] ?? 'Lección') as String,
-        dateMillis: (j['dateMillis'] ?? 0) as int,
-        score: ((j['score'] ?? 0) as num).toDouble(),
-        durationMs: (j['durationMs'] ?? 0) as int,
-        filePath: (j['filePath'] ?? '') as String,
-      );
+    id: (j['id'] ?? '') as String,
+    lessonId: (j['lessonId'] ?? '') as String,
+    lessonTitle: (j['lessonTitle'] ?? 'Lección') as String,
+    dateMillis: (j['dateMillis'] ?? 0) as int,
+    score: ((j['score'] ?? 0) as num).toDouble(),
+    durationMs: (j['durationMs'] ?? 0) as int,
+    filePath: (j['filePath'] ?? '') as String,
+  );
 }
 
 /// Biblioteca local de grabaciones ("Mis grabaciones").
@@ -148,9 +148,7 @@ class RecordingsService {
     if (s == null || s.isEmpty) return [];
     try {
       final decoded = jsonDecode(s) as List<dynamic>;
-      return decoded
-          .map((e) => (e as Map).cast<String, dynamic>())
-          .toList();
+      return decoded.map((e) => (e as Map).cast<String, dynamic>()).toList();
     } catch (_) {
       return [];
     }
@@ -179,8 +177,10 @@ class RecordingsService {
           !completer.isCompleted) {
         completer.complete(fromGetter.inMilliseconds);
       }
-      return await completer.future
-          .timeout(const Duration(seconds: 3), onTimeout: () => 0);
+      return await completer.future.timeout(
+        const Duration(seconds: 3),
+        onTimeout: () => 0,
+      );
     } catch (_) {
       return 0;
     } finally {

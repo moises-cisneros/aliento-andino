@@ -215,8 +215,8 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
                   onTap: premiumLocked
                       ? () => _openPaywall()
                       : locked
-                          ? () => _showLockedMessage()
-                          : () => _openLesson(lesson.id),
+                      ? () => _showLockedMessage()
+                      : () => _openLesson(lesson.id),
                 );
               });
             }(),
@@ -231,7 +231,8 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
   /// y debajo los chips de filtros activos (removibles).
   Widget _buildSearchAndFilter(LessonsLoaded state) {
     final cs = Theme.of(context).colorScheme;
-    final count = (state.activeCategory != null ? 1 : 0) +
+    final count =
+        (state.activeCategory != null ? 1 : 0) +
         (state.activeDifficulty != null ? 1 : 0) +
         (state.activeGenre != null ? 1 : 0);
 
@@ -249,22 +250,29 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
                   style: TextStyle(color: cs.onSurface, fontSize: 14),
                   decoration: InputDecoration(
                     isDense: true,
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 12),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                     hintText: 'Buscar lecciones...',
-                    hintStyle:
-                        TextStyle(color: Theme.of(context).hintColor, fontSize: 14),
-                    prefixIcon: Icon(Icons.search,
-                        color: Theme.of(context).hintColor, size: 20),
+                    hintStyle: TextStyle(
+                      color: Theme.of(context).hintColor,
+                      fontSize: 14,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      color: Theme.of(context).hintColor,
+                      size: 20,
+                    ),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
-                            icon: Icon(Icons.clear,
-                                size: 18, color: Theme.of(context).hintColor),
+                            icon: Icon(
+                              Icons.clear,
+                              size: 18,
+                              color: Theme.of(context).hintColor,
+                            ),
                             onPressed: () {
                               _searchController.clear();
-                              context
-                                  .read<LessonsBloc>()
-                                  .add(const LessonsSearch(''));
+                              context.read<LessonsBloc>().add(
+                                const LessonsSearch(''),
+                              );
                             },
                           )
                         : null,
@@ -283,7 +291,9 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
             const SizedBox(width: 8),
             // Botón de filtros: compacto (ícono + badge de conteo).
             Material(
-              color: count > 0 ? cs.primary.withValues(alpha: 0.12) : cs.surface,
+              color: count > 0
+                  ? cs.primary.withValues(alpha: 0.12)
+                  : cs.surface,
               borderRadius: BorderRadius.circular(12),
               child: InkWell(
                 key: TutorTargets.keyFor('lessons_categories'),
@@ -295,15 +305,20 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: Row(
                       children: [
-                        Icon(Icons.tune,
-                            size: 20,
-                            color: count > 0 ? cs.primary : cs.onSurfaceVariant),
+                        Icon(
+                          Icons.tune,
+                          size: 20,
+                          color: count > 0 ? cs.primary : cs.onSurfaceVariant,
+                        ),
                         if (count > 0) ...[
                           const SizedBox(width: 6),
-                          Text('$count',
-                              style: TextStyle(
-                                  color: cs.primary,
-                                  fontWeight: FontWeight.bold)),
+                          Text(
+                            '$count',
+                            style: TextStyle(
+                              color: cs.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ],
                     ),
@@ -332,24 +347,25 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
     final chips = <Widget>[
       if (categoryName != null)
         _activeChip(
-            categoryName,
-            () => context
-                .read<LessonsBloc>()
-                .add(LessonsLoadByCategory(state.activeCategory!))),
+          categoryName,
+          () => context.read<LessonsBloc>().add(
+            LessonsLoadByCategory(state.activeCategory!),
+          ),
+        ),
       if (state.activeDifficulty != null)
         _activeChip(
           state.activeDifficulty![0].toUpperCase() +
               state.activeDifficulty!.substring(1),
-          () => context
-              .read<LessonsBloc>()
-              .add(const LessonsFilterByDifficulty(null)),
+          () => context.read<LessonsBloc>().add(
+            const LessonsFilterByDifficulty(null),
+          ),
         ),
       if (state.activeGenre != null)
         _activeChip(
-            state.activeGenre!,
-            () => context
-                .read<LessonsBloc>()
-                .add(const LessonsFilterByGenre(null))),
+          state.activeGenre!,
+          () =>
+              context.read<LessonsBloc>().add(const LessonsFilterByGenre(null)),
+        ),
     ];
     if (chips.isEmpty) return const [];
     return [
@@ -396,7 +412,8 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
   Widget _buildFilterSheet(BuildContext sheetCtx, LessonsLoaded st) {
     final cs = Theme.of(context).colorScheme;
     final bloc = sheetCtx.read<LessonsBloc>();
-    final hasActive = st.activeCategory != null ||
+    final hasActive =
+        st.activeCategory != null ||
         st.activeDifficulty != null ||
         st.activeGenre != null;
 
@@ -420,11 +437,14 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
             const SizedBox(height: 16),
             Row(
               children: [
-                Text('Filtros',
-                    style: TextStyle(
-                        color: cs.onSurface,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold)),
+                Text(
+                  'Filtros',
+                  style: TextStyle(
+                    color: cs.onSurface,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const Spacer(),
                 if (hasActive)
                   TextButton(
@@ -508,9 +528,13 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: Text('Ver ${st.lessons.length} lecciones',
-                    style: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.bold)),
+                child: Text(
+                  'Ver ${st.lessons.length} lecciones',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ],
@@ -523,11 +547,14 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
     final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(top: 18, bottom: 10),
-      child: Text(title,
-          style: TextStyle(
-              color: cs.onSurfaceVariant,
-              fontSize: 13,
-              fontWeight: FontWeight.w600)),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: cs.onSurfaceVariant,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 

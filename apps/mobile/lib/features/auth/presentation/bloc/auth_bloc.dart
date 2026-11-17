@@ -82,7 +82,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   /// Guarda el perfil del usuario para poder restaurar la sesión sin internet.
   Future<void> _cacheUser(UserEntity user) async {
     try {
-      await secureStorage.saveUser(jsonEncode(UserModel.fromEntity(user).toJson()));
+      await secureStorage.saveUser(
+        jsonEncode(UserModel.fromEntity(user).toJson()),
+      );
     } catch (_) {
       // Cachear el perfil no debe romper el login.
     }
@@ -205,17 +207,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           desc.contains('no credentials')) {
         // Credential Manager no encontró ninguna cuenta de Google en el
         // dispositivo (caso típico en emuladores sin cuenta agregada).
-        emit(const AuthError(
-          message:
-              'No hay una cuenta de Google en este dispositivo. Agregá una en '
-              'Ajustes → Cuentas del dispositivo, o iniciá sesión con tu email.',
-        ));
+        emit(
+          const AuthError(
+            message:
+                'No hay una cuenta de Google en este dispositivo. Agregá una en '
+                'Ajustes → Cuentas del dispositivo, o iniciá sesión con tu email.',
+          ),
+        );
       } else {
-        emit(const AuthError(
-          message:
-              'No se pudo iniciar sesión con Google. Probá de nuevo o usá tu '
-              'email y contraseña.',
-        ));
+        emit(
+          const AuthError(
+            message:
+                'No se pudo iniciar sesión con Google. Probá de nuevo o usá tu '
+                'email y contraseña.',
+          ),
+        );
       }
     } catch (e) {
       // Error logged only in debug builds

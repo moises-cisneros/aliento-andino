@@ -1,11 +1,7 @@
 import 'dart:math' as math;
 
 /// Estado del seguimiento postural on-device.
-enum PostureTrackingStatus {
-  tracking,
-  lost,
-  calibrating,
-}
+enum PostureTrackingStatus { tracking, lost, calibrating }
 
 /// Landmark tridimensional normalizado proveniente de MediaPipe Pose / Hands.
 class NormalizedLandmark {
@@ -68,16 +64,18 @@ class PostureEvaluation {
   });
 
   factory PostureEvaluation.lost() => const PostureEvaluation(
-        overallScore: 0.0,
-        isErgonomic: false,
-        status: PostureTrackingStatus.lost,
-        shoulderTiltDegrees: 0.0,
-        neckTiltDegrees: 0.0,
-        leftElbowDegrees: 0.0,
-        rightElbowDegrees: 0.0,
-        embouchureDistance: 0.0,
-        feedback: ['Alineá tu rostro y torso con la cámara para evaluar tu postura.'],
-      );
+    overallScore: 0.0,
+    isErgonomic: false,
+    status: PostureTrackingStatus.lost,
+    shoulderTiltDegrees: 0.0,
+    neckTiltDegrees: 0.0,
+    leftElbowDegrees: 0.0,
+    rightElbowDegrees: 0.0,
+    embouchureDistance: 0.0,
+    feedback: [
+      'Alineá tu rostro y torso con la cámara para evaluar tu postura.',
+    ],
+  );
 
   @override
   String toString() =>

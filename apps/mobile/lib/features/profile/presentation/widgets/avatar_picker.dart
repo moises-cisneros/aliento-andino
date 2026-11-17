@@ -201,10 +201,7 @@ class _AvatarPickerState extends State<AvatarPicker> {
           onPressed: _uploading ? null : _showSourceSheet,
           child: Text(
             hasAvatar ? 'Cambiar foto' : 'Subir foto',
-            style: TextStyle(
-              color: cs.primary,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(color: cs.primary, fontWeight: FontWeight.w600),
           ),
         ),
       ],

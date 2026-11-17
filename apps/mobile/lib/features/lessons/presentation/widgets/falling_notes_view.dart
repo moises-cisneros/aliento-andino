@@ -177,11 +177,13 @@ class _FallingPainter extends CustomPainter {
     );
 
     // 2) Teclado en la base.
-    final highlightMidi =
-        currentExpectedNote == null ? null : _midi(currentExpectedNote!);
+    final highlightMidi = currentExpectedNote == null
+        ? null
+        : _midi(currentExpectedNote!);
     for (var wi = 0; wi < whiteKeys.length; wi++) {
       final x = wi * whiteW;
-      final isHi = highlightMidi != null && _midi(whiteKeys[wi]) == highlightMidi;
+      final isHi =
+          highlightMidi != null && _midi(whiteKeys[wi]) == highlightMidi;
       final r = Rect.fromLTWH(x + 0.5, hitY, whiteW - 1, keyboardH);
       canvas.drawRect(r, Paint()..color = isHi ? primary : keyWhite);
       canvas.drawRect(

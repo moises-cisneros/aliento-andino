@@ -12,13 +12,17 @@ class CommentTile extends StatefulWidget {
   final CommentModel comment;
   final VoidCallback? onUserTap;
   final VoidCallback? onDelete;
+
   /// Toggle like del comentario (bloc-backed para comentarios raíz). Si es null,
   /// el tile maneja el like localmente (caso de los replies cargados aparte).
   final VoidCallback? onLike;
+
   /// Editar el comentario (solo el dueño). Si es null no se muestra la opción.
   final VoidCallback? onEdit;
+
   /// Callback para crear un reply. Recibe el parentId.
   final void Function(String parentCommentId, String parentUsername)? onReply;
+
   /// Si es true, el tile se renderea como reply (indentado, avatar más chico).
   final bool isReply;
 
@@ -80,9 +84,9 @@ class _CommentTileState extends State<CommentTile> {
     if (_replies == null) {
       setState(() => _loadingReplies = true);
       try {
-        final replies = await context
-            .read<SocialRepository>()
-            .getReplies(widget.comment.id);
+        final replies = await context.read<SocialRepository>().getReplies(
+          widget.comment.id,
+        );
         if (!mounted) return;
         setState(() {
           _replies = replies;
@@ -101,8 +105,9 @@ class _CommentTileState extends State<CommentTile> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final createdAt = DateTime.tryParse(widget.comment.createdAt);
-    final timeAgo =
-        createdAt != null ? timeago.format(createdAt, locale: 'es') : '';
+    final timeAgo = createdAt != null
+        ? timeago.format(createdAt, locale: 'es')
+        : '';
     final avatarRadius = widget.isReply ? 14.0 : 16.0;
 
     return Padding(
@@ -115,7 +120,10 @@ class _CommentTileState extends State<CommentTile> {
             children: [
               GestureDetector(
                 onTap: widget.onUserTap,
-                child: UserAvatar(user: widget.comment.user, radius: avatarRadius),
+                child: UserAvatar(
+                  user: widget.comment.user,
+                  radius: avatarRadius,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -141,7 +149,10 @@ class _CommentTileState extends State<CommentTile> {
                         const SizedBox(width: 6),
                         Text(
                           timeAgo,
-                          style: TextStyle(color: Theme.of(context).hintColor, fontSize: 11),
+                          style: TextStyle(
+                            color: Theme.of(context).hintColor,
+                            fontSize: 11,
+                          ),
                         ),
                         const Spacer(),
                         _likeButton(cs),
@@ -168,7 +179,10 @@ class _CommentTileState extends State<CommentTile> {
                                 widget.comment.user.username,
                               ),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                  horizontal: 2,
+                                ),
                                 child: Text(
                                   'Responder',
                                   style: TextStyle(
@@ -184,7 +198,10 @@ class _CommentTileState extends State<CommentTile> {
                             InkWell(
                               onTap: widget.onEdit,
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                  horizontal: 2,
+                                ),
                                 child: Text(
                                   'Editar',
                                   style: TextStyle(
@@ -201,7 +218,9 @@ class _CommentTileState extends State<CommentTile> {
                             InkWell(
                               onTap: _toggleReplies,
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
                                 child: Row(
                                   children: [
                                     Icon(
@@ -235,7 +254,11 @@ class _CommentTileState extends State<CommentTile> {
               ),
               if (widget.onDelete != null)
                 IconButton(
-                  icon: Icon(Icons.close, size: 16, color: Theme.of(context).hintColor),
+                  icon: Icon(
+                    Icons.close,
+                    size: 16,
+                    color: Theme.of(context).hintColor,
+                  ),
                   onPressed: widget.onDelete,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),

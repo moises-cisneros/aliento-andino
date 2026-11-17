@@ -280,7 +280,10 @@ class _SkillLevelTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       'Tocá para retomar la evaluación',
-                      style: TextStyle(color: cs.onSurfaceVariant, fontSize: 12),
+                      style: TextStyle(
+                        color: cs.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -607,7 +610,9 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
 
   Future<void> _submit() async {
     if (_new.text.length < 8) {
-      setState(() => _error = 'La nueva contraseña debe tener al menos 8 caracteres');
+      setState(
+        () => _error = 'La nueva contraseña debe tener al menos 8 caracteres',
+      );
       return;
     }
     if (_new.text != _confirm.text) {
@@ -619,9 +624,10 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       _error = null;
     });
     try {
-      await context
-          .read<AuthRepository>()
-          .changePassword(_current.text, _new.text);
+      await context.read<AuthRepository>().changePassword(
+        _current.text,
+        _new.text,
+      );
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -665,8 +671,10 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
       actions: [
         TextButton(
           onPressed: _loading ? null : () => Navigator.of(context).pop(),
-          child: Text('Cancelar',
-              style: TextStyle(color: Theme.of(context).hintColor)),
+          child: Text(
+            'Cancelar',
+            style: TextStyle(color: Theme.of(context).hintColor),
+          ),
         ),
         ElevatedButton(
           onPressed: _loading ? null : _submit,
@@ -679,7 +687,9 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : const Text('Cambiar'),
         ),
@@ -719,8 +729,8 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
     });
     try {
       await context.read<AuthRepository>().deleteAccount(
-            password: widget.isLocal ? _password.text : null,
-          );
+        password: widget.isLocal ? _password.text : null,
+      );
       if (!mounted) return;
       final authBloc = context.read<AuthBloc>();
       Navigator.of(context).pop();
@@ -769,8 +779,10 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
       actions: [
         TextButton(
           onPressed: _loading ? null : () => Navigator.of(context).pop(),
-          child: Text('Cancelar',
-              style: TextStyle(color: Theme.of(context).hintColor)),
+          child: Text(
+            'Cancelar',
+            style: TextStyle(color: Theme.of(context).hintColor),
+          ),
         ),
         ElevatedButton(
           onPressed: _loading ? null : _confirmDelete,
@@ -783,7 +795,9 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
               : const Text('Eliminar'),
         ),
@@ -868,8 +882,7 @@ class _PracticeReminderTileState extends State<_PracticeReminderTile> {
             borderRadius: BorderRadius.circular(10),
             onTap: () => _toggle(!_enabled),
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Row(
                 children: [
                   Icon(Icons.alarm, color: cs.primary, size: 22),
@@ -896,7 +909,9 @@ class _PracticeReminderTileState extends State<_PracticeReminderTile> {
                       child: Text(
                         'Hora del recordatorio',
                         style: TextStyle(
-                            color: cs.onSurfaceVariant, fontSize: 13),
+                          color: cs.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                     Text(
@@ -907,8 +922,11 @@ class _PracticeReminderTileState extends State<_PracticeReminderTile> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Icon(Icons.chevron_right,
-                        color: cs.onSurfaceVariant, size: 18),
+                    Icon(
+                      Icons.chevron_right,
+                      color: cs.onSurfaceVariant,
+                      size: 18,
+                    ),
                   ],
                 ),
               ),
@@ -953,14 +971,18 @@ class _DailyGoalTileState extends State<_DailyGoalTile> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: options
-              .map((m) => ListTile(
-                    title: Text('$m minutos',
-                        style: TextStyle(color: cs.onSurface)),
-                    trailing: m == _goal
-                        ? Icon(Icons.check, color: cs.primary)
-                        : null,
-                    onTap: () => Navigator.of(ctx).pop(m),
-                  ))
+              .map(
+                (m) => ListTile(
+                  title: Text(
+                    '$m minutos',
+                    style: TextStyle(color: cs.onSurface),
+                  ),
+                  trailing: m == _goal
+                      ? Icon(Icons.check, color: cs.primary)
+                      : null,
+                  onTap: () => Navigator.of(ctx).pop(m),
+                ),
+              )
               .toList(),
         ),
       ),
@@ -1044,14 +1066,18 @@ class _InstrumentTileState extends State<_InstrumentTile> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: Instrument.values
-              .map((ins) => ListTile(
-                    title: Text(instrumentLabels[ins] ?? ins.name,
-                        style: TextStyle(color: cs.onSurface)),
-                    trailing: ins == _instrument
-                        ? Icon(Icons.check, color: cs.primary)
-                        : null,
-                    onTap: () => Navigator.of(ctx).pop(ins),
-                  ))
+              .map(
+                (ins) => ListTile(
+                  title: Text(
+                    instrumentLabels[ins] ?? ins.name,
+                    style: TextStyle(color: cs.onSurface),
+                  ),
+                  trailing: ins == _instrument
+                      ? Icon(Icons.check, color: cs.primary)
+                      : null,
+                  onTap: () => Navigator.of(ctx).pop(ins),
+                ),
+              )
               .toList(),
         ),
       ),

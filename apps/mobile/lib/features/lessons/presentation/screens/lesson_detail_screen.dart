@@ -41,7 +41,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         builder: (context, state) {
           if (state is LessonDetailLoading) {
             return Center(
-              child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.primary,
+              ),
             );
           }
 
@@ -52,7 +54,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 children: [
                   Text(
                     state.message,
-                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
@@ -103,14 +107,21 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Theme.of(context).colorScheme.primary.withValues(alpha: 0.3), Theme.of(context).scaffoldBackgroundColor],
+                  colors: [
+                    Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.3),
+                    Theme.of(context).scaffoldBackgroundColor,
+                  ],
                 ),
               ),
               child: Center(
                 child: Icon(
                   Icons.music_note,
                   size: 64,
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.3),
                 ),
               ),
             ),
@@ -128,7 +139,11 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   children: [
                     DifficultyBadge(difficulty: lesson.difficulty),
                     SizedBox(width: 12),
-                    Icon(Icons.speed, color: Theme.of(context).colorScheme.onSurfaceVariant, size: 16),
+                    Icon(
+                      Icons.speed,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      size: 16,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '${lesson.tempoBpm} BPM',
@@ -238,7 +253,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                       color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                       ),
                     ),
                     child: StaffView(notes: notes),
@@ -259,8 +276,9 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                 PianoGuideWidget(
                   highlightNotes: uniqueNotes,
                   rangeNotes: uniqueNotes,
-                  minOctaves:
-                      lesson.difficulty.toLowerCase() == 'principiante' ? 2 : 3,
+                  minOctaves: lesson.difficulty.toLowerCase() == 'principiante'
+                      ? 2
+                      : 3,
                 ),
 
                 // Botón iniciar práctica
@@ -315,7 +333,10 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
         const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 12,
+          ),
         ),
       ],
     );

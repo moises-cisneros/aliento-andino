@@ -83,8 +83,10 @@ class _NoteSequenceViewerState extends State<NoteSequenceViewer> {
       }
 
       final p = _controller.position;
-      final target = (before - p.viewportDimension / 2 + cardW / 2)
-          .clamp(0.0, p.maxScrollExtent);
+      final target = (before - p.viewportDimension / 2 + cardW / 2).clamp(
+        0.0,
+        p.maxScrollExtent,
+      );
       _controller.animateTo(
         target,
         duration: const Duration(milliseconds: 350),
@@ -141,10 +143,12 @@ class _NoteSequenceViewerState extends State<NoteSequenceViewer> {
             if (group.indexOf(note) > 0) return const SizedBox.shrink();
           }
 
-          final isCurrent = widget.currentPosition != null &&
+          final isCurrent =
+              widget.currentPosition != null &&
               note.position - 1 == widget.currentPosition;
-          final isCompleted =
-              widget.completedPositions.contains(note.position - 1);
+          final isCompleted = widget.completedPositions.contains(
+            note.position - 1,
+          );
 
           // Ancho proporcional a la duración
           final width = (note.duration * 50).clamp(30.0, 120.0);

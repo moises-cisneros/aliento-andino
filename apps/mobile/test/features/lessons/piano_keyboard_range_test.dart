@@ -10,7 +10,14 @@ void main() {
     });
 
     test('principiante (Twinkle C4–A4, min 2 oct) → C3..C5, 15 blancas', () {
-      final keys = computeWhiteKeyRange(['C4', 'D4', 'E4', 'F4', 'G4', 'A4'], 2);
+      final keys = computeWhiteKeyRange([
+        'C4',
+        'D4',
+        'E4',
+        'F4',
+        'G4',
+        'A4',
+      ], 2);
       expect(keys.first, 'C3');
       expect(keys.last, 'C5');
       expect(keys.length, 15); // 2 octavas = 15 teclas blancas (25 totales)
@@ -26,8 +33,19 @@ void main() {
 
     test('avanzado (cromática C4–C5, min 3 oct) → 3 octavas, 22 blancas', () {
       final notes = [
-        'C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4',
-        'A#4', 'B4', 'C5',
+        'C4',
+        'C#4',
+        'D4',
+        'D#4',
+        'E4',
+        'F4',
+        'F#4',
+        'G4',
+        'G#4',
+        'A4',
+        'A#4',
+        'B4',
+        'C5',
       ];
       final keys = computeWhiteKeyRange(notes, 3);
       expect((keys.length - 1) ~/ 7, 3); // 3 octavas completas

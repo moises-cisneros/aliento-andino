@@ -11,7 +11,9 @@ class TunerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => TunerBloc()..add(const TunerStarted(instrument: InstrumentType.quena)),
+      create: (_) =>
+          TunerBloc()
+            ..add(const TunerStarted(instrument: InstrumentType.quena)),
       child: const _TunerScreenContent(),
     );
   }
@@ -56,11 +58,17 @@ class _TunerScreenContent extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.mic_off, size: 64, color: theme.colorScheme.error),
+                      Icon(
+                        Icons.mic_off,
+                        size: 64,
+                        color: theme.colorScheme.error,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         'Permiso de Micrófono Requerido',
-                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -90,7 +98,10 @@ class _TunerScreenContent extends StatelessWidget {
 
             return Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -160,7 +171,10 @@ class _TunerScreenContent extends StatelessWidget {
                         icon: Icon(isRunning ? Icons.stop : Icons.play_arrow),
                         label: Text(
                           isRunning ? 'Detener Afinador' : 'Iniciar Afinador',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -185,11 +199,17 @@ class _TunerScreenContent extends StatelessWidget {
           children: [
             Text('• Soplá de forma continua y suave a 15-20 cm del micrófono.'),
             SizedBox(height: 8),
-            Text('• Si la aguja está a la izquierda (CALADO), subí ligeramente la presión del soplo.'),
+            Text(
+              '• Si la aguja está a la izquierda (CALADO), subí ligeramente la presión del soplo.',
+            ),
             SizedBox(height: 8),
-            Text('• Si la aguja está a la derecha (ALTO), relajá el labio o abrí la embocadura.'),
+            Text(
+              '• Si la aguja está a la derecha (ALTO), relajá el labio o abrí la embocadura.',
+            ),
             SizedBox(height: 8),
-            Text('• La zona verde indica que estás dentro de la tolerancia afinada (±15 cents).'),
+            Text(
+              '• La zona verde indica que estás dentro de la tolerancia afinada (±15 cents).',
+            ),
           ],
         ),
         actions: [

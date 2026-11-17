@@ -34,8 +34,11 @@ void main() {
   group('round-trip nombre ↔ MIDI', () {
     test('cada número MIDI vuelve a sí mismo', () {
       for (var n = 21; n <= 108; n++) {
-        expect(noteNameToMidi(midiNumberToName(n)), n,
-            reason: 'falló en MIDI $n (${midiNumberToName(n)})');
+        expect(
+          noteNameToMidi(midiNumberToName(n)),
+          n,
+          reason: 'falló en MIDI $n (${midiNumberToName(n)})',
+        );
       }
     });
   });

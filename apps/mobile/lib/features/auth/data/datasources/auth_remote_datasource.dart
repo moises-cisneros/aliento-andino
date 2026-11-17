@@ -106,20 +106,14 @@ class AuthRemoteDatasource {
   ) async {
     await _dio.put(
       AppConfig.changePasswordEndpoint,
-      data: {
-        'current_password': currentPassword,
-        'new_password': newPassword,
-      },
+      data: {'current_password': currentPassword, 'new_password': newPassword},
     );
   }
 
   /// DELETE /auth/me — elimina la cuenta. `password` requerido para cuentas
   /// locales; puede ir null para Google.
   Future<void> deleteAccount({String? password}) async {
-    await _dio.delete(
-      AppConfig.meEndpoint,
-      data: {'password': ?password},
-    );
+    await _dio.delete(AppConfig.meEndpoint, data: {'password': ?password});
   }
 
   /// POST /auth/forgot-password

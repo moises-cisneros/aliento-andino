@@ -13,7 +13,18 @@ class MidiNoteEvent {
 }
 
 const _noteNames = [
-  'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
+  'C',
+  'C#',
+  'D',
+  'D#',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'G#',
+  'A',
+  'A#',
+  'B',
 ];
 
 /// Convierte un número MIDI (0..127) a nombre con octava. Ej: 69 → "A4".
@@ -29,7 +40,13 @@ int? noteNameToMidi(String note) {
   final accidental = m.group(2)!;
   final octave = int.parse(m.group(3)!);
   const letterToSemi = {
-    'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11,
+    'C': 0,
+    'D': 2,
+    'E': 4,
+    'F': 5,
+    'G': 7,
+    'A': 9,
+    'B': 11,
   };
   var semi = letterToSemi[letter]!;
   if (accidental == '#') semi++;

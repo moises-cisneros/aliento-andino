@@ -38,11 +38,7 @@ class CommentModel {
     );
   }
 
-  CommentModel copyWith({
-    int? likesCount,
-    bool? isLikedByMe,
-    String? content,
-  }) {
+  CommentModel copyWith({int? likesCount, bool? isLikedByMe, String? content}) {
     return CommentModel(
       id: id,
       postId: postId,

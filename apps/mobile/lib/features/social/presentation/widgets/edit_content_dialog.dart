@@ -36,7 +36,10 @@ Future<String?> showEditContentDialog(
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(),
-          child: Text('Cancelar', style: TextStyle(color: Theme.of(ctx).hintColor)),
+          child: Text(
+            'Cancelar',
+            style: TextStyle(color: Theme.of(ctx).hintColor),
+          ),
         ),
         ElevatedButton(
           onPressed: () {

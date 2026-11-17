@@ -45,8 +45,10 @@ class PracticeReminderService {
   /// Pide el permiso de notificaciones (Android 13+ / iOS). Devuelve true si
   /// quedó concedido (o si la plataforma no lo requiere).
   Future<bool> _requestPermission() async {
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (android != null) {
       final granted = await android.requestNotificationsPermission();
       return granted ?? true;

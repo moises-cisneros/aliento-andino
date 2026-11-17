@@ -16,7 +16,9 @@ class WeeklyChart extends StatelessWidget {
         child: Center(
           child: Text(
             'Sin datos esta semana',
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       );
@@ -65,7 +67,9 @@ class WeeklyChart extends StatelessWidget {
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
                         colors: [
-                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                          Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.3),
                           Theme.of(context).colorScheme.primary,
                         ],
                       ),

@@ -77,12 +77,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
     });
     try {
       await context.read<SubscriptionRepository>().checkout(
-            plan: _plan!.id,
-            cardNumber: _number.text,
-            cardHolder: _holder.text,
-            cardExpiry: _expiry.text,
-            cardCvc: _cvc.text,
-          );
+        plan: _plan!.id,
+        cardNumber: _number.text,
+        cardHolder: _holder.text,
+        cardExpiry: _expiry.text,
+        cardCvc: _cvc.text,
+      );
       if (!mounted) return;
       // Refrescar el usuario (isPremium) y las lecciones (desbloqueo).
       context.read<AuthBloc>().add(AuthCheckRequested());
@@ -95,7 +95,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
       if (!mounted) return;
       setState(() {
         _processing = false;
-        _error = 'No se pudo procesar el pago. Revisá los datos e intentá de nuevo.';
+        _error =
+            'No se pudo procesar el pago. Revisá los datos e intentá de nuevo.';
       });
     }
   }
@@ -114,8 +115,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
       body: _success
           ? _successView(cs)
           : _plan == null
-              ? _loadingOrError(cs)
-              : _formView(cs),
+          ? _loadingOrError(cs)
+          : _formView(cs),
     );
   }
 
@@ -212,8 +213,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         LengthLimitingTextInputFormatter(4),
                         _ExpiryFormatter(),
                       ],
-                      validator: (v) =>
-                          (v ?? '').length < 5 ? 'MM/AA' : null,
+                      validator: (v) => (v ?? '').length < 5 ? 'MM/AA' : null,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -227,8 +227,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         FilteringTextInputFormatter.digitsOnly,
                         LengthLimitingTextInputFormatter(4),
                       ],
-                      validator: (v) =>
-                          (v ?? '').length < 3 ? 'CVC' : null,
+                      validator: (v) => (v ?? '').length < 3 ? 'CVC' : null,
                     ),
                   ),
                 ],

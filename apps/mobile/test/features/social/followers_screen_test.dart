@@ -33,8 +33,9 @@ const _me = UserEntity(
 
 void main() {
   // Reproduce el ancho del emulador donde fallaba la aserción del ListTile.
-  testWidgets('FollowersScreen renderiza la lista a 440px sin crashear',
-      (tester) async {
+  testWidgets('FollowersScreen renderiza la lista a 440px sin crashear', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(440 * 3, 914 * 3);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.reset);
@@ -49,10 +50,12 @@ void main() {
         isFollowedByMe: i.isEven,
       ),
     );
-    when(() => repo.getFollowers(any()))
-        .thenAnswer((_) async => {'items': users});
-    when(() => repo.getFollowing(any()))
-        .thenAnswer((_) async => {'items': users});
+    when(
+      () => repo.getFollowers(any()),
+    ).thenAnswer((_) async => {'items': users});
+    when(
+      () => repo.getFollowing(any()),
+    ).thenAnswer((_) async => {'items': users});
 
     final authBloc = MockAuthBloc();
     when(() => authBloc.state).thenReturn(const AuthAuthenticated(user: _me));

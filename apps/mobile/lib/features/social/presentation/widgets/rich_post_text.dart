@@ -57,9 +57,12 @@ class _RichPostTextState extends State<RichPostText> {
         spans.add(TextSpan(text: widget.text.substring(last, m.start)));
       }
       final token = m.group(0)!;
-      final recognizer = TapGestureRecognizer()..onTap = () => _onTapToken(token);
+      final recognizer = TapGestureRecognizer()
+        ..onTap = () => _onTapToken(token);
       _recognizers.add(recognizer);
-      spans.add(TextSpan(text: token, style: linkStyle, recognizer: recognizer));
+      spans.add(
+        TextSpan(text: token, style: linkStyle, recognizer: recognizer),
+      );
       last = m.end;
     }
     if (last < widget.text.length) {
@@ -79,7 +82,10 @@ class _RichPostTextState extends State<RichPostText> {
       fontWeight: FontWeight.w600,
     );
 
-    final textSpan = TextSpan(style: baseStyle, children: _buildSpans(linkStyle));
+    final textSpan = TextSpan(
+      style: baseStyle,
+      children: _buildSpans(linkStyle),
+    );
 
     if (widget.maxLines == null) {
       return Text.rich(textSpan);
@@ -105,9 +111,7 @@ class _RichPostTextState extends State<RichPostText> {
             Text.rich(
               textSpan,
               maxLines: _expanded ? null : widget.maxLines,
-              overflow: _expanded
-                  ? TextOverflow.clip
-                  : TextOverflow.ellipsis,
+              overflow: _expanded ? TextOverflow.clip : TextOverflow.ellipsis,
             ),
             GestureDetector(
               onTap: () => setState(() => _expanded = !_expanded),

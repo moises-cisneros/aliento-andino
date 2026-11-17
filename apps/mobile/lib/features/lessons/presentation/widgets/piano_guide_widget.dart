@@ -231,7 +231,20 @@ int? _noteToMidi(String note) {
 }
 
 String _midiName(int m) {
-  const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const names = [
+    'C',
+    'C#',
+    'D',
+    'D#',
+    'E',
+    'F',
+    'F#',
+    'G',
+    'G#',
+    'A',
+    'A#',
+    'B',
+  ];
   return '${names[m % 12]}${m ~/ 12 - 1}';
 }
 

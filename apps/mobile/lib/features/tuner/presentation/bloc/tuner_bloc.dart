@@ -60,7 +60,9 @@ class TunerInitial extends TunerState {
 
 class TunerPermissionDenied extends TunerState {
   final String message;
-  const TunerPermissionDenied([this.message = 'Se requiere permiso de micrófono para afinar.']);
+  const TunerPermissionDenied([
+    this.message = 'Se requiere permiso de micrófono para afinar.',
+  ]);
 }
 
 class TunerActiveState extends TunerState {
@@ -124,9 +126,9 @@ class TunerBloc extends Bloc<TunerEvent, TunerState> {
   TunerBloc({
     YinPitchDetector? pitchDetector,
     AudioCaptureService? captureService,
-  })  : _pitchDetector = pitchDetector ?? const YinPitchDetector(),
-        _captureService = captureService ?? AudioCaptureService(),
-        super(const TunerInitial()) {
+  }) : _pitchDetector = pitchDetector ?? const YinPitchDetector(),
+       _captureService = captureService ?? AudioCaptureService(),
+       super(const TunerInitial()) {
     on<TunerStarted>(_onStarted);
     on<TunerStopped>(_onStopped);
     on<TunerPitchSampleReceived>(_onPitchSampleReceived);
@@ -138,42 +140,8 @@ class TunerBloc extends Bloc<TunerEvent, TunerState> {
     _currentInstrument = event.instrument;
     _currentTolerance = event.toleranceCents;
 
-    emit(TunerActiveState(
-      centsDeviation: 0.0,
-      noteName: '--',
-      isTuned: false,
-      frequencyHz: 0.0,
-      targetFrequencyHz: 0.0,
-      instrument: _currentInstrument,
-      toleranceCents: _currentTolerance,
-      isSilent: true,
-    ));
-
-    try {
-      await _captureService.startCapture();
-      await _audioSubscription?.cancel();
-      _audioSubscription = _captureService.pcmAudioStream.listen((samples) {
-        final f0 = _pitchDetector.detectFundamentalFrequency(samples);
-        if (f0 <= 0.0) {
-          add(const TunerPitchSampleReceived(
-            detectedHz: 0.0,
-            targetNote: '--',
-            targetHz: 0.0,
-          ));
-        } else {
-          final noteInfo = _closestAndeanNote(f0, _currentInstrument);
-          add(TunerPitchSampleReceived(
-            detectedHz: f0,
-            targetNote: noteInfo.name,
-            targetHz: noteInfo.frequency,
-          ));
-        }
-      });
-    } on PermissionDeniedException {
-      emit(const TunerPermissionDenied());
-    } catch (e) {
-      // Si falla hardware, silenciar
-      emit(TunerActiveState(
+    emit(
+      TunerActiveState(
         centsDeviation: 0.0,
         noteName: '--',
         isTuned: false,
@@ -182,7 +150,49 @@ class TunerBloc extends Bloc<TunerEvent, TunerState> {
         instrument: _currentInstrument,
         toleranceCents: _currentTolerance,
         isSilent: true,
-      ));
+      ),
+    );
+
+    try {
+      await _captureService.startCapture();
+      await _audioSubscription?.cancel();
+      _audioSubscription = _captureService.pcmAudioStream.listen((samples) {
+        final f0 = _pitchDetector.detectFundamentalFrequency(samples);
+        if (f0 <= 0.0) {
+          add(
+            const TunerPitchSampleReceived(
+              detectedHz: 0.0,
+              targetNote: '--',
+              targetHz: 0.0,
+            ),
+          );
+        } else {
+          final noteInfo = _closestAndeanNote(f0, _currentInstrument);
+          add(
+            TunerPitchSampleReceived(
+              detectedHz: f0,
+              targetNote: noteInfo.name,
+              targetHz: noteInfo.frequency,
+            ),
+          );
+        }
+      });
+    } on PermissionDeniedException {
+      emit(const TunerPermissionDenied());
+    } catch (e) {
+      // Si falla hardware, silenciar
+      emit(
+        TunerActiveState(
+          centsDeviation: 0.0,
+          noteName: '--',
+          isTuned: false,
+          frequencyHz: 0.0,
+          targetFrequencyHz: 0.0,
+          instrument: _currentInstrument,
+          toleranceCents: _currentTolerance,
+          isSilent: true,
+        ),
+      );
     }
   }
 
@@ -202,10 +212,7 @@ class TunerBloc extends Bloc<TunerEvent, TunerState> {
 
     if (event.detectedHz <= 0.0 || event.targetHz <= 0.0) {
       // Silencio o nota inaudible: aguja gradualmente en reposo
-      emit(current.copyWith(
-        isSilent: true,
-        frequencyHz: 0.0,
-      ));
+      emit(current.copyWith(isSilent: true, frequencyHz: 0.0));
       return;
     }
 
@@ -215,14 +222,16 @@ class TunerBloc extends Bloc<TunerEvent, TunerState> {
       toleranceCents: current.toleranceCents,
     );
 
-    emit(current.copyWith(
-      centsDeviation: eval.centsDeviation.clamp(-50.0, 50.0),
-      noteName: event.targetNote,
-      isTuned: eval.isTuned,
-      frequencyHz: event.detectedHz,
-      targetFrequencyHz: event.targetHz,
-      isSilent: false,
-    ));
+    emit(
+      current.copyWith(
+        centsDeviation: eval.centsDeviation.clamp(-50.0, 50.0),
+        noteName: event.targetNote,
+        isTuned: eval.isTuned,
+        frequencyHz: event.detectedHz,
+        targetFrequencyHz: event.targetHz,
+        isSilent: false,
+      ),
+    );
   }
 
   void _onToleranceChanged(
@@ -231,7 +240,11 @@ class TunerBloc extends Bloc<TunerEvent, TunerState> {
   ) {
     _currentTolerance = event.toleranceCents;
     if (state is TunerActiveState) {
-      emit((state as TunerActiveState).copyWith(toleranceCents: event.toleranceCents));
+      emit(
+        (state as TunerActiveState).copyWith(
+          toleranceCents: event.toleranceCents,
+        ),
+      );
     }
   }
 

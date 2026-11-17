@@ -125,26 +125,33 @@ class _UserSearchScreenState extends State<UserSearchScreen>
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildUsersTab(),
-          _buildPostsTab(),
-        ],
+        children: [_buildUsersTab(), _buildPostsTab()],
       ),
     );
   }
 
   Widget _buildUsersTab() {
     if (_loading && _tabController.index == 0) return _spinner();
-    if (!_hasSearched) return _emptyState('Buscá usuarios por nombre', Icons.person_search);
-    if (_userResults.isEmpty) return _emptyState('Sin resultados', Icons.search_off);
+    if (!_hasSearched) {
+      return _emptyState('Buscá usuarios por nombre', Icons.person_search);
+    }
+    if (_userResults.isEmpty) {
+      return _emptyState('Sin resultados', Icons.search_off);
+    }
     return ListView.builder(
       itemCount: _userResults.length,
       itemBuilder: (context, i) {
         final user = _userResults[i];
         return ListTile(
           leading: UserAvatar(user: user, radius: 22),
-          title: Text(user.fullName, style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
-          subtitle: Text('@${user.username}', style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12)),
+          title: Text(
+            user.fullName,
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+          ),
+          subtitle: Text(
+            '@${user.username}',
+            style: TextStyle(color: Theme.of(context).hintColor, fontSize: 12),
+          ),
           onTap: () => context.push('/social/user/${user.id}'),
         );
       },
@@ -154,12 +161,11 @@ class _UserSearchScreenState extends State<UserSearchScreen>
   Widget _buildPostsTab() {
     if (_loading && _tabController.index == 1) return _spinner();
     if (!_hasSearched) {
-      return _emptyState(
-        'Buscá posts o usá #hashtag',
-        Icons.tag,
-      );
+      return _emptyState('Buscá posts o usá #hashtag', Icons.tag);
     }
-    if (_postResults.isEmpty) return _emptyState('Sin resultados', Icons.search_off);
+    if (_postResults.isEmpty) {
+      return _emptyState('Sin resultados', Icons.search_off);
+    }
     return ListView.builder(
       itemCount: _postResults.length,
       itemBuilder: (context, i) {
@@ -176,7 +182,9 @@ class _UserSearchScreenState extends State<UserSearchScreen>
   }
 
   Widget _spinner() => Center(
-    child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+    child: CircularProgressIndicator(
+      color: Theme.of(context).colorScheme.primary,
+    ),
   );
 
   Widget _emptyState(String msg, IconData icon) {
@@ -185,7 +193,11 @@ class _UserSearchScreenState extends State<UserSearchScreen>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: cs.onSurfaceVariant.withValues(alpha: 0.4), size: 56),
+          Icon(
+            icon,
+            color: cs.onSurfaceVariant.withValues(alpha: 0.4),
+            size: 56,
+          ),
           const SizedBox(height: 12),
           Text(msg, style: TextStyle(color: cs.onSurfaceVariant, fontSize: 15)),
         ],

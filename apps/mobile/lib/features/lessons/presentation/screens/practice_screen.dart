@@ -157,12 +157,12 @@ class _PracticeContentState extends State<_PracticeContent> {
       }
     });
     context.read<PracticeBloc>().add(
-          PracticeSetLoop(
-            enabled: _loopOn,
-            start: _loopStart.round(),
-            end: _loopEnd.round(),
-          ),
-        );
+      PracticeSetLoop(
+        enabled: _loopOn,
+        start: _loopStart.round(),
+        end: _loopEnd.round(),
+      ),
+    );
   }
 
   /// Stats de manos (cámara) acumuladas para alimentar el feedback con IA.
@@ -302,9 +302,9 @@ class _PracticeContentState extends State<_PracticeContent> {
 
   Future<void> _loadBpm() async {
     try {
-      final data = await context
-          .read<LessonRepository>()
-          .getLessonDetail(widget.lessonId);
+      final data = await context.read<LessonRepository>().getLessonDetail(
+        widget.lessonId,
+      );
       final lesson = data['lesson'] as LessonModel;
       if (mounted) {
         setState(() {
@@ -414,9 +414,7 @@ class _PracticeContentState extends State<_PracticeContent> {
     if (!_isPremium) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-            'El coach por cámara es una función Premium.',
-          ),
+          content: const Text('El coach por cámara es una función Premium.'),
           behavior: SnackBarBehavior.floating,
           action: SnackBarAction(
             label: 'Ver planes',
@@ -649,10 +647,9 @@ class _PracticeContentState extends State<_PracticeContent> {
                         width: 110,
                         height: 110,
                         decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.9),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.9),
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
@@ -687,10 +684,7 @@ class _PracticeContentState extends State<_PracticeContent> {
             color: cs.error,
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
-              BoxShadow(
-                color: cs.error.withValues(alpha: 0.4),
-                blurRadius: 12,
-              ),
+              BoxShadow(color: cs.error.withValues(alpha: 0.4), blurRadius: 12),
             ],
           ),
           child: Row(
@@ -760,16 +754,22 @@ class _PracticeContentState extends State<_PracticeContent> {
                   completedPositions,
                 )
               : switch (_playView) {
-                  _PlayView.cascade =>
-                    _buildPlayingCascade(context, state, totalPlayable),
-                  _PlayView.staff =>
-                    _buildPlayingStaff(context, state, totalPlayable),
+                  _PlayView.cascade => _buildPlayingCascade(
+                    context,
+                    state,
+                    totalPlayable,
+                  ),
+                  _PlayView.staff => _buildPlayingStaff(
+                    context,
+                    state,
+                    totalPlayable,
+                  ),
                   _PlayView.sequence => _buildPlayingWithoutCamera(
-                      context,
-                      state,
-                      totalPlayable,
-                      completedPositions,
-                    ),
+                    context,
+                    state,
+                    totalPlayable,
+                    completedPositions,
+                  ),
                 },
         ),
       ],
@@ -803,19 +803,22 @@ class _PracticeContentState extends State<_PracticeContent> {
                 max: maxIdx,
                 divisions: total - 1,
                 values: RangeValues(start, end),
-                labels: RangeLabels('${start.round() + 1}', '${end.round() + 1}'),
+                labels: RangeLabels(
+                  '${start.round() + 1}',
+                  '${end.round() + 1}',
+                ),
                 activeColor: cs.primary,
                 onChanged: (v) => setState(() {
                   _loopStart = v.start;
                   _loopEnd = v.end;
                 }),
                 onChangeEnd: (v) => context.read<PracticeBloc>().add(
-                      PracticeSetLoop(
-                        enabled: true,
-                        start: v.start.round(),
-                        end: v.end.round(),
-                      ),
-                    ),
+                  PracticeSetLoop(
+                    enabled: true,
+                    start: v.start.round(),
+                    end: v.end.round(),
+                  ),
+                ),
               ),
             )
           else
@@ -916,88 +919,92 @@ class _PracticeContentState extends State<_PracticeContent> {
               scrollDirection: Axis.horizontal,
               reverse: true,
               child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                tooltip: 'Vista: ${_viewName(_playView)} (tocar para cambiar)',
-                icon: Icon(
-                  _viewIcon(_playView),
-                  color: _playView == _PlayView.sequence
-                      ? Theme.of(context).colorScheme.onSurfaceVariant
-                      : Theme.of(context).colorScheme.primary,
-                ),
-                onPressed: () => setState(() {
-                  _playView = _PlayView
-                      .values[(_playView.index + 1) % _PlayView.values.length];
-                }),
-              ),
-              IconButton(
-                tooltip: _recordOn ? 'Detener grabación' : 'Grabar mi audio',
-                icon: Icon(
-                  _recordOn ? Icons.stop_circle : Icons.fiber_manual_record,
-                  color: _recordOn
-                      ? Theme.of(context).colorScheme.error
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                onPressed: _toggleRecord,
-              ),
-              IconButton(
-                tooltip: _metronomeOn ? 'Apagar metrónomo' : 'Metrónomo',
-                icon: Icon(
-                  Icons.av_timer,
-                  color: _metronomeOn
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                onPressed: _toggleMetronome,
-              ),
-              IconButton(
-                tooltip: _micEnabled
-                    ? 'Apagar micrófono'
-                    : 'Detectar mi audio con micrófono',
-                icon: Icon(
-                  _micEnabled ? Icons.mic : Icons.mic_off,
-                  color: _micEnabled
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                onPressed: _toggleMic,
-              ),
-              IconButton(
-                tooltip: _midiEnabled
-                    ? 'Desconectar teclado MIDI'
-                    : 'Conectar teclado MIDI (máxima precisión)',
-                icon: Icon(
-                  Icons.piano,
-                  color: _midiEnabled
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                onPressed: _toggleMidi,
-              ),
-              IconButton(
-                tooltip: _handTrackerEnabled
-                    ? 'Ocultar cámara'
-                    : 'Analizar mis manos con cámara',
-                icon: Icon(
-                  _handTrackerEnabled
-                      ? Icons.videocam
-                      : Icons.videocam_outlined,
-                  color: _handTrackerEnabled
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                onPressed: _toggleCamera,
-              ),
-              IconButton(
-                icon: Icon(
-                  Icons.pause,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                onPressed: () =>
-                    context.read<PracticeBloc>().add(const PracticePause()),
-              ),
-            ],
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip:
+                        'Vista: ${_viewName(_playView)} (tocar para cambiar)',
+                    icon: Icon(
+                      _viewIcon(_playView),
+                      color: _playView == _PlayView.sequence
+                          ? Theme.of(context).colorScheme.onSurfaceVariant
+                          : Theme.of(context).colorScheme.primary,
+                    ),
+                    onPressed: () => setState(() {
+                      _playView =
+                          _PlayView.values[(_playView.index + 1) %
+                              _PlayView.values.length];
+                    }),
+                  ),
+                  IconButton(
+                    tooltip: _recordOn
+                        ? 'Detener grabación'
+                        : 'Grabar mi audio',
+                    icon: Icon(
+                      _recordOn ? Icons.stop_circle : Icons.fiber_manual_record,
+                      color: _recordOn
+                          ? Theme.of(context).colorScheme.error
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: _toggleRecord,
+                  ),
+                  IconButton(
+                    tooltip: _metronomeOn ? 'Apagar metrónomo' : 'Metrónomo',
+                    icon: Icon(
+                      Icons.av_timer,
+                      color: _metronomeOn
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: _toggleMetronome,
+                  ),
+                  IconButton(
+                    tooltip: _micEnabled
+                        ? 'Apagar micrófono'
+                        : 'Detectar mi audio con micrófono',
+                    icon: Icon(
+                      _micEnabled ? Icons.mic : Icons.mic_off,
+                      color: _micEnabled
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: _toggleMic,
+                  ),
+                  IconButton(
+                    tooltip: _midiEnabled
+                        ? 'Desconectar teclado MIDI'
+                        : 'Conectar teclado MIDI (máxima precisión)',
+                    icon: Icon(
+                      Icons.piano,
+                      color: _midiEnabled
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: _toggleMidi,
+                  ),
+                  IconButton(
+                    tooltip: _handTrackerEnabled
+                        ? 'Ocultar cámara'
+                        : 'Analizar mis manos con cámara',
+                    icon: Icon(
+                      _handTrackerEnabled
+                          ? Icons.videocam
+                          : Icons.videocam_outlined,
+                      color: _handTrackerEnabled
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: _toggleCamera,
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.pause,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: () =>
+                        context.read<PracticeBloc>().add(const PracticePause()),
+                  ),
+                ],
               ),
             ),
           ),
@@ -1070,16 +1077,16 @@ class _PracticeContentState extends State<_PracticeContent> {
   }
 
   String _viewName(_PlayView v) => switch (v) {
-        _PlayView.sequence => 'Secuencia',
-        _PlayView.cascade => 'Cascada',
-        _PlayView.staff => 'Partitura',
-      };
+    _PlayView.sequence => 'Secuencia',
+    _PlayView.cascade => 'Cascada',
+    _PlayView.staff => 'Partitura',
+  };
 
   IconData _viewIcon(_PlayView v) => switch (v) {
-        _PlayView.sequence => Icons.view_agenda,
-        _PlayView.cascade => Icons.waterfall_chart,
-        _PlayView.staff => Icons.queue_music,
-      };
+    _PlayView.sequence => Icons.view_agenda,
+    _PlayView.cascade => Icons.waterfall_chart,
+    _PlayView.staff => Icons.queue_music,
+  };
 
   Widget _buildPlayingWithoutCamera(
     BuildContext context,
@@ -1267,8 +1274,11 @@ class _PracticeContentState extends State<_PracticeContent> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.lightbulb_outline,
-                size: 15, color: AppTheme.warning),
+            const Icon(
+              Icons.lightbulb_outline,
+              size: 15,
+              color: AppTheme.warning,
+            ),
             const SizedBox(width: 6),
             Text(
               tip,
@@ -1506,8 +1516,9 @@ class _PracticeContentState extends State<_PracticeContent> {
               highlightNotes: {state.expectedNote!},
               activeNote: state.expectedNote,
               wrongNote: state.playedNote,
-              rangeNotes:
-                  state.notes.where((n) => !n.isRest).map((n) => n.note),
+              rangeNotes: state.notes
+                  .where((n) => !n.isRest)
+                  .map((n) => n.note),
             ),
           const SizedBox(height: 12),
           Text(
@@ -1543,8 +1554,9 @@ class _PracticeContentState extends State<_PracticeContent> {
         .where((n) => !n.isRest)
         .length;
     final done = rawDone > playable ? playable : rawDone;
-    final double progress =
-        playable == 0 ? 0.0 : (done / playable).clamp(0.0, 1.0).toDouble();
+    final double progress = playable == 0
+        ? 0.0
+        : (done / playable).clamp(0.0, 1.0).toDouble();
     final attempts = state.correctCount + state.wrongCount;
     final accuracy = attempts == 0
         ? 100
@@ -1680,9 +1692,9 @@ class _PracticeContentState extends State<_PracticeContent> {
                   Expanded(
                     child: OutlinedButton.icon(
                       // Reinicia la lección desde la primera nota.
-                      onPressed: () => context
-                          .read<PracticeBloc>()
-                          .add(const PracticeRestart()),
+                      onPressed: () => context.read<PracticeBloc>().add(
+                        const PracticeRestart(),
+                      ),
                       icon: const Icon(Icons.replay, size: 18),
                       label: const Text('Reiniciar'),
                       style: OutlinedButton.styleFrom(

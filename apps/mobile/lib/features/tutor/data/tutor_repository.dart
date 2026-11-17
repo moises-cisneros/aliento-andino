@@ -20,9 +20,9 @@ class TutorAction {
   const TutorAction({required this.tool, required this.args});
 
   factory TutorAction.fromJson(Map<String, dynamic> json) => TutorAction(
-        tool: (json['tool'] as String?) ?? '',
-        args: (json['args'] as Map<String, dynamic>?) ?? const {},
-      );
+    tool: (json['tool'] as String?) ?? '',
+    args: (json['args'] as Map<String, dynamic>?) ?? const {},
+  );
 }
 
 /// Respuesta del agente: texto + acciones.
@@ -32,11 +32,11 @@ class TutorReply {
   const TutorReply({required this.reply, required this.actions});
 
   factory TutorReply.fromJson(Map<String, dynamic> json) => TutorReply(
-        reply: (json['reply'] as String?) ?? '',
-        actions: ((json['actions'] as List<dynamic>?) ?? const [])
-            .map((e) => TutorAction.fromJson(e as Map<String, dynamic>))
-            .toList(),
-      );
+    reply: (json['reply'] as String?) ?? '',
+    actions: ((json['actions'] as List<dynamic>?) ?? const [])
+        .map((e) => TutorAction.fromJson(e as Map<String, dynamic>))
+        .toList(),
+  );
 }
 
 /// Repositorio del agente tutor de IA.
@@ -58,9 +58,9 @@ class TutorRepository {
     required ApiClient apiClient,
     ConnectivityService? connectivity,
     OfflineFaqAssistant? offlineAssistant,
-  })  : _apiClient = apiClient,
-        _connectivity = connectivity,
-        _offline = offlineAssistant;
+  }) : _apiClient = apiClient,
+       _connectivity = connectivity,
+       _offline = offlineAssistant;
 
   void clearConversation() => conversation.clear();
 
@@ -77,7 +77,8 @@ class TutorRepository {
       } catch (_) {
         // La nube falló a mitad (timeout / red): intentamos el FAQ local.
         final local = await _offline?.bestMatch(message);
-        if (local != null && local.score >= OfflineFaqAssistant.matchThreshold) {
+        if (local != null &&
+            local.score >= OfflineFaqAssistant.matchThreshold) {
           return _replyFromFaq(local);
         }
         rethrow;
@@ -90,7 +91,8 @@ class TutorRepository {
       return _replyFromFaq(local);
     }
     return const TutorReply(
-      reply: 'Estás sin conexión 📴. Puedo ayudarte con dudas básicas de la app '
+      reply:
+          'Estás sin conexión 📴. Puedo ayudarte con dudas básicas de la app '
           '(guardar lecciones, rankings, progreso, modo offline, perfil…). '
           'Para preguntas más complejas, volvé a intentar cuando tengas internet.',
       actions: [],
@@ -108,9 +110,9 @@ class TutorRepository {
   }
 
   TutorReply _replyFromFaq(FaqMatch m) => TutorReply(
-        reply: m.answer,
-        actions: m.action == null ? const [] : [m.action!],
-      );
+    reply: m.answer,
+    actions: m.action == null ? const [] : [m.action!],
+  );
 
   /// Llama al agente Gemini/Vertex en el backend (capa avanzada, online).
   Future<TutorReply> _chatRemote(
