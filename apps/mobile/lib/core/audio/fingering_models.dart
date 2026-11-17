@@ -168,3 +168,77 @@ class QuenaFingering {
     );
   }
 }
+
+/// Zampoña (siku) fingering: the active tube on the `ira` (6 tubes) or
+/// `arca` (7 tubes) row. [tubeIndex] is 1-based.
+class ZamponaFingering {
+  final String activeRow;
+  final int tubeIndex;
+  final String noteName;
+
+  /// Throws [ArgumentError] when [activeRow] is not `'ira'`/`'arca'` or
+  /// [tubeIndex] is outside the row (1..6 for ira, 1..7 for arca).
+  ZamponaFingering(this.activeRow, this.tubeIndex, this.noteName) {
+    final max = tubeCounts[activeRow];
+    if (max == null) {
+      throw ArgumentError.value(
+        activeRow,
+        'activeRow',
+        "must be 'ira' or 'arca'",
+      );
+    }
+    if (tubeIndex < 1 || tubeIndex > max) {
+      throw ArgumentError.value(
+        tubeIndex,
+        'tubeIndex',
+        'must be within 1..$max',
+      );
+    }
+  }
+
+  /// Like the constructor, but an out-of-range [tubeIndex] falls back to the
+  /// first tube instead of throwing. An invalid [activeRow] still throws.
+  factory ZamponaFingering.safe(
+    String activeRow,
+    int tubeIndex,
+    String noteName,
+  ) {
+    try {
+      return ZamponaFingering(activeRow, tubeIndex, noteName);
+    } on ArgumentError {
+      if (!tubeCounts.containsKey(activeRow)) rethrow;
+      return ZamponaFingering(activeRow, 1, noteName);
+    }
+  }
+
+  static const Map<String, int> tubeCounts = {'ira': 6, 'arca': 7};
+
+  // Andean diatonic G-major layout: the two rows alternate scale degrees.
+  static const List<String> iraNotes = ['G4', 'B4', 'D5', 'F#5', 'A5', 'C6'];
+  static const List<String> arcaNotes = [
+    'A4',
+    'C5',
+    'E5',
+    'G5',
+    'B5',
+    'D6',
+    'F#6',
+  ];
+
+  /// Returns the tube that plays [note], or null if the zampoña cannot play it.
+  static ZamponaFingering? forNote(String note) {
+    final midi = parseNoteToMidi(note);
+    if (midi == null) return null;
+    for (var i = 0; i < iraNotes.length; i++) {
+      if (parseNoteToMidi(iraNotes[i]) == midi) {
+        return ZamponaFingering('ira', i + 1, iraNotes[i]);
+      }
+    }
+    for (var i = 0; i < arcaNotes.length; i++) {
+      if (parseNoteToMidi(arcaNotes[i]) == midi) {
+        return ZamponaFingering('arca', i + 1, arcaNotes[i]);
+      }
+    }
+    return null;
+  }
+}
