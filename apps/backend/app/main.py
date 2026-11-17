@@ -27,6 +27,7 @@ from app.routers import (
     admin_rankings,
     admin_social,
     admin_subscriptions,
+    analytics,
     auth,
     challenges,
     fingerings,
@@ -210,6 +211,7 @@ app.include_router(rankings.router)
 app.include_router(challenges.router)
 app.include_router(admin_rankings.router)
 app.include_router(admin_analytics.router)
+app.include_router(analytics.router)
 app.include_router(uploads.router)
 app.include_router(notifications.router)
 app.include_router(subscription.router)
