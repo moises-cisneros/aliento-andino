@@ -132,6 +132,7 @@ Para trabajar con precisión quirúrgica y evitar suposiciones, usá estrictamen
     - `user.email`: `moisescisnerosdl@gmail.com`
 12. **Metodología ODD**: Implementar mediante Organic Driven Development con Gentle AI. Explorar antes de escribir y mantener un radio de impacto controlado.
 13. **Prohibición Absoluta de Commits/Push Directos a `main`**: Está terminantemente prohibido commitear o pushear directamente a `main` (o `staging`). Todo cambio debe realizarse en una rama dedicada (`<tipo>/<numero-subissue>-<descripcion>`), y cada sub-issue debe cerrarse obligatoriamente mediante un Pull Request (`Closes #<subissue>`). Las issues madres (Historias de Usuario / HUs) se cierran cuando todas sus tareas/sub-issues estén resueltas (vía la última PR con `Closes #<hu>` o mediante la automatización `.github/workflows/close-parent-hu.yml`).
+14. **Implementación Siempre en un Git Worktree**: Toda implementación (código, tests, docs) se hace en un `git worktree` propio, nunca en el checkout principal. Así `main` —o la rama que el desarrollador tenga abierta en su IDE— no se ensucia ni cambia de rama mientras el agente trabaja. Convención: `git worktree add -b <tipo>/<numero-subissue>-<descripcion> ../aliento-andino-worktrees/<nombre> origin/main`. Cada worktree usa su propio `.codegraph/` (nunca copiarlo ni enlazarlo desde otro checkout). Detalle en [`CONTRIBUTING.md`](CONTRIBUTING.md#22-ramas).
 
 ---
 
@@ -143,7 +144,7 @@ Sub-issue (GitHub) ──► Rama feat/<id>-<desc> ──► Commits atómicos �
 
 1. **Una Rama y un PR por Sub-issue**:
    - Cada tarea técnica de una HU (`SUB-XX-X`) se trabaja en una rama propia creada desde `main` actualizado:
-     `git checkout -b feat/<subissue-id>-<descripcion-corta>`
+     `git worktree add -b feat/<subissue-id>-<descripcion-corta> ../aliento-andino-worktrees/<nombre> origin/main` (regla 14: nunca `git checkout -b` en el checkout principal)
    - Se implementan los cambios en unidades revisables (~400 líneas) con sus tests y documentación.
    - Se sube la rama y se abre el Pull Request hacia `main`.
 2. **Cierre Automático de Sub-issues**:
