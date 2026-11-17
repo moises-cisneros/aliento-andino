@@ -14,6 +14,8 @@ class UserModel extends UserEntity {
     required super.isVerified,
     required super.authProvider,
     super.skillLevel,
+    super.preferredInstruments,
+    super.breathSensitivityRms,
     super.notificationsPushEnabled,
     super.notificationsEmailEnabled,
     super.isPremium,
@@ -37,6 +39,8 @@ class UserModel extends UserEntity {
       isVerified: e.isVerified,
       authProvider: e.authProvider,
       skillLevel: e.skillLevel,
+      preferredInstruments: e.preferredInstruments,
+      breathSensitivityRms: e.breathSensitivityRms,
       notificationsPushEnabled: e.notificationsPushEnabled,
       notificationsEmailEnabled: e.notificationsEmailEnabled,
       isPremium: e.isPremium,
@@ -60,6 +64,13 @@ class UserModel extends UserEntity {
       isVerified: json['is_verified'] as bool? ?? false,
       authProvider: (json['auth_provider'] as String?) ?? 'local',
       skillLevel: json['skill_level'] as String?,
+      preferredInstruments:
+          (json['preferred_instruments'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      breathSensitivityRms: (json['breath_sensitivity_rms'] as num?)
+          ?.toDouble(),
       notificationsPushEnabled:
           json['notifications_push_enabled'] as bool? ?? true,
       notificationsEmailEnabled:
@@ -85,6 +96,8 @@ class UserModel extends UserEntity {
       'is_verified': isVerified,
       'auth_provider': authProvider,
       'skill_level': skillLevel,
+      'preferred_instruments': preferredInstruments,
+      'breath_sensitivity_rms': breathSensitivityRms,
       'notifications_push_enabled': notificationsPushEnabled,
       'notifications_email_enabled': notificationsEmailEnabled,
       'is_premium': isPremium,

@@ -13,6 +13,8 @@ class UserEntity extends Equatable {
   final bool isVerified;
   final String authProvider;
   final String? skillLevel;
+  final List<String> preferredInstruments;
+  final double? breathSensitivityRms;
   final bool notificationsPushEnabled;
   final bool notificationsEmailEnabled;
   // Suscripción (pago simulado)
@@ -34,6 +36,8 @@ class UserEntity extends Equatable {
     required this.isVerified,
     required this.authProvider,
     this.skillLevel,
+    this.preferredInstruments = const [],
+    this.breathSensitivityRms,
     this.notificationsPushEnabled = true,
     this.notificationsEmailEnabled = true,
     this.isPremium = false,
@@ -56,6 +60,8 @@ class UserEntity extends Equatable {
     isVerified,
     authProvider,
     skillLevel,
+    preferredInstruments,
+    breathSensitivityRms,
     notificationsPushEnabled,
     notificationsEmailEnabled,
     isPremium,

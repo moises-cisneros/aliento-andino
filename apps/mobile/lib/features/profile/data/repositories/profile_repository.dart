@@ -60,20 +60,7 @@ class ProfileRepository {
     Map<String, dynamic> xpData,
     List<dynamic> achievementsRaw,
   ) {
-    final user = UserEntity(
-      id: (userData['id'] as String?) ?? '',
-      email: (userData['email'] as String?) ?? '',
-      username: (userData['username'] as String?) ?? '',
-      fullName: (userData['full_name'] as String?) ?? '',
-      avatarUrl: userData['avatar_url'] as String?,
-      bio: userData['bio'] as String?,
-      isActive: userData['is_active'] as bool? ?? true,
-      isAdmin: userData['is_admin'] as bool? ?? false,
-      isVerified: userData['is_verified'] as bool? ?? false,
-      authProvider: (userData['auth_provider'] as String?) ?? 'local',
-      createdAt: (userData['created_at'] as String?) ?? '',
-      updatedAt: userData['updated_at'] as String?,
-    );
+    final user = _buildUser(userData);
 
     final achievements = achievementsRaw
         .map((e) => AchievementModel.fromJson(e as Map<String, dynamic>))
@@ -84,6 +71,31 @@ class ProfileRepository {
       'xp_data': UserXPModel.fromJson(xpData),
       'recent_achievements': achievements,
     };
+  }
+
+  UserEntity _buildUser(Map<String, dynamic> data) {
+    return UserEntity(
+      id: (data['id'] as String?) ?? '',
+      email: (data['email'] as String?) ?? '',
+      username: (data['username'] as String?) ?? '',
+      fullName: (data['full_name'] as String?) ?? '',
+      avatarUrl: data['avatar_url'] as String?,
+      bio: data['bio'] as String?,
+      isActive: data['is_active'] as bool? ?? true,
+      isAdmin: data['is_admin'] as bool? ?? false,
+      isVerified: data['is_verified'] as bool? ?? false,
+      authProvider: (data['auth_provider'] as String?) ?? 'local',
+      skillLevel: data['skill_level'] as String?,
+      preferredInstruments:
+          (data['preferred_instruments'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
+      breathSensitivityRms: (data['breath_sensitivity_rms'] as num?)
+          ?.toDouble(),
+      createdAt: (data['created_at'] as String?) ?? '',
+      updatedAt: data['updated_at'] as String?,
+    );
   }
 
   /// Obtener perfil social (contadores) del usuario actual (cacheado offline).
@@ -110,29 +122,38 @@ class ProfileRepository {
     String? username,
     String? bio,
     String? avatarUrl,
+    List<String>? preferredInstruments,
+    double? breathSensitivityRms,
   }) async {
     final body = <String, dynamic>{};
     if (fullName != null) body['full_name'] = fullName;
     if (username != null) body['username'] = username;
     if (bio != null) body['bio'] = bio;
     if (avatarUrl != null) body['avatar_url'] = avatarUrl;
+    if (preferredInstruments != null) {
+      body['preferred_instruments'] = preferredInstruments;
+    }
+    if (breathSensitivityRms != null) {
+      body['breath_sensitivity_rms'] = breathSensitivityRms;
+    }
 
-    final response = await _apiClient.dio.put('/auth/me', data: body);
-    final data = response.data as Map<String, dynamic>;
-    return UserEntity(
-      id: (data['id'] as String?) ?? '',
-      email: (data['email'] as String?) ?? '',
-      username: (data['username'] as String?) ?? '',
-      fullName: (data['full_name'] as String?) ?? '',
-      avatarUrl: data['avatar_url'] as String?,
-      bio: data['bio'] as String?,
-      isActive: data['is_active'] as bool? ?? true,
-      isAdmin: data['is_admin'] as bool? ?? false,
-      isVerified: data['is_verified'] as bool? ?? false,
-      authProvider: (data['auth_provider'] as String?) ?? 'local',
-      createdAt: (data['created_at'] as String?) ?? '',
-      updatedAt: data['updated_at'] as String?,
-    );
+    try {
+      final response = await _apiClient.dio.put('/v1/users/me', data: body);
+      final data = response.data as Map<String, dynamic>;
+      final updated = _buildUser(data);
+      await _db?.putSnapshot('profile_me', jsonEncode(data));
+      return updated;
+    } on DioException {
+      // Offline fallback: Persistir localmente en SQLite y marcar para sincronización en background
+      await _db?.putSnapshot('pending_profile_update', jsonEncode(body));
+      final cachedMe = await _db?.getSnapshot('profile_me');
+      final currentMap = cachedMe != null
+          ? Map<String, dynamic>.from(jsonDecode(cachedMe) as Map)
+          : <String, dynamic>{};
+      currentMap.addAll(body);
+      await _db?.putSnapshot('profile_me', jsonEncode(currentMap));
+      return _buildUser(currentMap);
+    }
   }
 
   /// Obtener posts propios con cursor pagination.

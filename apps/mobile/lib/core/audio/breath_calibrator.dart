@@ -27,6 +27,9 @@ class BreathCalibrator {
   /// Clave de persistencia local del umbral calibrado.
   static const String prefsKey = 'breath_rms_threshold';
 
+  /// Clave de persistencia local de la fecha de última calibración.
+  static const String lastCalibratedKey = 'breath_rms_last_calibrated';
+
   /// Muestras por encima de este valor se consideran ruido de impacto.
   static const double impactNoiseCeiling = 0.95;
 
@@ -97,15 +100,26 @@ class BreathCalibrator {
   Future<SharedPreferences> _resolvePrefs() async =>
       _prefs ?? await SharedPreferences.getInstance();
 
-  /// Persiste el umbral calibrado localmente.
-  Future<void> saveThreshold(double threshold) async {
+  /// Persiste el umbral calibrado localmente junto con la fecha.
+  Future<void> saveThreshold(double threshold, [DateTime? timestamp]) async {
     final prefs = await _resolvePrefs();
     await prefs.setDouble(prefsKey, threshold);
+    await prefs.setString(
+      lastCalibratedKey,
+      (timestamp ?? DateTime.now()).toIso8601String(),
+    );
   }
 
   /// Carga el umbral calibrado previamente, o `null` si no existe.
   Future<double?> loadThreshold() async {
     final prefs = await _resolvePrefs();
     return prefs.getDouble(prefsKey);
+  }
+
+  /// Carga la fecha de la última calibración, o `null` si no existe.
+  Future<DateTime?> loadLastCalibrated() async {
+    final prefs = await _resolvePrefs();
+    final raw = prefs.getString(lastCalibratedKey);
+    return raw != null ? DateTime.tryParse(raw) : null;
   }
 }

@@ -33,7 +33,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         user.id,
         cursor: null,
       );
-      final posts = postsResult['items'] as List<PostModel>;
+      final posts =
+          (postsResult['items'] as List?)?.cast<PostModel>().toList() ??
+          <PostModel>[];
 
       emit(
         ProfileLoaded(
@@ -43,7 +45,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
           recentAchievements: profileData['recent_achievements'] as dynamic,
           myPosts: posts,
           nextCursor: postsResult['next_cursor'] as String?,
-          hasMorePosts: postsResult['has_more'] as bool,
+          hasMorePosts: (postsResult['has_more'] as bool?) ?? false,
         ),
       );
     } catch (e) {
@@ -63,7 +65,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         user.id,
         cursor: null,
       );
-      final posts = postsResult['items'] as List<PostModel>;
+      final posts =
+          (postsResult['items'] as List?)?.cast<PostModel>().toList() ??
+          <PostModel>[];
 
       emit(
         ProfileLoaded(
@@ -73,7 +77,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
           recentAchievements: profileData['recent_achievements'] as dynamic,
           myPosts: posts,
           nextCursor: postsResult['next_cursor'] as String?,
-          hasMorePosts: postsResult['has_more'] as bool,
+          hasMorePosts: (postsResult['has_more'] as bool?) ?? false,
         ),
       );
     } catch (e) {
@@ -123,6 +127,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         username: event.username,
         bio: event.bio,
         avatarUrl: event.avatarUrl,
+        preferredInstruments: event.preferredInstruments,
+        breathSensitivityRms: event.breathSensitivityRms,
       );
       emit(ProfileUpdateSuccess(updatedUser: updatedUser));
     } catch (e) {

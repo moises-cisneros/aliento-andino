@@ -19,9 +19,10 @@ S10: "Pruebas Obligatorias Móvil: Unitaria: Validación de formulario de edici�
 ## Tasks
 
 - [x] T1 (S4, S5, S6, S7) [inline]: Backend — `PUT /api/v1/users/me`, schema `UserUpdate` con validación de instrumentos andinos y umbral RMS [0.0, 1.0], migración de columnas en `users`, y tests unitario/integración/E2E (#63 SUB-19-B) — Branch `feat/63-put-users-me`
-- [ ] T2 (S1, S2, S3, S8, S9, S10) [inline]: Mobile — `ProfileEditScreen`, `BreathProfileCard`, selector de instrumentos preferidos (Quena, Zampoña, Tarka), integración con BLoC de perfil, persistencia offline, tests unitario, integración y E2E (#62 SUB-19-A) — Branch `feat/62-profile-screen-mobile`
+- [x] T2 (S1, S2, S3, S8, S9, S10) [inline]: Mobile — `ProfileEditScreen`, `BreathProfileCard`, selector de instrumentos preferidos (Quena, Zampoña, Tarka), integración con BLoC de perfil, persistencia offline, tests unitario, integración y E2E (#62 SUB-19-A) — Branch `feat/62-profile-screen-mobile`
 
 ## Log
 
 L1: "Implementa las subissues de la issue #63 (HU-19), realizalo con ODD, en un propio git worktree."
-L2: Verification backend SUB-19-B: `pytest tests/test_users.py -v` (19 passed, 0 failures), `ruff check .` (0 errors), `ruff format --check .` (clean).
+L2: Verification backend SUB-19-B: `pytest tests/test_users.py -v` (19 passed, 0 failures), `ruff check .` (0 errors), `ruff format --check .` (clean). PR #87 merged to main (fb50772).
+L3: Verification mobile SUB-19-A: `flutter test test/features/profile/` (6 passed, 100% green), `flutter analyze` (0 errors, 0 warnings), `dart format` (clean). Ready for PR and closure of #62 and HU-19 #61.

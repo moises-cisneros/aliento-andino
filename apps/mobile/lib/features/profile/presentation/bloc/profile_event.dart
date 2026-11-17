@@ -29,14 +29,25 @@ class ProfileUpdateRequested extends ProfileEvent {
   final String? username;
   final String? bio;
   final String? avatarUrl;
+  final List<String>? preferredInstruments;
+  final double? breathSensitivityRms;
 
   const ProfileUpdateRequested({
     this.fullName,
     this.username,
     this.bio,
     this.avatarUrl,
+    this.preferredInstruments,
+    this.breathSensitivityRms,
   });
 
   @override
-  List<Object?> get props => [fullName, username, bio, avatarUrl];
+  List<Object?> get props => [
+    fullName,
+    username,
+    bio,
+    avatarUrl,
+    preferredInstruments,
+    breathSensitivityRms,
+  ];
 }
