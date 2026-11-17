@@ -16,10 +16,11 @@ S8: "Pruebas Obligatorias Mobile: Unitaria: `apps/mobile/test/features/lessons/l
 
 ## Tasks
 
-- [x] T1 (S1-S4) [inline]: Backend — `GET /api/v1/lessons` y `GET /api/v1/lessons/{lesson_id}`, `LessonService.get_lessons` y `get_lesson_by_id`, validaciones y tests (#20 SUB-04-A) — Branch `feat/20-lessons-rest-api`
-- [ ] T2 (S5-S8) [inline]: Mobile — `LessonRepository` getLessons/getLessonById por InstrumentType, `LessonPlayerBloc`, `LessonListScreen` y `LessonPlayerScreen`, tests unitarios, integración y E2E (#21 SUB-04-B) — Branch `feat/21-mobile-lesson-player`
+- [x] T1 (S1-S4) [inline]: Backend — `GET /api/v1/lessons` y `GET /api/v1/lessons/{lesson_id}`, `LessonService.get_lessons` y `get_lesson_by_id`, validaciones y tests (#20 SUB-04-A) — Branch `feat/20-lessons-rest-api` (Commit 56c7b15, PR #82 merged)
+- [x] T2 (S5-S8) [inline]: Mobile — `LessonRepository` getLessons/getLessonById por InstrumentType, `LessonPlayerBloc`, `LessonListScreen` y `LessonPlayerScreen`, tests unitarios, integración y E2E (#21 SUB-04-B) — Branch `feat/21-mobile-lesson-player`
 
 ## Log
 
 L1: "Implementa las subissues de la issue #19 (HU-04), realizalo con ODD, en un propio git worktree."
 L2: Verification backend: `ruff check .` 0 errors, `ruff format --check .` clean, `pytest tests/test_lessons.py -v` 20 passed. Full suite `pytest tests/ -q` 166 passed.
+L3: Verification mobile: `flutter analyze` 0 issues (No issues found!), `dart format --output=none --set-exit-if-changed .` clean, `flutter test test/features/lessons/lesson_player_bloc_test.dart` 9 passed (unit, integration, and E2E suites).

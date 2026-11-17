@@ -4,6 +4,7 @@ class LessonModel {
   final String categoryId;
   final String title;
   final String description;
+  final String instrument;
   final String difficulty;
   final int tempoBpm;
   final String timeSignature;
@@ -32,6 +33,7 @@ class LessonModel {
     required this.categoryId,
     required this.title,
     required this.description,
+    this.instrument = 'quena',
     required this.difficulty,
     required this.tempoBpm,
     this.timeSignature = '4/4',
@@ -62,6 +64,7 @@ class LessonModel {
       categoryId: (json['category_id'] as String?) ?? '',
       title: (json['title'] as String?) ?? '',
       description: (json['description'] as String?) ?? '',
+      instrument: (json['instrument'] as String?) ?? 'quena',
       difficulty: (json['difficulty'] as String?) ?? 'principiante',
       tempoBpm: json['tempo_bpm'] as int? ?? 60,
       timeSignature: json['time_signature'] as String? ?? '4/4',
@@ -92,6 +95,7 @@ class LessonModel {
     'category_id': categoryId,
     'title': title,
     'description': description,
+    'instrument': instrument,
     'difficulty': difficulty,
     'tempo_bpm': tempoBpm,
     'time_signature': timeSignature,

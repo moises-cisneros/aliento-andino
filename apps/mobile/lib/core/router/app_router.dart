@@ -20,6 +20,8 @@ import '../../features/lessons/presentation/bloc/lesson_detail/lesson_detail_blo
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/lessons/presentation/screens/ear_training_screen.dart';
 import '../../features/lessons/presentation/screens/lesson_detail_screen.dart';
+import '../../features/lessons/presentation/screens/lesson_list_screen.dart';
+import '../../features/lessons/presentation/screens/lesson_player_screen.dart';
 import '../../features/lessons/presentation/screens/sight_reading_screen.dart';
 import '../../features/lessons/presentation/screens/theory_hub_screen.dart';
 import '../../features/lessons/presentation/screens/theory_quiz_screen.dart';
@@ -304,6 +306,17 @@ class AppRouter {
         builder: (context, state) => PaymentScreen(
           planId: state.uri.queryParameters['plan'] ?? 'monthly',
         ),
+      ),
+      GoRoute(
+        path: '/lesson-catalog',
+        builder: (context, state) => const LessonListScreen(),
+      ),
+      GoRoute(
+        path: '/lesson-player/:id',
+        builder: (context, state) {
+          final lessonId = state.pathParameters['id']!;
+          return LessonPlayerScreen(lessonId: lessonId);
+        },
       ),
       GoRoute(
         path: '/lessons/:id',

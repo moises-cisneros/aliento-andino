@@ -44,7 +44,7 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
     }
     try {
       _categories = await _lessonRepository.getCategories();
-      final result = await _lessonRepository.getLessons();
+      final result = await _lessonRepository.getLessonsPaginated();
       _all = result['items'] as List<LessonModel>;
       final path = LearningPath.compute(_all);
       _lockedIds = path.lockedIds;
@@ -62,7 +62,7 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
     emit(const LessonsLoading());
     try {
       _categories = await _lessonRepository.getCategories();
-      final result = await _lessonRepository.getLessons();
+      final result = await _lessonRepository.getLessonsPaginated();
       _all = result['items'] as List<LessonModel>;
       final path = LearningPath.compute(_all);
       _lockedIds = path.lockedIds;

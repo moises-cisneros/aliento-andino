@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../../../core/audio/instrument.dart';
 import '../../../../core/network/api_client.dart';
 import '../datasources/local_lesson_datasource.dart';
 import '../models/category_model.dart';
@@ -22,6 +23,65 @@ class LessonRepository {
   }) : _apiClient = apiClient,
        _local = local;
 
+  /// Obtener catálogo de lecciones filtradas por instrumento andino y dificultad (SUB-04-B / HU-04).
+  Future<List<LessonModel>> getLessons({
+    required InstrumentType instrument,
+    String? difficulty,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{'instrument': instrument.name};
+      if (difficulty != null && difficulty.isNotEmpty) {
+        queryParams['difficulty'] = difficulty;
+      }
+
+      final response = await _apiClient.dio.get(
+        '/v1/lessons',
+        queryParameters: queryParams,
+      );
+      final list = response.data as List<dynamic>;
+      final items = list
+          .map((e) => LessonModel.fromJson(e as Map<String, dynamic>))
+          .toList();
+
+      await _local?.cacheLessons(items);
+      return items;
+    } on DioException {
+      final cached = await _local?.getLessons(difficulty: difficulty);
+      if (cached != null && cached.isNotEmpty) {
+        final filtered = cached
+            .where((l) => l.instrument == instrument.name)
+            .toList();
+        if (filtered.isNotEmpty) return filtered;
+        return cached;
+      }
+      rethrow;
+    }
+  }
+
+  /// Obtener modelo de lección por ID (SUB-04-B / HU-04).
+  Future<LessonModel> getLessonById(String lessonId) async {
+    try {
+      final response = await _apiClient.dio.get('/v1/lessons/$lessonId');
+      final data = response.data as Map<String, dynamic>;
+      final lesson = LessonModel.fromJson(data);
+      final notes =
+          (data['notes'] as List<dynamic>?)
+              ?.map(
+                (e) => NoteSequenceModel.fromJson(e as Map<String, dynamic>),
+              )
+              .toList() ??
+          [];
+      if (notes.isNotEmpty) {
+        await _local?.cacheLessonDetail(lesson, notes);
+      }
+      return lesson;
+    } on DioException {
+      final cached = await _local?.getLesson(lessonId);
+      if (cached != null) return cached;
+      rethrow;
+    }
+  }
+
   /// Obtener categorías activas con conteo de lecciones.
   Future<List<CategoryModel>> getCategories() async {
     try {
@@ -39,11 +99,8 @@ class LessonRepository {
     }
   }
 
-  /// Obtener lecciones con filtros. El catálogo es curado (~decenas de
-  /// lecciones), así que se trae todo de una (limit 100 = tope del backend) para
-  /// que la lista no quede cortada. Si algún día supera las 100, conviene
-  /// paginar/scroll infinito.
-  Future<Map<String, dynamic>> getLessons({
+  /// Obtener lecciones con filtros paginados (compatibilidad con flujo previo).
+  Future<Map<String, dynamic>> getLessonsPaginated({
     String? categoryId,
     String? difficulty,
     String? search,
