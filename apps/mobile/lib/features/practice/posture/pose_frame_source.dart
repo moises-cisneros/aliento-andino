@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:equatable/equatable.dart';
 
 import 'package:mobile/features/practice/posture/posture_scorer.dart';
@@ -76,45 +74,4 @@ abstract class PoseFrameSource {
 
   /// Libera todos los recursos y cierra el stream.
   Future<void> dispose();
-}
-
-/// Punto de integración (seam) con el motor nativo MediaPipe Pose.
-///
-/// La inferencia postural de 33 landmarks de MediaPipe Pose requiere un binding
-/// nativo (TFLite/GPU vía plataforma) que no se compila ni ejecuta en el entorno
-/// de CI/escritorio actual —en `pubspec.yaml` sólo está enlazado
-/// `hand_landmarker` (MediaPipe Hands, 21 landmarks, sólo Android)—. Toda la
-/// lógica de evaluación (ángulos, alineación y puntuación 0–100) es pura y vive
-/// detrás de esta interfaz en [MediaPipePosturePipeline], por lo que está
-/// cubierta por pruebas sin necesidad del binding.
-///
-/// Cuando se incorpore el detector de pose nativo, alimentar [_controller] con
-/// cada [PoseFrame] inferido dentro de [start]; hasta entonces la activación
-/// informa explícitamente que el motor de pose aún no está disponible en lugar
-/// de simular un seguimiento inexistente.
-class MediaPipePoseFrameSource implements PoseFrameSource {
-  final StreamController<PoseFrame> _controller =
-      StreamController<PoseFrame>.broadcast();
-
-  @override
-  Stream<PoseFrame> get poseFrameStream => _controller.stream;
-
-  @override
-  Future<void> start() async {
-    // TODO(aliento-andino): enlazar MediaPipe Pose (33 landmarks) vía canal
-    // nativo y reenviar cada fotograma inferido a `_controller.add(...)`.
-    throw const PoseTrackingException(
-      'El motor de pose MediaPipe (33 landmarks) aún no está enlazado en este '
-      'build. La evaluación postural (ángulos/alineación/score) está lista y '
-      'probada tras PoseFrameSource; falta conectar el detector nativo.',
-    );
-  }
-
-  @override
-  Future<void> stop() async {}
-
-  @override
-  Future<void> dispose() async {
-    await _controller.close();
-  }
 }

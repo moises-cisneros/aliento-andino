@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:mobile/core/audio/instrument.dart';
+import 'package:mobile/features/practice/posture/mediapipe_pose_service.dart';
 import 'package:mobile/features/practice/posture/mediapipe_posture_pipeline.dart';
 import 'package:mobile/features/practice/posture/pose_frame_source.dart';
 import 'package:mobile/features/practice/posture/posture_scorer.dart';
@@ -144,7 +145,7 @@ class PostureBloc extends Bloc<PostureEvent, PostureState> {
   PostureBloc({
     PoseFrameSource? frameSource,
     MediaPipePosturePipeline? pipeline,
-  }) : _frameSource = frameSource ?? MediaPipePoseFrameSource(),
+  }) : _frameSource = frameSource ?? MediaPipePoseService(),
        _pipeline = pipeline ?? const MediaPipePosturePipeline(),
        super(const PostureInitial()) {
     on<StartPostureMonitoringEvent>(_onStart);

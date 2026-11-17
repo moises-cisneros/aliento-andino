@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:mobile/core/audio/instrument.dart';
 import 'package:mobile/features/practice/posture/presentation/bloc/posture_bloc.dart';
+import 'package:mobile/features/practice/presentation/widgets/posture_indicator_widget.dart';
 
 /// [SUB-06-B] Vista de cámara con retroalimentación ergonómica postural.
 ///
@@ -55,29 +56,38 @@ class _PostureContent extends StatelessWidget {
             }
           },
           builder: (context, state) {
-            return Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 8),
-                  Text(
-                    _headline(state),
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.titleMedium,
+            return Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 8),
+                      Text(
+                        _headline(state),
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 24),
+                      Center(
+                        child: _PostureScoreRing(state: state, theme: theme),
+                      ),
+                      const SizedBox(height: 24),
+                      Expanded(
+                        child: _FeedbackList(state: state, theme: theme),
+                      ),
+                      _actionButton(context, state),
+                      const SizedBox(height: 8),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  Center(
-                    child: _PostureScoreRing(state: state, theme: theme),
+                ),
+                // [SUB-06-B] Visor ergonómico en el borde de la pantalla.
+                if (state is PostureAlignmentEvaluated)
+                  Positioned.fill(
+                    child: PostureIndicatorWidget.fromState(state),
                   ),
-                  const SizedBox(height: 24),
-                  Expanded(
-                    child: _FeedbackList(state: state, theme: theme),
-                  ),
-                  _actionButton(context, state),
-                  const SizedBox(height: 8),
-                ],
-              ),
+              ],
             );
           },
         ),
