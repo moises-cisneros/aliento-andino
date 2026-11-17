@@ -57,14 +57,17 @@ void main() {
     test('getFeed rethrows when offline without cache', () async {
       adapter.onError('GET /feed', 503);
 
-      expect(repo.getFeed(), throwsA(isA<DioException>()));
+      await expectLater(repo.getFeed(), throwsA(isA<DioException>()));
     });
 
     test('getFeed rethrows on a paginated request even with cache', () async {
       await db.putSnapshot('feed', jsonEncode([postJson()]));
       adapter.onError('GET /feed', 503);
 
-      expect(repo.getFeed(cursor: 'x'), throwsA(isA<DioException>()));
+      await expectLater(
+        repo.getFeed(cursor: 'x'),
+        throwsA(isA<DioException>()),
+      );
     });
 
     test(
@@ -238,6 +241,6 @@ void main() {
     expect(((await noDb.getFeed())['items'] as List).length, 1);
 
     adapter.onError('GET /feed', 503);
-    expect(noDb.getFeed(), throwsA(isA<DioException>()));
+    await expectLater(noDb.getFeed(), throwsA(isA<DioException>()));
   });
 }
