@@ -3,6 +3,7 @@
 import math
 import uuid
 
+from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -12,8 +13,11 @@ from app.schemas.lesson import (
     CategoryCreate,
     CategoryUpdate,
     LessonCreate,
+    LessonListItem,
     LessonUpdate,
+    LessonWithNotes,
     NoteSequenceCreate,
+    NoteSequenceResponse,
 )
 
 # ===================== CATEGORÍAS =====================
@@ -548,3 +552,200 @@ async def get_admin_lessons_paginated(
         )
 
     return {"items": items, "total": total, "page": page, "pages": pages}
+
+
+# ===================== SERVICIO DE LECCIONES ANDINAS (HU-04) =====================
+
+SUPPORTED_INSTRUMENTS = {"quena", "zampona", "tarka"}
+SUPPORTED_DIFFICULTIES = {"principiante", "intermedio", "avanzado"}
+
+
+class LessonService:
+    """Servicio de catálogo y reproducción interactiva de lecciones andinas."""
+
+    @staticmethod
+    async def get_lessons(
+        db: AsyncSession,
+        instrument: str | None = None,
+        difficulty: str | None = None,
+        skip: int = 0,
+        limit: int = 20,
+        user_id: uuid.UUID | None = None,
+    ) -> list[LessonListItem]:
+        """Obtiene lecciones activas filtradas por instrumento andino y dificultad."""
+        if instrument is not None:
+            inst = instrument.strip().lower()
+            if inst not in SUPPORTED_INSTRUMENTS:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Instrumento inválido: '{instrument}'. Valores permitidos: quena, zampona, tarka",
+                )
+        else:
+            inst = None
+
+        if difficulty is not None:
+            diff = difficulty.strip().lower()
+            if diff not in SUPPORTED_DIFFICULTIES:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Dificultad inválida: '{difficulty}'. Valores permitidos: principiante, intermedio, avanzado",
+                )
+        else:
+            diff = None
+
+        query = (
+            select(Lesson)
+            .options(
+                selectinload(Lesson.category),
+                selectinload(Lesson.notes),
+            )
+            .where(Lesson.is_active == True)  # noqa: E712
+        )
+
+        if inst:
+            query = query.where(func.lower(Lesson.instrument) == inst)
+        if diff:
+            query = query.where(func.lower(Lesson.difficulty) == diff)
+
+        query = query.order_by(Lesson.order, Lesson.created_at).offset(skip).limit(limit)
+        result = await db.execute(query)
+        lessons = list(result.scalars().all())
+
+        best_scores: dict[uuid.UUID, float] = {}
+        if user_id and lessons:
+            from app.models.lesson import PracticeSession
+
+            lesson_ids = [lesson.id for lesson in lessons]
+            best_q = (
+                select(PracticeSession.lesson_id, func.max(PracticeSession.score))
+                .where(
+                    PracticeSession.user_id == user_id,
+                    PracticeSession.lesson_id.in_(lesson_ids),
+                )
+                .group_by(PracticeSession.lesson_id)
+            )
+            best_result = await db.execute(best_q)
+            best_scores = dict(best_result.all())
+
+        items: list[LessonListItem] = []
+        for lesson in lessons:
+            items.append(
+                LessonListItem(
+                    id=lesson.id,
+                    category_id=lesson.category_id,
+                    title=lesson.title,
+                    description=lesson.description,
+                    instrument=lesson.instrument,
+                    difficulty=lesson.difficulty,
+                    tempo_bpm=lesson.tempo_bpm,
+                    time_signature=lesson.time_signature,
+                    key_signature=lesson.key_signature,
+                    genre=lesson.genre,
+                    artist=lesson.artist,
+                    thumbnail_url=lesson.thumbnail_url,
+                    audio_preview_url=lesson.audio_preview_url,
+                    duration_seconds=lesson.duration_seconds,
+                    order=lesson.order,
+                    is_active=lesson.is_active,
+                    is_premium=lesson.is_premium,
+                    total_plays=lesson.total_plays,
+                    average_score=lesson.average_score,
+                    created_by=lesson.created_by,
+                    created_at=lesson.created_at,
+                    updated_at=lesson.updated_at,
+                    category_name=lesson.category.name if lesson.category else None,
+                    notes_count=len(lesson.notes) if lesson.notes else 0,
+                    user_best_score=best_scores.get(lesson.id),
+                    requires_premium=lesson_requires_premium(lesson),
+                )
+            )
+        return items
+
+    @staticmethod
+    async def get_lesson_by_id(
+        db: AsyncSession,
+        lesson_id: uuid.UUID,
+        user_id: uuid.UUID | None = None,
+    ) -> LessonWithNotes:
+        """Obtiene una lección por ID con su secuencia completa de notas serializadas."""
+        query = (
+            select(Lesson)
+            .options(
+                selectinload(Lesson.category),
+                selectinload(Lesson.notes),
+                selectinload(Lesson.creator),
+            )
+            .where(Lesson.id == lesson_id)
+        )
+        result = await db.execute(query)
+        lesson = result.scalar_one_or_none()
+        if not lesson:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Lección no encontrada",
+            )
+
+        user_best_score = None
+        user_attempts = 0
+        if user_id:
+            from app.models.lesson import PracticeSession
+
+            best_q = select(func.max(PracticeSession.score)).where(
+                PracticeSession.user_id == user_id,
+                PracticeSession.lesson_id == lesson_id,
+            )
+            best_res = await db.execute(best_q)
+            user_best_score = best_res.scalar()
+
+            attempts_q = select(func.count(PracticeSession.id)).where(
+                PracticeSession.user_id == user_id,
+                PracticeSession.lesson_id == lesson_id,
+            )
+            attempts_res = await db.execute(attempts_q)
+            user_attempts = attempts_res.scalar() or 0
+
+        note_responses = [
+            NoteSequenceResponse(
+                id=n.id,
+                position=n.position,
+                note=n.note,
+                duration=n.duration,
+                is_rest=n.is_rest,
+                finger=n.finger,
+                hand=n.hand,
+                velocity=n.velocity,
+                is_chord=n.is_chord,
+                chord_group=n.chord_group,
+            )
+            for n in (lesson.notes or [])
+        ]
+
+        return LessonWithNotes(
+            id=lesson.id,
+            category_id=lesson.category_id,
+            title=lesson.title,
+            description=lesson.description,
+            instrument=lesson.instrument,
+            difficulty=lesson.difficulty,
+            tempo_bpm=lesson.tempo_bpm,
+            time_signature=lesson.time_signature,
+            key_signature=lesson.key_signature,
+            genre=lesson.genre,
+            artist=lesson.artist,
+            thumbnail_url=lesson.thumbnail_url,
+            audio_preview_url=lesson.audio_preview_url,
+            duration_seconds=lesson.duration_seconds,
+            order=lesson.order,
+            is_active=lesson.is_active,
+            is_premium=lesson.is_premium,
+            total_plays=lesson.total_plays,
+            average_score=lesson.average_score,
+            created_by=lesson.created_by,
+            created_at=lesson.created_at,
+            updated_at=lesson.updated_at,
+            category_name=lesson.category.name if lesson.category else None,
+            creator_name=lesson.creator.full_name if lesson.creator else None,
+            notes=note_responses,
+            user_best_score=user_best_score,
+            user_attempts=user_attempts,
+        )

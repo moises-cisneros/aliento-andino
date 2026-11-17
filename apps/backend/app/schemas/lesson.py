@@ -124,6 +124,7 @@ class LessonCreate(BaseModel):
     category_id: uuid.UUID
     title: str = Field(min_length=3, max_length=255)
     description: str = Field(min_length=1)
+    instrument: str = "quena"
     difficulty: str
     tempo_bpm: int = Field(ge=40, le=200)
     time_signature: str = "4/4"
@@ -134,6 +135,14 @@ class LessonCreate(BaseModel):
     is_premium: bool = False
     order: int = 0
     notes: list[NoteSequenceCreate] = []
+
+    @field_validator("instrument")
+    @classmethod
+    def validate_instrument(cls, v: str) -> str:
+        allowed = ("quena", "zampona", "tarka")
+        if v.lower() not in allowed:
+            raise ValueError(f"instrument debe ser uno de: {allowed}")
+        return v.lower()
 
     @field_validator("difficulty")
     @classmethod
@@ -150,6 +159,7 @@ class LessonUpdate(BaseModel):
     category_id: uuid.UUID | None = None
     title: str | None = Field(None, min_length=3, max_length=255)
     description: str | None = None
+    instrument: str | None = None
     difficulty: str | None = None
     tempo_bpm: int | None = Field(None, ge=40, le=200)
     time_signature: str | None = None
@@ -160,6 +170,16 @@ class LessonUpdate(BaseModel):
     is_premium: bool | None = None
     order: int | None = None
     is_active: bool | None = None
+
+    @field_validator("instrument")
+    @classmethod
+    def validate_instrument(cls, v: str | None) -> str | None:
+        if v is not None:
+            allowed = ("quena", "zampona", "tarka")
+            if v.lower() not in allowed:
+                raise ValueError(f"instrument debe ser uno de: {allowed}")
+            return v.lower()
+        return v
 
     @field_validator("difficulty")
     @classmethod
@@ -184,6 +204,7 @@ class LessonResponse(BaseModel):
     category_id: uuid.UUID
     title: str
     description: str
+    instrument: str = "quena"
     difficulty: str
     tempo_bpm: int
     time_signature: str

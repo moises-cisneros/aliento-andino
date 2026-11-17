@@ -17,10 +17,54 @@ from app.schemas.lesson import (
 )
 from app.services import lesson_service
 
-router = APIRouter(prefix="/api/lessons", tags=["Lecciones"])
+router = APIRouter(tags=["Lecciones"])
 
 
-@router.get("/categories", response_model=list[CategoryWithCount])
+# ===================== API V1 (HU-04) =====================
+
+
+@router.get("/api/v1/lessons", response_model=list[LessonListItem])
+async def get_v1_lessons(
+    instrument: str | None = Query(
+        None, description="Filtro por instrumento andino (quena, zampona, tarka)"
+    ),
+    difficulty: str | None = Query(
+        None, description="Filtro por dificultad (principiante, intermedio, avanzado)"
+    ),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[LessonListItem]:
+    """Lista lecciones filtradas por instrumento andino y nivel de dificultad."""
+    return await lesson_service.LessonService.get_lessons(
+        db=db,
+        instrument=instrument,
+        difficulty=difficulty,
+        skip=skip,
+        limit=limit,
+        user_id=current_user.id,
+    )
+
+
+@router.get("/api/v1/lessons/{lesson_id}", response_model=LessonWithNotes)
+async def get_v1_lesson_detail(
+    lesson_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> LessonWithNotes:
+    """Detalle de una lección andina con su secuencia de notas serializadas."""
+    return await lesson_service.LessonService.get_lesson_by_id(
+        db=db,
+        lesson_id=lesson_id,
+        user_id=current_user.id,
+    )
+
+
+# ===================== LEGACY API (/api/lessons) =====================
+
+
+@router.get("/api/lessons/categories", response_model=list[CategoryWithCount])
 async def list_categories(
     db: AsyncSession = Depends(get_db),
     _current_user: User = Depends(get_current_user),
@@ -29,7 +73,7 @@ async def list_categories(
     return await lesson_service.get_categories_with_count(db)
 
 
-@router.get("/genres", response_model=list[str])
+@router.get("/api/lessons/genres", response_model=list[str])
 async def list_genres(
     db: AsyncSession = Depends(get_db),
     _current_user: User = Depends(get_current_user),
@@ -38,7 +82,7 @@ async def list_genres(
     return await lesson_service.get_genres(db)
 
 
-@router.get("", response_model=PaginatedResponse)
+@router.get("/api/lessons", response_model=PaginatedResponse)
 async def list_lessons(
     category_id: uuid.UUID | None = Query(None),
     difficulty: str | None = Query(None),
@@ -62,7 +106,7 @@ async def list_lessons(
     )
 
 
-@router.get("/recommended", response_model=list[LessonListItem])
+@router.get("/api/lessons/recommended", response_model=list[LessonListItem])
 async def list_recommended(
     limit: int = Query(6, ge=1, le=20),
     db: AsyncSession = Depends(get_db),
@@ -78,7 +122,7 @@ async def list_recommended(
     )
 
 
-@router.get("/{lesson_id}", response_model=LessonWithNotes)
+@router.get("/api/lessons/{lesson_id}", response_model=LessonWithNotes)
 async def get_lesson_detail(
     lesson_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -94,7 +138,7 @@ async def get_lesson_detail(
     return detail
 
 
-@router.get("/{lesson_id}/sequence", response_model=list[NoteSequenceResponse])
+@router.get("/api/lessons/{lesson_id}/sequence", response_model=list[NoteSequenceResponse])
 async def get_lesson_sequence(
     lesson_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),

@@ -58,6 +58,9 @@ class Lesson(Base):
     )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    instrument: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="quena", server_default="quena", index=True
+    )
     difficulty: Mapped[str] = mapped_column(
         String(20), nullable=False
     )  # "principiante", "intermedio", "avanzado"

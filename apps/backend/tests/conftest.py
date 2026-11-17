@@ -1,5 +1,10 @@
 """Test configuration: in-memory SQLite async database for tests."""
 
+import os
+
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-unit-testing-32-chars")
+
 import asyncio
 import uuid
 
