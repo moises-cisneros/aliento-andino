@@ -1,7 +1,7 @@
 """Utilidades de seguridad: JWT y hashing de contraseñas."""
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import bcrypt
 import jwt
@@ -17,16 +17,12 @@ def hash_password(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verificar contraseña contra su hash."""
-    return bcrypt.checkpw(
-        plain_password.encode("utf-8"), hashed_password.encode("utf-8")
-    )
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
 
 def create_access_token(user_id: uuid.UUID) -> str:
     """Crear JWT access token con expiración de 15 minutos."""
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=settings.access_token_expire_minutes
-    )
+    expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {
         "sub": str(user_id),
         "exp": expire,
@@ -39,9 +35,7 @@ def create_refresh_token(user_id: uuid.UUID) -> tuple[str, str]:
     """Crear JWT refresh token con expiración de 7 días.
     Retorna (token_string, jti) para almacenar el jti en la base de datos."""
     jti = str(uuid.uuid4())
-    expire = datetime.now(timezone.utc) + timedelta(
-        days=settings.refresh_token_expire_days
-    )
+    expire = datetime.now(UTC) + timedelta(days=settings.refresh_token_expire_days)
     payload = {
         "sub": str(user_id),
         "exp": expire,
@@ -55,9 +49,7 @@ def create_refresh_token(user_id: uuid.UUID) -> tuple[str, str]:
 def decode_token(token: str) -> dict | None:
     """Decodificar y validar un JWT. Retorna None si es inválido."""
     try:
-        payload = jwt.decode(
-            token, settings.secret_key, algorithms=[settings.algorithm]
-        )
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         return payload
     except PyJWTError:
         return None

@@ -2,7 +2,7 @@
 practice session GET, gemini_service mockeado, uploads."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -10,12 +10,12 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.lesson import Category, Lesson, NoteSequence, PracticeSession
+from app.models.lesson import Category, Lesson, PracticeSession
 from app.models.notification import Notification, NotificationToken
 from app.models.user import User
 
-
 # ============== REGISTER CON SKILL_LEVEL ==============
+
 
 class TestRegisterWithSkillLevel:
     async def test_register_persists_skill_level(self, client: AsyncClient):
@@ -65,10 +65,9 @@ class TestRegisterWithSkillLevel:
 
 # ============== UPDATE PROFILE CON SKILL_LEVEL Y PREFS ==============
 
+
 class TestUpdateProfile:
-    async def test_update_skill_level(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_update_skill_level(self, client: AsyncClient, auth_headers: dict):
         response = await client.put(
             "/api/auth/me",
             headers=auth_headers,
@@ -77,9 +76,7 @@ class TestUpdateProfile:
         assert response.status_code == 200
         assert response.json()["skill_level"] == "advanced"
 
-    async def test_update_notifications_prefs(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_update_notifications_prefs(self, client: AsyncClient, auth_headers: dict):
         response = await client.put(
             "/api/auth/me",
             headers=auth_headers,
@@ -95,6 +92,7 @@ class TestUpdateProfile:
 
 
 # ============== /api/lessons/recommended ==============
+
 
 @pytest.fixture
 async def beginner_lessons(db_session: AsyncSession):
@@ -135,10 +133,9 @@ class TestRecommendedLessons:
         # Set skill_level=beginner directamente en BD (más confiable que PUT
         # porque db_session y el endpoint pueden usar conexiones distintas en SQLite :memory:)
         from sqlalchemy import update
+
         await db_session.execute(
-            update(User)
-            .where(User.id == test_user.id)
-            .values(skill_level="beginner")
+            update(User).where(User.id == test_user.id).values(skill_level="beginner")
         )
         await db_session.commit()
 
@@ -148,9 +145,7 @@ class TestRecommendedLessons:
             f"skill_level no persistió, got {me_resp.json()['skill_level']}"
         )
 
-        response = await client.get(
-            "/api/lessons/recommended?limit=10", headers=auth_headers
-        )
+        response = await client.get("/api/lessons/recommended?limit=10", headers=auth_headers)
         assert response.status_code == 200
         items = response.json()
         assert len(items) > 0
@@ -165,9 +160,7 @@ class TestRecommendedLessons:
         auth_headers: dict,
         beginner_lessons,
     ):
-        response = await client.get(
-            "/api/lessons/recommended?limit=10", headers=auth_headers
-        )
+        response = await client.get("/api/lessons/recommended?limit=10", headers=auth_headers)
         assert response.status_code == 200
         # Sin skill_level devuelve cualquier dificultad ordenado por total_plays desc
         items = response.json()
@@ -175,6 +168,7 @@ class TestRecommendedLessons:
 
 
 # ============== /api/practice/sessions/{id} ==============
+
 
 class TestGetPracticeSession:
     async def test_submit_persists_background_ai_feedback(
@@ -198,8 +192,7 @@ class TestGetPracticeSession:
             .where(User.id == test_user.id)
             .values(
                 subscription_status="premium",
-                subscription_expires_at=datetime.now(timezone.utc)
-                + timedelta(days=30),
+                subscription_expires_at=datetime.now(UTC) + timedelta(days=30),
             )
         )
         await db_session.commit()
@@ -232,9 +225,7 @@ class TestGetPracticeSession:
 
         assert response.status_code == 200
         session_id = response.json()["session"]["id"]
-        saved = await client.get(
-            f"/api/practice/sessions/{session_id}", headers=auth_headers
-        )
+        saved = await client.get(f"/api/practice/sessions/{session_id}", headers=auth_headers)
         assert saved.status_code == 200
         assert saved.json()["ai_feedback"] == feedback
 
@@ -257,8 +248,7 @@ class TestGetPracticeSession:
             .where(User.id == test_user.id)
             .values(
                 subscription_status="premium",
-                subscription_expires_at=datetime.now(timezone.utc)
-                + timedelta(days=30),
+                subscription_expires_at=datetime.now(UTC) + timedelta(days=30),
             )
         )
         await db_session.commit()
@@ -283,9 +273,7 @@ class TestGetPracticeSession:
         db_session.add(session)
         await db_session.commit()
 
-        response = await client.get(
-            f"/api/practice/sessions/{session.id}", headers=auth_headers
-        )
+        response = await client.get(f"/api/practice/sessions/{session.id}", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         assert data["ai_feedback"] == "Buen trabajo, seguí practicando."
@@ -321,9 +309,7 @@ class TestGetPracticeSession:
         db_session.add(session)
         await db_session.commit()
 
-        response = await client.get(
-            f"/api/practice/sessions/{session.id}", headers=auth_headers
-        )
+        response = await client.get(f"/api/practice/sessions/{session.id}", headers=auth_headers)
         assert response.status_code == 200
         data = response.json()
         # El test_user por defecto es free → ai_feedback oculto.
@@ -365,13 +351,12 @@ class TestGetPracticeSession:
         db_session.add(session)
         await db_session.commit()
 
-        response = await client.get(
-            f"/api/practice/sessions/{session.id}", headers=auth_headers
-        )
+        response = await client.get(f"/api/practice/sessions/{session.id}", headers=auth_headers)
         assert response.status_code == 404
 
 
 # ============== /api/notifications ==============
+
 
 class TestNotifications:
     async def test_list_empty(self, client: AsyncClient, auth_headers: dict):
@@ -390,25 +375,27 @@ class TestNotifications:
     ):
         # Crear 2 unread + 1 read
         for _ in range(2):
-            db_session.add(Notification(
+            db_session.add(
+                Notification(
+                    user_id=test_user.id,
+                    type="like",
+                    title="t",
+                    body="b",
+                    is_read=False,
+                )
+            )
+        db_session.add(
+            Notification(
                 user_id=test_user.id,
                 type="like",
                 title="t",
                 body="b",
-                is_read=False,
-            ))
-        db_session.add(Notification(
-            user_id=test_user.id,
-            type="like",
-            title="t",
-            body="b",
-            is_read=True,
-        ))
+                is_read=True,
+            )
+        )
         await db_session.commit()
 
-        response = await client.get(
-            "/api/notifications/unread-count", headers=auth_headers
-        )
+        response = await client.get("/api/notifications/unread-count", headers=auth_headers)
         assert response.status_code == 200
         assert response.json()["unread_count"] == 2
 
@@ -420,23 +407,21 @@ class TestNotifications:
         db_session: AsyncSession,
     ):
         for _ in range(3):
-            db_session.add(Notification(
-                user_id=test_user.id,
-                type="follow",
-                title="t",
-                body="b",
-            ))
+            db_session.add(
+                Notification(
+                    user_id=test_user.id,
+                    type="follow",
+                    title="t",
+                    body="b",
+                )
+            )
         await db_session.commit()
 
-        response = await client.post(
-            "/api/notifications/mark-all-read", headers=auth_headers
-        )
+        response = await client.post("/api/notifications/mark-all-read", headers=auth_headers)
         assert response.status_code == 200
 
         # Confirmar
-        count_resp = await client.get(
-            "/api/notifications/unread-count", headers=auth_headers
-        )
+        count_resp = await client.get("/api/notifications/unread-count", headers=auth_headers)
         assert count_resp.json()["unread_count"] == 0
 
     async def test_register_token(
@@ -451,14 +436,13 @@ class TestNotifications:
 
         # Verificar en BD
         result = await db_session.execute(
-            select(NotificationToken).where(
-                NotificationToken.token == "fcm-test-token-abc"
-            )
+            select(NotificationToken).where(NotificationToken.token == "fcm-test-token-abc")
         )
         assert result.scalar_one_or_none() is not None
 
 
 # ============== GEMINI SERVICE (MOCK) ==============
+
 
 class TestGeminiService:
     async def test_generate_feedback_returns_text(self):
@@ -520,10 +504,9 @@ class TestGeminiService:
 
 # ============== UPLOADS (MOCK) ==============
 
+
 class TestUploads:
-    async def test_upload_rejects_invalid_folder(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_upload_rejects_invalid_folder(self, client: AsyncClient, auth_headers: dict):
         files = {"file": ("test.png", b"fake-png-content", "image/png")}
         response = await client.post(
             "/api/uploads/media?folder=evil",
@@ -532,17 +515,13 @@ class TestUploads:
         )
         assert response.status_code == 400
 
-    async def test_upload_rejects_bad_content_type(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_upload_rejects_bad_content_type(self, client: AsyncClient, auth_headers: dict):
         # Mockear el upload a GCS para evitar la llamada real
         with patch(
             "app.services.storage_service.upload_media",
             new=AsyncMock(side_effect=ValueError("Tipo de archivo no permitido")),
         ):
-            files = {
-                "file": ("test.exe", b"fake-exe", "application/octet-stream")
-            }
+            files = {"file": ("test.exe", b"fake-exe", "application/octet-stream")}
             response = await client.post(
                 "/api/uploads/media?folder=posts",
                 headers=auth_headers,
@@ -550,9 +529,7 @@ class TestUploads:
             )
             assert response.status_code == 400
 
-    async def test_upload_success_mocked(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_upload_success_mocked(self, client: AsyncClient, auth_headers: dict):
         with patch(
             "app.services.storage_service.upload_media",
             new=AsyncMock(return_value="https://example.com/test.png"),

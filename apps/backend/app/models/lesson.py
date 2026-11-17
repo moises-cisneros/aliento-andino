@@ -25,17 +25,13 @@ class Category(Base):
 
     __tablename__ = "categories"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     icon: Mapped[str | None] = mapped_column(String(50), nullable=True)
     order: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), onupdate=func.now(), nullable=True
     )
@@ -54,9 +50,7 @@ class Lesson(Base):
 
     __tablename__ = "lessons"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     category_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("categories.id", ondelete="CASCADE"),
@@ -87,9 +81,7 @@ class Lesson(Base):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), onupdate=func.now(), nullable=True
     )
@@ -118,30 +110,22 @@ class NoteSequence(Base):
     """Secuencia de notas de un ejercicio (cada fila es una nota o silencio)."""
 
     __tablename__ = "note_sequences"
-    __table_args__ = (
-        Index("ix_note_sequences_lesson_position", "lesson_id", "position"),
-    )
+    __table_args__ = (Index("ix_note_sequences_lesson_position", "lesson_id", "position"),)
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     lesson_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("lessons.id", ondelete="CASCADE"),
         nullable=False,
     )
     position: Mapped[int] = mapped_column(Integer, nullable=False)
-    note: Mapped[str] = mapped_column(
-        String(10), nullable=False
-    )  # "C4", "F#4", "Bb3", "REST"
+    note: Mapped[str] = mapped_column(String(10), nullable=False)  # "C4", "F#4", "Bb3", "REST"
     duration: Mapped[float] = mapped_column(
         Float, nullable=False
     )  # beats: 1.0=negra, 0.5=corchea, 2.0=blanca
     is_rest: Mapped[bool] = mapped_column(Boolean, default=False)
     finger: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    hand: Mapped[str | None] = mapped_column(
-        String(10), nullable=True
-    )  # "left", "right", "both"
+    hand: Mapped[str | None] = mapped_column(String(10), nullable=True)  # "left", "right", "both"
     velocity: Mapped[int] = mapped_column(Integer, default=80)
     is_chord: Mapped[bool] = mapped_column(Boolean, default=False)
     chord_group: Mapped[int | None] = mapped_column(Integer, nullable=True)
@@ -158,9 +142,7 @@ class PracticeSession(Base):
 
     __tablename__ = "practice_sessions"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -191,9 +173,7 @@ class PracticeSession(Base):
     errors_detail: Mapped[list | None] = mapped_column(JSON, nullable=True)
     ai_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
     completed: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relaciones
     user: Mapped["User"] = relationship("User", lazy="selectin")

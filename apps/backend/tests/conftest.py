@@ -2,7 +2,6 @@
 
 import asyncio
 import uuid
-from datetime import datetime, timezone
 
 import pytest
 import pytest_asyncio
@@ -19,15 +18,14 @@ limiter.enabled = False
 
 # Also disable the router-level limiter
 from app.routers import auth as auth_router
+
 auth_router.limiter.enabled = False
 
 # In-memory SQLite for testing
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 engine_test = create_async_engine(TEST_DATABASE_URL, echo=False)
-async_session_test = async_sessionmaker(
-    engine_test, class_=AsyncSession, expire_on_commit=False
-)
+async_session_test = async_sessionmaker(engine_test, class_=AsyncSession, expire_on_commit=False)
 
 
 async def override_get_db():

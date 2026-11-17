@@ -1,6 +1,6 @@
 """Tests de las funciones puras de gamificación (XP, niveles, semana)."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -17,12 +17,12 @@ class TestCalculateSessionXp:
         "score, difficulty, completed, expected",
         [
             # base(10) + precision + completion(15 si completed), * multiplicador
-            (100.0, "principiante", True, 75),   # (10+50+15)*1.0
-            (100.0, "avanzado", True, 150),       # (10+50+15)*2.0
-            (90.0, "intermedio", True, 82),       # (10+30+15)*1.5 = 82.5 -> 82
-            (85.0, "intermedio", True, 67),       # (10+20+15)*1.5 = 67.5 -> 67
-            (50.0, "principiante", False, 10),    # (10+0+0)*1.0
-            (75.0, "avanzado", False, 40),        # (10+10+0)*2.0
+            (100.0, "principiante", True, 75),  # (10+50+15)*1.0
+            (100.0, "avanzado", True, 150),  # (10+50+15)*2.0
+            (90.0, "intermedio", True, 82),  # (10+30+15)*1.5 = 82.5 -> 82
+            (85.0, "intermedio", True, 67),  # (10+20+15)*1.5 = 67.5 -> 67
+            (50.0, "principiante", False, 10),  # (10+0+0)*1.0
+            (75.0, "avanzado", False, 40),  # (10+10+0)*2.0
         ],
     )
     def test_xp_values(self, score, difficulty, completed, expected):
@@ -65,4 +65,4 @@ class TestWeekMonday:
         assert monday.weekday() == 0
 
     def test_not_in_the_future(self):
-        assert get_current_week_monday() <= datetime.now(timezone.utc).date()
+        assert get_current_week_monday() <= datetime.now(UTC).date()

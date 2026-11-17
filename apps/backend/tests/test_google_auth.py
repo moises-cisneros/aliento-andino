@@ -5,7 +5,6 @@ registro nuevo, login de usuario existente y rechazo de tokens inválidos, sin
 contactar a Google.
 """
 
-import pytest
 from httpx import AsyncClient
 
 from app.services import auth_service
@@ -41,9 +40,7 @@ class TestGoogleAuth:
         def _raise(*a, **k):
             raise ValueError("token inválido")
 
-        monkeypatch.setattr(
-            auth_service.google_id_token, "verify_oauth2_token", _raise
-        )
+        monkeypatch.setattr(auth_service.google_id_token, "verify_oauth2_token", _raise)
         resp = await client.post("/api/auth/google", json={"google_token": "bad"})
         assert resp.status_code == 401
 

@@ -9,7 +9,7 @@ Maneja:
 
 import logging
 import uuid
-from typing import Iterable
+from collections.abc import Iterable
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,28 +39,26 @@ async def notify_user(
 
         # Persistir SIEMPRE en BD (incluso si el push está apagado o no hay tokens)
         # para que el usuario vea el historial en la campanita.
-        db.add(Notification(
-            user_id=user_id,
-            type=notif_type,
-            title=title,
-            body=body,
-            data=data,
-        ))
+        db.add(
+            Notification(
+                user_id=user_id,
+                type=notif_type,
+                title=title,
+                body=body,
+                data=data,
+            )
+        )
         await db.commit()
 
         # Verificar flag de preferencia push
-        result = await db.execute(
-            select(User.notifications_push_enabled).where(User.id == user_id)
-        )
+        result = await db.execute(select(User.notifications_push_enabled).where(User.id == user_id))
         row = result.first()
         if not row or not row[0]:
             return 0
 
         # Obtener tokens del user
         tokens_result = await db.execute(
-            select(NotificationToken.token).where(
-                NotificationToken.user_id == user_id
-            )
+            select(NotificationToken.token).where(NotificationToken.user_id == user_id)
         )
         tokens = [t[0] for t in tokens_result.all()]
         if not tokens:
@@ -75,11 +73,7 @@ async def notify_user(
 
         # Limpiar tokens inválidos
         if invalid:
-            await db.execute(
-                delete(NotificationToken).where(
-                    NotificationToken.token.in_(invalid)
-                )
-            )
+            await db.execute(delete(NotificationToken).where(NotificationToken.token.in_(invalid)))
             await db.commit()
 
         return success

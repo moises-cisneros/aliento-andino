@@ -1,8 +1,8 @@
 """Servicio FCM usando firebase-admin SDK (más simple y confiable que HTTP v1 a mano)."""
 
 import logging
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 from app.config import settings
 
@@ -89,7 +89,7 @@ async def send_to_tokens(
     # particionamos en lotes para soportar audiencias grandes sin fallar.
     try:
         for start in range(0, len(token_list), _MAX_MULTICAST_TOKENS):
-            chunk = token_list[start:start + _MAX_MULTICAST_TOKENS]
+            chunk = token_list[start : start + _MAX_MULTICAST_TOKENS]
             message = messaging.MulticastMessage(
                 tokens=chunk,
                 notification=messaging.Notification(title=title, body=body),
@@ -114,13 +114,15 @@ async def send_to_tokens(
                         "registration-token-not-registered",
                         "INVALID_ARGUMENT",
                         "invalid-argument",
-                        "NOT_FOUND",            # el token ya no existe (app desinstalada / rotado)
-                        "SENDER_ID_MISMATCH",   # token registrado contra otro proyecto FCM
+                        "NOT_FOUND",  # el token ya no existe (app desinstalada / rotado)
+                        "SENDER_ID_MISMATCH",  # token registrado contra otro proyecto FCM
                     }:
                         invalid.append(chunk[idx])
                     logger.warning(
                         "FCM token=%s... code=%s msg=%s",
-                        chunk[idx][:20], code, resp.exception,
+                        chunk[idx][:20],
+                        code,
+                        resp.exception,
                     )
     except Exception as e:
         logger.error("Error enviando FCM (multicast): %s", e, exc_info=True)

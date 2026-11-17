@@ -1,6 +1,5 @@
 """Tests for authentication endpoints."""
 
-import pytest
 from httpx import AsyncClient
 
 from app.models.user import User
@@ -203,9 +202,7 @@ class TestLogout:
 class TestForgotPassword:
     """Tests for POST /api/auth/forgot-password."""
 
-    async def test_forgot_password_existing_email(
-        self, client: AsyncClient, test_user: User
-    ):
+    async def test_forgot_password_existing_email(self, client: AsyncClient, test_user: User):
         response = await client.post(
             "/api/auth/forgot-password",
             json={"email": "test@example.com"},
@@ -224,9 +221,7 @@ class TestForgotPassword:
 class TestUpdateProfile:
     """Tests for PUT /api/auth/me."""
 
-    async def test_update_profile_success(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_update_profile_success(self, client: AsyncClient, auth_headers: dict):
         response = await client.put(
             "/api/auth/me",
             headers=auth_headers,
@@ -237,9 +232,7 @@ class TestUpdateProfile:
         assert data["full_name"] == "Updated Name"
         assert data["bio"] == "My new bio"
 
-    async def test_update_profile_invalid_avatar_url(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_update_profile_invalid_avatar_url(self, client: AsyncClient, auth_headers: dict):
         response = await client.put(
             "/api/auth/me",
             headers=auth_headers,
@@ -258,9 +251,7 @@ class TestUpdateProfile:
 class TestDeleteAccount:
     """Tests for DELETE /api/auth/me (eliminar cuenta)."""
 
-    async def test_delete_account_success(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_delete_account_success(self, client: AsyncClient, auth_headers: dict):
         response = await client.request(
             "DELETE",
             "/api/auth/me",
@@ -278,9 +269,7 @@ class TestDeleteAccount:
         )
         assert login.status_code == 401
 
-    async def test_delete_account_wrong_password(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_delete_account_wrong_password(self, client: AsyncClient, auth_headers: dict):
         response = await client.request(
             "DELETE",
             "/api/auth/me",
@@ -293,9 +282,7 @@ class TestDeleteAccount:
         assert me.status_code == 200
 
     async def test_delete_account_no_auth(self, client: AsyncClient):
-        response = await client.request(
-            "DELETE", "/api/auth/me", json={"password": "x"}
-        )
+        response = await client.request("DELETE", "/api/auth/me", json={"password": "x"})
         assert response.status_code in (401, 403)
 
 

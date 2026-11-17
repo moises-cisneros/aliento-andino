@@ -1,7 +1,7 @@
 """Lote 4: desafíos semanales (progreso calculado desde practice_sessions)."""
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from httpx import AsyncClient
@@ -16,9 +16,7 @@ pytestmark = pytest.mark.asyncio
 
 def _session(uid: uuid.UUID, score: float, day) -> PracticeSession:
     """Sesión de práctica al mediodía UTC del día dado (lección única)."""
-    dt = datetime.combine(day, datetime.min.time()).replace(
-        tzinfo=timezone.utc
-    ) + timedelta(hours=12)
+    dt = datetime.combine(day, datetime.min.time()).replace(tzinfo=UTC) + timedelta(hours=12)
     return PracticeSession(
         id=uuid.uuid4(),
         user_id=uid,
@@ -38,9 +36,7 @@ def _session(uid: uuid.UUID, score: float, day) -> PracticeSession:
 
 
 class TestWeeklyChallenges:
-    async def test_no_data_all_zero(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_no_data_all_zero(self, client: AsyncClient, auth_headers: dict):
         resp = await client.get("/api/challenges/weekly", headers=auth_headers)
         assert resp.status_code == 200, resp.text
         data = resp.json()
@@ -56,13 +52,9 @@ class TestWeeklyChallenges:
         me = (await client.get("/api/auth/me", headers=auth_headers)).json()
         uid = uuid.UUID(me["id"])
         monday = get_current_week_monday()
-        today = datetime.now(timezone.utc).date()
+        today = datetime.now(UTC).date()
         # Días de esta semana hasta hoy (hasta 4 para no excederse).
-        days = [
-            monday + timedelta(days=k)
-            for k in range(4)
-            if monday + timedelta(days=k) <= today
-        ]
+        days = [monday + timedelta(days=k) for k in range(4) if monday + timedelta(days=k) <= today]
         # 1 sesión por día; las 2 primeras con 90 (cuentan para "80%+").
         for idx, d in enumerate(days):
             db_session.add(_session(uid, 90.0 if idx < 2 else 50.0, d))
@@ -83,9 +75,7 @@ class TestWeeklyChallenges:
         me = (await client.get("/api/auth/me", headers=auth_headers)).json()
         uid = uuid.UUID(me["id"])
         monday = get_current_week_monday()
-        db_session.add(
-            UserXP(user_id=uid, weekly_xp=600, week_start_date=monday)
-        )
+        db_session.add(UserXP(user_id=uid, weekly_xp=600, week_start_date=monday))
         await db_session.commit()
 
         resp = await client.get("/api/challenges/weekly", headers=auth_headers)
@@ -101,9 +91,7 @@ class TestWeeklyChallenges:
         me = (await client.get("/api/auth/me", headers=auth_headers)).json()
         uid = uuid.UUID(me["id"])
         old_monday = get_current_week_monday() - timedelta(days=7)
-        db_session.add(
-            UserXP(user_id=uid, weekly_xp=999, week_start_date=old_monday)
-        )
+        db_session.add(UserXP(user_id=uid, weekly_xp=999, week_start_date=old_monday))
         await db_session.commit()
 
         resp = await client.get("/api/challenges/weekly", headers=auth_headers)

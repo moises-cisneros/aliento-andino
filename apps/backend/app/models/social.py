@@ -25,9 +25,7 @@ class Post(Base):
 
     __tablename__ = "posts"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -80,9 +78,7 @@ class Comment(Base):
 
     __tablename__ = "comments"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     post_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("posts.id", ondelete="CASCADE"),
@@ -105,9 +101,7 @@ class Comment(Base):
     replies_count: Mapped[int] = mapped_column(Integer, default=0)
     likes_count: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relaciones
     post = relationship("Post", back_populates="comments")
@@ -122,13 +116,9 @@ class Like(Base):
     """Likes en publicaciones (un like por usuario por post)."""
 
     __tablename__ = "likes"
-    __table_args__ = (
-        UniqueConstraint("post_id", "user_id", name="uq_like_post_user"),
-    )
+    __table_args__ = (UniqueConstraint("post_id", "user_id", name="uq_like_post_user"),)
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     post_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("posts.id", ondelete="CASCADE"),
@@ -139,9 +129,7 @@ class Like(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relaciones
     post = relationship("Post", back_populates="likes")
@@ -152,13 +140,9 @@ class CommentLike(Base):
     """Likes en comentarios (uno por usuario por comentario)."""
 
     __tablename__ = "comment_likes"
-    __table_args__ = (
-        UniqueConstraint("comment_id", "user_id", name="uq_comment_like"),
-    )
+    __table_args__ = (UniqueConstraint("comment_id", "user_id", name="uq_comment_like"),)
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     comment_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("comments.id", ondelete="CASCADE"),
@@ -169,9 +153,7 @@ class CommentLike(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class SavedPost(Base):
@@ -183,9 +165,7 @@ class SavedPost(Base):
         Index("ix_saved_posts_user_id", "user_id"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -196,22 +176,16 @@ class SavedPost(Base):
         ForeignKey("posts.id", ondelete="CASCADE"),
         nullable=False,
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class Follow(Base):
     """Relaciones de seguimiento entre usuarios."""
 
     __tablename__ = "follows"
-    __table_args__ = (
-        UniqueConstraint("follower_id", "following_id", name="uq_follow"),
-    )
+    __table_args__ = (UniqueConstraint("follower_id", "following_id", name="uq_follow"),)
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     follower_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -224,17 +198,11 @@ class Follow(Base):
         nullable=False,
         index=True,
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relaciones
-    follower = relationship(
-        "User", lazy="selectin", foreign_keys=[follower_id]
-    )
-    following = relationship(
-        "User", lazy="selectin", foreign_keys=[following_id]
-    )
+    follower = relationship("User", lazy="selectin", foreign_keys=[follower_id])
+    following = relationship("User", lazy="selectin", foreign_keys=[following_id])
 
 
 class Report(Base):
@@ -248,9 +216,7 @@ class Report(Base):
         Index("ix_reports_reported_user_id", "reported_user_id"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     reporter_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -279,18 +245,12 @@ class Report(Base):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    reviewed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relaciones
     reporter = relationship("User", lazy="selectin", foreign_keys=[reporter_id])
     post = relationship("Post", lazy="selectin", foreign_keys=[post_id])
     comment = relationship("Comment", lazy="selectin", foreign_keys=[comment_id])
-    reported_user = relationship(
-        "User", lazy="selectin", foreign_keys=[reported_user_id]
-    )
+    reported_user = relationship("User", lazy="selectin", foreign_keys=[reported_user_id])
     reviewer = relationship("User", lazy="selectin", foreign_keys=[reviewed_by])

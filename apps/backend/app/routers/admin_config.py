@@ -36,7 +36,5 @@ async def update_config(
     """Actualiza la config (solo los campos enviados) y refresca el cache."""
     changes = {k: v for k, v in payload.model_dump().items() if v is not None}
     result = await config_service.update(db, changes)
-    await audit_service.log(
-        db, current_admin, "config.update", "config", None, changes
-    )
+    await audit_service.log(db, current_admin, "config.update", "config", None, changes)
     return result

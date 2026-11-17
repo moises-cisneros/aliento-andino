@@ -2,7 +2,6 @@
 
 import uuid
 
-import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -79,13 +78,9 @@ class TestMentions:
         # El usuario mencionado recibe una notificación type=mention.
         notifs = await client.get("/api/notifications", headers=headers2)
         assert notifs.status_code == 200, notifs.text
-        assert any(
-            n["type"] == "mention" for n in notifs.json()["items"]
-        ), notifs.json()
+        assert any(n["type"] == "mention" for n in notifs.json()["items"]), notifs.json()
 
-    async def test_no_self_mention_notification(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_no_self_mention_notification(self, client: AsyncClient, auth_headers: dict):
         me = await client.get("/api/auth/me", headers=auth_headers)
         my_username = me.json()["username"]
 

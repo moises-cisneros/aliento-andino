@@ -36,7 +36,7 @@ async def log(
         if commit:
             await db.commit()
     except Exception:  # noqa: BLE001 - la auditoría no debe tumbar la acción
-        try:
+        try:  # noqa: SIM105
             await db.rollback()
         except Exception:  # noqa: BLE001
             pass
@@ -61,21 +61,23 @@ async def list_logs(
     where = conditions if conditions else [True]
 
     total = (
-        await db.execute(
-            select(func.count()).select_from(AdminAuditLog).where(*where)
-        )
+        await db.execute(select(func.count()).select_from(AdminAuditLog).where(*where))
     ).scalar() or 0
 
     offset = (page - 1) * limit
     rows = (
-        await db.execute(
-            select(AdminAuditLog)
-            .where(*where)
-            .order_by(AdminAuditLog.created_at.desc())
-            .offset(offset)
-            .limit(limit)
+        (
+            await db.execute(
+                select(AdminAuditLog)
+                .where(*where)
+                .order_by(AdminAuditLog.created_at.desc())
+                .offset(offset)
+                .limit(limit)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     items = [
         {

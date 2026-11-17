@@ -1,6 +1,5 @@
 """Tests for lessons endpoints."""
 
-import pytest
 from httpx import AsyncClient
 
 
@@ -20,9 +19,7 @@ class TestListCategories:
     """Tests for GET /api/lessons/categories."""
 
     async def test_list_categories(self, client: AsyncClient, auth_headers: dict):
-        response = await client.get(
-            "/api/lessons/categories", headers=auth_headers
-        )
+        response = await client.get("/api/lessons/categories", headers=auth_headers)
         assert response.status_code == 200
         assert isinstance(response.json(), list)
 

@@ -37,17 +37,17 @@ class TestFriendsLeaderboard:
 
         me = (await client.get("/api/auth/me", headers=auth_headers)).json()
 
-        db_session.add_all([
-            UserXP(user_id=uuid.UUID(me["id"]), total_xp=200, level=2),
-            UserXP(user_id=u2.id, total_xp=500, level=3),
-            UserXP(user_id=u3.id, total_xp=1000, level=5),
-        ])
+        db_session.add_all(
+            [
+                UserXP(user_id=uuid.UUID(me["id"]), total_xp=200, level=2),
+                UserXP(user_id=u2.id, total_xp=500, level=3),
+                UserXP(user_id=u3.id, total_xp=1000, level=5),
+            ]
+        )
         await db_session.commit()
 
         # Sigo a u2 (no a u3)
-        follow = await client.post(
-            f"/api/users/{u2.id}/follow", headers=auth_headers
-        )
+        follow = await client.post(f"/api/users/{u2.id}/follow", headers=auth_headers)
         assert follow.status_code == 200, follow.text
 
         resp = await client.get("/api/rankings/friends", headers=auth_headers)
@@ -68,9 +68,7 @@ class TestFriendsLeaderboard:
         assert data["my_rank"] == 2
         assert data["my_xp"] == 200
 
-    async def test_includes_self_without_follows(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_includes_self_without_follows(self, client: AsyncClient, auth_headers: dict):
         # Sin seguir a nadie y sin fila de XP previa, igual aparezco yo en #1.
         resp = await client.get("/api/rankings/friends", headers=auth_headers)
         assert resp.status_code == 200, resp.text

@@ -1,9 +1,9 @@
 """Router de perfiles de usuario, follows y búsqueda."""
 
 import uuid
-
-from fastapi import APIRouter, Depends, HTTPException, Query, status
 from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db

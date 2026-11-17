@@ -18,9 +18,7 @@ from app.database import Base
 class AiUsageLog(Base):
     __tablename__ = "ai_usage_logs"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     # "practice_feedback" | "tutor"
     kind: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
     model: Mapped[str | None] = mapped_column(String(64), nullable=True)

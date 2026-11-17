@@ -55,9 +55,7 @@ async def upload_media(
             folder=folder,
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except RuntimeError as e:
         logger.error("Upload falló: %s", e)
         raise HTTPException(

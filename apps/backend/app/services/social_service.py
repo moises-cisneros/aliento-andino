@@ -1,22 +1,27 @@
 """Servicio de red social: posts, likes, comentarios y reportes."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import and_, delete, exists, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.social import (
-    Comment, CommentLike, Like, Post, Report, SavedPost,
-)
 from app.models.hashtag import Hashtag, PostHashtag
-from app.models.lesson import PracticeSession, Lesson
+from app.models.lesson import PracticeSession
+from app.models.social import (
+    Comment,
+    CommentLike,
+    Like,
+    Post,
+    Report,
+    SavedPost,
+)
 from app.models.user import User
 from app.services.text_parsing import extract_hashtags, extract_mentions
 from app.utils.sql import greatest
 
-
 # ===================== POSTS =====================
+
 
 async def create_post(
     db: AsyncSession,
@@ -104,9 +109,7 @@ async def _sync_hashtags(db: AsyncSession, post: Post) -> None:
 
 async def _resync_hashtags(db: AsyncSession, post: Post) -> None:
     """Borra los hashtags actuales del post (decrementa counters) y re-sincroniza."""
-    rows = await db.execute(
-        select(PostHashtag.hashtag_id).where(PostHashtag.post_id == post.id)
-    )
+    rows = await db.execute(select(PostHashtag.hashtag_id).where(PostHashtag.post_id == post.id))
     hashtag_ids = list(rows.scalars().all())
     if hashtag_ids:
         await db.execute(
@@ -166,9 +169,9 @@ async def soft_delete_post(db: AsyncSession, post: Post) -> None:
     post.is_active = False
     # Decrementar counter cache
     await db.execute(
-        update(User).where(User.id == post.user_id).values(
-            posts_count=greatest(User.posts_count - 1, 0)
-        )
+        update(User)
+        .where(User.id == post.user_id)
+        .values(posts_count=greatest(User.posts_count - 1, 0))
     )
     await db.commit()
 
@@ -225,9 +228,7 @@ async def get_feed(
     # Construir respuesta con datos de practice session
     items = []
     for post in posts:
-        post_dict = _build_post_response(
-            post, post.id in liked_post_ids, post.id in saved_post_ids
-        )
+        post_dict = _build_post_response(post, post.id in liked_post_ids, post.id in saved_post_ids)
         items.append(post_dict)
 
     next_cursor = posts[-1].created_at.isoformat() if posts and has_more else None
@@ -278,10 +279,7 @@ async def get_recent_feed(
         liked_post_ids = set(liked_result.scalars().all())
 
     saved_post_ids = await _saved_post_ids(db, user_id, post_ids)
-    items = [
-        _build_post_response(p, p.id in liked_post_ids, p.id in saved_post_ids)
-        for p in posts
-    ]
+    items = [_build_post_response(p, p.id in liked_post_ids, p.id in saved_post_ids) for p in posts]
     next_cursor = posts[-1].created_at.isoformat() if posts and has_more else None
 
     return {"items": items, "next_cursor": next_cursor, "has_more": has_more}
@@ -332,10 +330,7 @@ async def get_hashtag_feed(
         liked_post_ids = set(liked_result.scalars().all())
 
     saved_post_ids = await _saved_post_ids(db, user_id, post_ids)
-    items = [
-        _build_post_response(p, p.id in liked_post_ids, p.id in saved_post_ids)
-        for p in posts
-    ]
+    items = [_build_post_response(p, p.id in liked_post_ids, p.id in saved_post_ids) for p in posts]
     next_cursor = posts[-1].created_at.isoformat() if posts and has_more else None
 
     return {"items": items, "next_cursor": next_cursor, "has_more": has_more}
@@ -350,7 +345,7 @@ async def get_explore(
     """Obtener posts populares de las últimas 48 horas."""
     from datetime import timedelta
 
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=48)
+    cutoff = datetime.now(UTC) - timedelta(hours=48)
 
     # Total
     count_query = (
@@ -395,10 +390,7 @@ async def get_explore(
         liked_post_ids = set(liked_result.scalars().all())
 
     saved_post_ids = await _saved_post_ids(db, user_id, post_ids)
-    items = [
-        _build_post_response(p, p.id in liked_post_ids, p.id in saved_post_ids)
-        for p in posts
-    ]
+    items = [_build_post_response(p, p.id in liked_post_ids, p.id in saved_post_ids) for p in posts]
     pages = (total + limit - 1) // limit if limit > 0 else 1
 
     return {"items": items, "total": total, "page": page, "pages": pages}
@@ -460,10 +452,7 @@ async def search_posts(
         liked_post_ids = set(liked_result.scalars().all())
 
     saved_post_ids = await _saved_post_ids(db, user_id, post_ids)
-    items = [
-        _build_post_response(p, p.id in liked_post_ids, p.id in saved_post_ids)
-        for p in posts
-    ]
+    items = [_build_post_response(p, p.id in liked_post_ids, p.id in saved_post_ids) for p in posts]
     pages = (total + limit - 1) // limit if limit > 0 else 1
 
     return {"items": items, "total": total, "page": page, "pages": pages}
@@ -487,11 +476,7 @@ async def get_post_detail(
 
     # Check saved
     saved_result = await db.execute(
-        select(
-            exists().where(
-                and_(SavedPost.post_id == post_id, SavedPost.user_id == user_id)
-            )
-        )
+        select(exists().where(and_(SavedPost.post_id == post_id, SavedPost.user_id == user_id)))
     )
     is_saved = saved_result.scalar()
 
@@ -507,14 +492,13 @@ async def get_post_detail(
     liked_comments = await _liked_comment_ids(db, user_id, [c.id for c in comments])
 
     post_dict = _build_post_response(post, is_liked, is_saved)
-    post_dict["recent_comments"] = [
-        _serialize_comment(c, c.id in liked_comments) for c in comments
-    ]
+    post_dict["recent_comments"] = [_serialize_comment(c, c.id in liked_comments) for c in comments]
 
     return post_dict
 
 
 # ===================== LIKES =====================
+
 
 async def toggle_like(
     db: AsyncSession,
@@ -523,18 +507,16 @@ async def toggle_like(
 ) -> dict:
     """Toggle like en un post. Retorna estado y nuevo count."""
     # Verificar si ya existe el like
-    result = await db.execute(
-        select(Like).where(Like.post_id == post_id, Like.user_id == user_id)
-    )
+    result = await db.execute(select(Like).where(Like.post_id == post_id, Like.user_id == user_id))
     existing_like = result.scalar_one_or_none()
 
     if existing_like:
         # Quitar like
         await db.delete(existing_like)
         await db.execute(
-            update(Post).where(Post.id == post_id).values(
-                likes_count=greatest(Post.likes_count - 1, 0)
-            )
+            update(Post)
+            .where(Post.id == post_id)
+            .values(likes_count=greatest(Post.likes_count - 1, 0))
         )
         await db.commit()
         # Obtener count actualizado
@@ -545,9 +527,7 @@ async def toggle_like(
         like = Like(post_id=post_id, user_id=user_id)
         db.add(like)
         await db.execute(
-            update(Post).where(Post.id == post_id).values(
-                likes_count=Post.likes_count + 1
-            )
+            update(Post).where(Post.id == post_id).values(likes_count=Post.likes_count + 1)
         )
         await db.commit()
         post = await get_post_by_id(db, post_id)
@@ -556,9 +536,8 @@ async def toggle_like(
         if post.user_id != user_id:
             from app.models.user import User
             from app.services import notification_dispatcher
-            actor_result = await db.execute(
-                select(User.username).where(User.id == user_id)
-            )
+
+            actor_result = await db.execute(select(User.username).where(User.id == user_id))
             actor_username = actor_result.scalar() or "Alguien"
             await notification_dispatcher.notify_user(
                 db,
@@ -606,6 +585,7 @@ async def get_post_likes(
 
 
 # ===================== SAVED (BOOKMARK) =====================
+
 
 async def toggle_save(
     db: AsyncSession,
@@ -673,15 +653,14 @@ async def get_saved_feed(
         liked_post_ids = set(liked_result.scalars().all())
 
     # Todos están guardados por definición
-    items = [
-        _build_post_response(p, p.id in liked_post_ids, True) for p in posts
-    ]
+    items = [_build_post_response(p, p.id in liked_post_ids, True) for p in posts]
     next_cursor = rows[-1][1].isoformat() if rows and has_more else None
 
     return {"items": items, "next_cursor": next_cursor, "has_more": has_more}
 
 
 # ===================== COMMENTS =====================
+
 
 async def create_comment(
     db: AsyncSession,
@@ -716,26 +695,22 @@ async def create_comment(
 
     # Incrementar counter cache del post
     await db.execute(
-        update(Post).where(Post.id == post_id).values(
-            comments_count=Post.comments_count + 1
-        )
+        update(Post).where(Post.id == post_id).values(comments_count=Post.comments_count + 1)
     )
 
     # Incrementar replies_count del parent si aplica
     if parent_comment_id is not None:
         await db.execute(
-            update(Comment).where(Comment.id == parent_comment_id).values(
-                replies_count=Comment.replies_count + 1
-            )
+            update(Comment)
+            .where(Comment.id == parent_comment_id)
+            .values(replies_count=Comment.replies_count + 1)
         )
 
     await db.commit()
     await db.refresh(comment)
 
     # Notificar a usuarios mencionados en el comentario
-    await _notify_mentions(
-        db, user_id, content, str(post_id), comment_id=str(comment.id)
-    )
+    await _notify_mentions(db, user_id, content, str(post_id), comment_id=str(comment.id))
 
     # Notificar
     post = await get_post_by_id(db, post_id)
@@ -743,9 +718,8 @@ async def create_comment(
     if parent_user_id is not None and parent_user_id != user_id:
         from app.models.user import User
         from app.services import notification_dispatcher
-        actor_result = await db.execute(
-            select(User.username).where(User.id == user_id)
-        )
+
+        actor_result = await db.execute(select(User.username).where(User.id == user_id))
         actor_username = actor_result.scalar() or "Alguien"
         preview = content[:60] + ("…" if len(content) > 60 else "")
         await notification_dispatcher.notify_user(
@@ -765,9 +739,8 @@ async def create_comment(
     if post and post.user_id != user_id:
         from app.models.user import User
         from app.services import notification_dispatcher
-        actor_result = await db.execute(
-            select(User.username).where(User.id == user_id)
-        )
+
+        actor_result = await db.execute(select(User.username).where(User.id == user_id))
         actor_username = actor_result.scalar() or "Alguien"
         preview = content[:60] + ("…" if len(content) > 60 else "")
         await notification_dispatcher.notify_user(
@@ -919,16 +892,16 @@ async def soft_delete_comment(db: AsyncSession, comment: Comment) -> None:
     comment.is_active = False
     # Decrementar counter cache del post
     await db.execute(
-        update(Post).where(Post.id == comment.post_id).values(
-            comments_count=greatest(Post.comments_count - 1, 0)
-        )
+        update(Post)
+        .where(Post.id == comment.post_id)
+        .values(comments_count=greatest(Post.comments_count - 1, 0))
     )
     # Si era un reply, decrementar replies_count del parent
     if comment.parent_comment_id is not None:
         await db.execute(
-            update(Comment).where(Comment.id == comment.parent_comment_id).values(
-                replies_count=greatest(Comment.replies_count - 1, 0)
-            )
+            update(Comment)
+            .where(Comment.id == comment.parent_comment_id)
+            .values(replies_count=greatest(Comment.replies_count - 1, 0))
         )
     await db.commit()
 
@@ -956,9 +929,9 @@ async def toggle_comment_like(
     if existing:
         await db.delete(existing)
         await db.execute(
-            update(Comment).where(Comment.id == comment.id).values(
-                likes_count=greatest(Comment.likes_count - 1, 0)
-            )
+            update(Comment)
+            .where(Comment.id == comment.id)
+            .values(likes_count=greatest(Comment.likes_count - 1, 0))
         )
         await db.commit()
         await db.refresh(comment)
@@ -966,9 +939,7 @@ async def toggle_comment_like(
 
     db.add(CommentLike(comment_id=comment.id, user_id=user_id))
     await db.execute(
-        update(Comment).where(Comment.id == comment.id).values(
-            likes_count=Comment.likes_count + 1
-        )
+        update(Comment).where(Comment.id == comment.id).values(likes_count=Comment.likes_count + 1)
     )
     await db.commit()
     await db.refresh(comment)
@@ -976,9 +947,8 @@ async def toggle_comment_like(
     # Notificar al autor del comentario (si no es uno mismo)
     if comment.user_id != user_id:
         from app.services import notification_dispatcher
-        actor_result = await db.execute(
-            select(User.username).where(User.id == user_id)
-        )
+
+        actor_result = await db.execute(select(User.username).where(User.id == user_id))
         actor_username = actor_result.scalar() or "Alguien"
         await notification_dispatcher.notify_user(
             db,
@@ -1009,6 +979,7 @@ async def update_comment(
 
 # ===================== REPORTS =====================
 
+
 async def create_report(
     db: AsyncSession,
     reporter_id: uuid.UUID,
@@ -1031,9 +1002,7 @@ async def create_report(
 
     # Marcar post como reportado si aplica
     if post_id:
-        await db.execute(
-            update(Post).where(Post.id == post_id).values(is_reported=True)
-        )
+        await db.execute(update(Post).where(Post.id == post_id).values(is_reported=True))
 
     await db.commit()
     await db.refresh(report)
@@ -1041,6 +1010,7 @@ async def create_report(
 
 
 # ===================== ADMIN =====================
+
 
 async def get_reports_paginated(
     db: AsyncSession,
@@ -1063,9 +1033,7 @@ async def get_reports_paginated(
     total = (await db.execute(count_query)).scalar() or 0
 
     offset = (page - 1) * limit
-    result = await db.execute(
-        query.order_by(Report.created_at.desc()).offset(offset).limit(limit)
-    )
+    result = await db.execute(query.order_by(Report.created_at.desc()).offset(offset).limit(limit))
     reports = list(result.scalars().all())
 
     items = []
@@ -1111,7 +1079,7 @@ async def update_report_status(
 
     report.status = status
     report.reviewed_by = admin_id
-    report.reviewed_at = datetime.now(timezone.utc)
+    report.reviewed_at = datetime.now(UTC)
     await db.commit()
     await db.refresh(report)
     return report
@@ -1127,9 +1095,9 @@ async def admin_delete_post(db: AsyncSession, post_id: uuid.UUID) -> bool:
     post.is_active = False
     post.is_reported = True
     await db.execute(
-        update(User).where(User.id == post.user_id).values(
-            posts_count=greatest(User.posts_count - 1, 0)
-        )
+        update(User)
+        .where(User.id == post.user_id)
+        .values(posts_count=greatest(User.posts_count - 1, 0))
     )
     await db.commit()
     return True
@@ -1144,9 +1112,9 @@ async def admin_delete_comment(db: AsyncSession, comment_id: uuid.UUID) -> bool:
 
     comment.is_active = False
     await db.execute(
-        update(Post).where(Post.id == comment.post_id).values(
-            comments_count=greatest(Post.comments_count - 1, 0)
-        )
+        update(Post)
+        .where(Post.id == comment.post_id)
+        .values(comments_count=greatest(Post.comments_count - 1, 0))
     )
     await db.commit()
     return True
@@ -1159,25 +1127,17 @@ async def get_social_stats(db: AsyncSession) -> dict:
     ).scalar() or 0
 
     total_comments = (
-        await db.execute(
-            select(func.count()).select_from(Comment).where(Comment.is_active == True)
-        )
+        await db.execute(select(func.count()).select_from(Comment).where(Comment.is_active == True))
     ).scalar() or 0
 
-    total_likes = (
-        await db.execute(select(func.count()).select_from(Like))
-    ).scalar() or 0
+    total_likes = (await db.execute(select(func.count()).select_from(Like))).scalar() or 0
 
     total_reports_pending = (
-        await db.execute(
-            select(func.count()).select_from(Report).where(Report.status == "pending")
-        )
+        await db.execute(select(func.count()).select_from(Report).where(Report.status == "pending"))
     ).scalar() or 0
 
     total_users_banned = (
-        await db.execute(
-            select(func.count()).select_from(User).where(User.is_banned == True)
-        )
+        await db.execute(select(func.count()).select_from(User).where(User.is_banned == True))
     ).scalar() or 0
 
     # Top 5 usuarios más activos (más posts)
@@ -1209,6 +1169,7 @@ async def get_social_stats(db: AsyncSession) -> dict:
 
 
 # ===================== HELPERS =====================
+
 
 def _build_post_response(post: Post, is_liked: bool, is_saved: bool = False) -> dict:
     """Construir diccionario de respuesta para un post."""

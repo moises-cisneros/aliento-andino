@@ -1,7 +1,7 @@
 """Lote 4: congeladores de racha (streak freeze) en process_practice_xp."""
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import select
@@ -16,7 +16,7 @@ pytestmark = pytest.mark.asyncio
 
 
 def _today():
-    return datetime.now(timezone.utc).date()
+    return datetime.now(UTC).date()
 
 
 async def _mk_user(db: AsyncSession, email: str, username: str) -> User:
@@ -50,9 +50,7 @@ class TestStreakFreeze:
     async def test_welcome_freeze_on_first_practice(self, db_session: AsyncSession):
         u = await _mk_user(db_session, "sf1@example.com", "sfone")
         await _practice(db_session, u.id)
-        xp = (
-            await db_session.execute(select(UserXP).where(UserXP.user_id == u.id))
-        ).scalar_one()
+        xp = (await db_session.execute(select(UserXP).where(UserXP.user_id == u.id))).scalar_one()
         assert xp.current_streak == 1
         assert xp.streak_freezes >= 1  # congelador de bienvenida
 
@@ -151,9 +149,7 @@ class TestStreakFreeze:
         await db_session.refresh(xp)
         assert xp.streak_freezes == MAX_STREAK_FREEZES  # no supera el tope
 
-    async def test_practice_twice_same_day_no_double_spend(
-        self, db_session: AsyncSession
-    ):
+    async def test_practice_twice_same_day_no_double_spend(self, db_session: AsyncSession):
         u = await _mk_user(db_session, "sf8@example.com", "sfeight")
         xp = UserXP(
             user_id=u.id,

@@ -14,8 +14,8 @@ from app.models.app_setting import AppSetting
 
 # Claves editables + sus valores por defecto (también validan qué se puede setear).
 DEFAULTS: dict[str, Any] = {
-    "price_monthly": 4.99,   # USD
-    "price_annual": 39.99,   # USD
+    "price_monthly": 4.99,  # USD
+    "price_annual": 39.99,  # USD
     "trial_days": 7,
     "ai_feedback_enabled": True,
 }
@@ -47,9 +47,7 @@ async def update(db: AsyncSession, changes: dict[str, Any]) -> dict[str, Any]:
     for k, v in changes.items():
         if k not in DEFAULTS:
             continue
-        row = (
-            await db.execute(select(AppSetting).where(AppSetting.key == k))
-        ).scalar_one_or_none()
+        row = (await db.execute(select(AppSetting).where(AppSetting.key == k))).scalar_one_or_none()
         if row:
             row.value = v
         else:

@@ -19,8 +19,8 @@ from app.schemas.lesson import (
     ProgressStats,
     WeeklyDataPoint,
 )
+from app.schemas.ranking import AchievementResponse
 from app.services import gemini_service, practice_service, ranking_service
-from app.schemas.ranking import AchievementResponse, XPGainResult
 
 logger = logging.getLogger(__name__)
 
@@ -205,6 +205,7 @@ async def get_practice_session(
 ):
     """Obtener una sesión de práctica por ID. Útil para polling de ai_feedback."""
     from sqlalchemy import select
+
     from app.models.lesson import PracticeSession
 
     result = await db.execute(

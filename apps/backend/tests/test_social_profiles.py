@@ -2,7 +2,6 @@
 
 import uuid
 
-import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,15 +33,11 @@ class TestProfilesAndFollowers:
         me = (await client.get("/api/auth/me", headers=auth_headers)).json()
 
         # test_user sigue a u2
-        follow = await client.post(
-            f"/api/users/{u2.id}/follow", headers=auth_headers
-        )
+        follow = await client.post(f"/api/users/{u2.id}/follow", headers=auth_headers)
         assert follow.status_code == 200, follow.text
 
         # La lista "siguiendo" de test_user marca is_followed_by_me=True para u2
-        following = await client.get(
-            f"/api/users/{me['id']}/following", headers=auth_headers
-        )
+        following = await client.get(f"/api/users/{me['id']}/following", headers=auth_headers)
         assert following.status_code == 200, following.text
         items = following.json()["items"]
         u2_item = next((i for i in items if i["id"] == str(u2.id)), None)
@@ -67,9 +62,7 @@ class TestProfilesAndFollowers:
         assert me["id"] not in ids  # uno mismo
         assert str(u3.id) in ids  # sugerido
 
-    async def test_media_tab_only_posts_with_media(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_media_tab_only_posts_with_media(self, client: AsyncClient, auth_headers: dict):
         me = (await client.get("/api/auth/me", headers=auth_headers)).json()
 
         text_post = await client.post(
@@ -89,9 +82,7 @@ class TestProfilesAndFollowers:
         assert text_post.status_code == 201
         assert media_post.status_code == 201
 
-        media = await client.get(
-            f"/api/users/{me['id']}/media", headers=auth_headers
-        )
+        media = await client.get(f"/api/users/{me['id']}/media", headers=auth_headers)
         assert media.status_code == 200, media.text
         ids = {p["id"] for p in media.json()["items"]}
         assert media_post.json()["id"] in ids

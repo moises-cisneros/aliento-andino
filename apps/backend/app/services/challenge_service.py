@@ -5,7 +5,7 @@ calcula en vivo desde practice_sessions + el weekly_xp ya anclado a lunes (UTC).
 """
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import distinct, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,24 +19,18 @@ from app.services.ranking_service import (
 # (key, título, descripción, métrica, objetivo). La métrica indexa los valores
 # calculados abajo: "days" | "lessons80" | "weekly_xp" | "sessions".
 _CHALLENGE_DEFS = [
-    ("days", "Practicá 5 días",
-     "Entrá a practicar en 5 días distintos esta semana", "days", 5),
-    ("lessons80", "3 lecciones al 80%",
-     "Completá 3 lecciones con 80% o más", "lessons80", 3),
-    ("xp", "Ganá 500 XP",
-     "Sumá 500 puntos de experiencia esta semana", "weekly_xp", 500),
-    ("sessions", "10 sesiones",
-     "Hacé 10 sesiones de práctica esta semana", "sessions", 10),
+    ("days", "Practicá 5 días", "Entrá a practicar en 5 días distintos esta semana", "days", 5),
+    ("lessons80", "3 lecciones al 80%", "Completá 3 lecciones con 80% o más", "lessons80", 3),
+    ("xp", "Ganá 500 XP", "Sumá 500 puntos de experiencia esta semana", "weekly_xp", 500),
+    ("sessions", "10 sesiones", "Hacé 10 sesiones de práctica esta semana", "sessions", 10),
 ]
 
 
 async def get_weekly_challenges(db: AsyncSession, user_id: uuid.UUID) -> dict:
     """Progreso del usuario en los desafíos de la semana actual (lunes-domingo)."""
     monday = get_current_week_monday()
-    today = datetime.now(timezone.utc).date()
-    week_start = datetime.combine(
-        monday, datetime.min.time()
-    ).replace(tzinfo=timezone.utc)
+    today = datetime.now(UTC).date()
+    week_start = datetime.combine(monday, datetime.min.time()).replace(tzinfo=UTC)
 
     # Sesiones de práctica esta semana.
     sessions = (
@@ -64,9 +58,7 @@ async def get_weekly_challenges(db: AsyncSession, user_id: uuid.UUID) -> dict:
     days_practiced = 0
     day = monday
     while day <= today:
-        day_start = datetime.combine(
-            day, datetime.min.time()
-        ).replace(tzinfo=timezone.utc)
+        day_start = datetime.combine(day, datetime.min.time()).replace(tzinfo=UTC)
         day_end = day_start + timedelta(days=1)
         count = (
             await db.execute(
@@ -96,14 +88,16 @@ async def get_weekly_challenges(db: AsyncSession, user_id: uuid.UUID) -> dict:
     challenges = []
     for key, title, desc, metric, target in _CHALLENGE_DEFS:
         raw = metric_values[metric]
-        challenges.append({
-            "key": key,
-            "title": title,
-            "description": desc,
-            "target": target,
-            "progress": min(raw, target),
-            "completed": raw >= target,
-        })
+        challenges.append(
+            {
+                "key": key,
+                "title": title,
+                "description": desc,
+                "target": target,
+                "progress": min(raw, target),
+                "completed": raw >= target,
+            }
+        )
 
     next_monday = monday + timedelta(days=7)
     days_remaining = (next_monday - today).days

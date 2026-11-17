@@ -5,11 +5,12 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-
 # ===================== USER SUMMARY =====================
+
 
 class UserSummary(BaseModel):
     """Resumen de usuario reutilizable en posts, comments, etc."""
+
     id: uuid.UUID
     username: str
     full_name: str
@@ -20,8 +21,10 @@ class UserSummary(BaseModel):
 
 # ===================== PRACTICE SESSION SUMMARY =====================
 
+
 class PracticeSessionSummary(BaseModel):
     """Resumen de sesión de práctica para vincular en posts."""
+
     id: uuid.UUID
     score: float
     correct_notes: int
@@ -34,8 +37,10 @@ class PracticeSessionSummary(BaseModel):
 
 # ===================== POST =====================
 
+
 class PostCreate(BaseModel):
     """Schema para crear publicación."""
+
     content: str = Field(min_length=1, max_length=2000)
     post_type: str = "text"
     media_url: str | None = Field(None, max_length=500)
@@ -52,11 +57,13 @@ class PostCreate(BaseModel):
 
 class PostUpdate(BaseModel):
     """Schema para editar publicación (solo contenido)."""
+
     content: str = Field(min_length=1, max_length=2000)
 
 
 class PostResponse(BaseModel):
     """Respuesta de publicación con datos del usuario y estado de like."""
+
     id: uuid.UUID
     user: UserSummary
     content: str
@@ -76,24 +83,29 @@ class PostResponse(BaseModel):
 
 class PostDetailResponse(PostResponse):
     """Detalle de publicación con últimos comentarios."""
+
     recent_comments: list["CommentResponse"] = []
 
 
 # ===================== COMMENT =====================
 
+
 class CommentCreate(BaseModel):
     """Schema para crear comentario (o reply si parent_comment_id está presente)."""
+
     content: str = Field(min_length=1, max_length=500)
     parent_comment_id: uuid.UUID | None = None
 
 
 class CommentUpdate(BaseModel):
     """Schema para editar comentario (solo contenido)."""
+
     content: str = Field(min_length=1, max_length=500)
 
 
 class CommentResponse(BaseModel):
     """Respuesta de comentario."""
+
     id: uuid.UUID
     post_id: uuid.UUID
     user: UserSummary
@@ -108,24 +120,30 @@ class CommentResponse(BaseModel):
 
 # ===================== LIKE =====================
 
+
 class LikeToggleResponse(BaseModel):
     """Respuesta de toggle like."""
+
     liked: bool
     likes_count: int
 
 
 # ===================== FOLLOW =====================
 
+
 class FollowToggleResponse(BaseModel):
     """Respuesta de toggle follow."""
+
     following: bool
     followers_count: int
 
 
 # ===================== USER PROFILE =====================
 
+
 class UserProfileResponse(BaseModel):
     """Perfil público de usuario."""
+
     id: uuid.UUID
     username: str
     full_name: str
@@ -142,8 +160,10 @@ class UserProfileResponse(BaseModel):
 
 # ===================== REPORT =====================
 
+
 class ReportCreate(BaseModel):
     """Schema para crear reporte de contenido."""
+
     post_id: uuid.UUID | None = None
     comment_id: uuid.UUID | None = None
     reported_user_id: uuid.UUID | None = None
@@ -161,6 +181,7 @@ class ReportCreate(BaseModel):
 
 class ReportResponse(BaseModel):
     """Respuesta de reporte."""
+
     id: uuid.UUID
     reporter: UserSummary
     post_id: uuid.UUID | None = None
@@ -183,6 +204,7 @@ class ReportResponse(BaseModel):
 
 class ReportUpdateStatus(BaseModel):
     """Schema para actualizar estado de reporte."""
+
     status: str
 
     @field_validator("status")
@@ -196,8 +218,10 @@ class ReportUpdateStatus(BaseModel):
 
 # ===================== CURSOR PAGINATION =====================
 
+
 class CursorPaginatedResponse(BaseModel):
     """Respuesta paginada por cursor para feed/infinite scroll."""
+
     items: list
     next_cursor: str | None = None
     has_more: bool = False
@@ -205,8 +229,10 @@ class CursorPaginatedResponse(BaseModel):
 
 # ===================== PAGINATED (offset) =====================
 
+
 class PaginatedUsersResponse(BaseModel):
     """Respuesta paginada de usuarios."""
+
     items: list[UserSummary]
     total: int
     page: int
@@ -215,8 +241,10 @@ class PaginatedUsersResponse(BaseModel):
 
 # ===================== ADMIN SOCIAL STATS =====================
 
+
 class SocialStatsResponse(BaseModel):
     """Estadísticas de la red social para admin."""
+
     total_posts: int
     total_comments: int
     total_likes: int
@@ -227,11 +255,14 @@ class SocialStatsResponse(BaseModel):
 
 # ===================== BAN =====================
 
+
 class BanRequest(BaseModel):
     """Schema para banear usuario."""
+
     reason: str = Field(min_length=1, max_length=500)
 
 
 class MessageResponse(BaseModel):
     """Respuesta genérica de mensaje."""
+
     message: str

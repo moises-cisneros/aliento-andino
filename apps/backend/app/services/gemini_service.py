@@ -108,9 +108,7 @@ def _build_prompt(
         elif isinstance(errors_detail, dict):
             sample = list(errors_detail.items())[:10]
             if sample:
-                errors_summary = "\nMuestra de errores: " + ", ".join(
-                    f"{k}={v}" for k, v in sample
-                )
+                errors_summary = "\nMuestra de errores: " + ", ".join(f"{k}={v}" for k, v in sample)
 
     return f"""Eres un profesor de piano cercano y motivador. Escribe en español latinoamericano neutro.
 Evita regionalismos como "che", "vos", "mirá", "dale", "laburo", "seguí" o "practicá".
@@ -202,6 +200,7 @@ async def generate_practice_feedback(
                 )
                 # Registrar tokens reales (no bloquea ni rompe el feedback).
                 from app.services import ai_usage_service
+
                 await ai_usage_service.record_from_response(
                     response, kind="practice_feedback", model=settings.gemini_model
                 )
@@ -209,20 +208,18 @@ async def generate_practice_feedback(
                 if not text:
                     logger.warning("Gemini devolvió texto vacío")
                     return None
-                logger.info(
-                    "Feedback IA generado (len=%d, intento=%d)", len(text), attempt
-                )
+                logger.info("Feedback IA generado (len=%d, intento=%d)", len(text), attempt)
                 return text
             except Exception as e:
                 last_err = e
-                logger.warning(
-                    "Gemini feedback intento %d/%d falló: %s", attempt, attempts, e
-                )
+                logger.warning("Gemini feedback intento %d/%d falló: %s", attempt, attempts, e)
                 if attempt < attempts:
                     await asyncio.sleep(0.6 * attempt)
 
         logger.error(
-            "Feedback IA falló tras %d intentos: %s", attempts, last_err,
+            "Feedback IA falló tras %d intentos: %s",
+            attempts,
+            last_err,
             exc_info=True,
         )
         return None

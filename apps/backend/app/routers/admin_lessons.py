@@ -17,8 +17,8 @@ from app.schemas.lesson import (
     LessonResponse,
     LessonUpdate,
     LessonWithNotes,
-    NotesUpdateRequest,
     NoteSequenceResponse,
+    NotesUpdateRequest,
     PaginatedResponse,
 )
 from app.services import lesson_service, practice_service
@@ -27,6 +27,7 @@ router = APIRouter(prefix="/api/admin", tags=["Admin - Lecciones"])
 
 
 # ===================== CATEGORÍAS =====================
+
 
 @router.post("/categories", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED)
 async def create_category(
@@ -74,6 +75,7 @@ async def delete_category(
 
 # ===================== LECCIONES =====================
 
+
 @router.get("/lessons", response_model=PaginatedResponse)
 async def list_admin_lessons(
     page: int = Query(1, ge=1),
@@ -86,8 +88,12 @@ async def list_admin_lessons(
 ):
     """Lista todas las lecciones para admin (incluyendo inactivas)."""
     return await lesson_service.get_admin_lessons_paginated(
-        db, page=page, limit=limit, category_id=category_id,
-        difficulty=difficulty, search=search,
+        db,
+        page=page,
+        limit=limit,
+        category_id=category_id,
+        difficulty=difficulty,
+        search=search,
     )
 
 
@@ -194,6 +200,7 @@ async def delete_lesson(
 
 
 # ===================== STATS ADMIN =====================
+
 
 @router.get("/stats/overview", response_model=AdminStatsOverview)
 async def get_admin_stats(

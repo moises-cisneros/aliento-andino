@@ -2,7 +2,6 @@
 
 import uuid
 
-import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -37,18 +36,14 @@ class TestSearchUsers:
 class TestUserProfile:
     """Tests for GET /api/users/{user_id}/profile."""
 
-    async def test_get_profile(
-        self, client: AsyncClient, auth_headers: dict, test_user: User
-    ):
+    async def test_get_profile(self, client: AsyncClient, auth_headers: dict, test_user: User):
         response = await client.get(
             f"/api/users/{test_user.id}/profile",
             headers=auth_headers,
         )
         assert response.status_code == 200
 
-    async def test_get_nonexistent_profile(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_get_nonexistent_profile(self, client: AsyncClient, auth_headers: dict):
         fake_id = uuid.uuid4()
         response = await client.get(
             f"/api/users/{fake_id}/profile",

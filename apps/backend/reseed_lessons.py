@@ -123,9 +123,7 @@ async def main(skip_confirm: bool) -> None:
         # Distribución por dificultad
         rows = (
             await db.execute(
-                select(Lesson.difficulty, func.count(Lesson.id)).group_by(
-                    Lesson.difficulty
-                )
+                select(Lesson.difficulty, func.count(Lesson.id)).group_by(Lesson.difficulty)
             )
         ).all()
     print("\n" + "=" * 64)

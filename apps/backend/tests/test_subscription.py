@@ -7,9 +7,7 @@ pytestmark = pytest.mark.asyncio
 
 
 class TestFreeTrial:
-    async def test_trial_available_for_fresh_user(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_trial_available_for_fresh_user(self, client: AsyncClient, auth_headers: dict):
         r = await client.get("/api/subscription/me", headers=auth_headers)
         assert r.status_code == 200
         data = r.json()
@@ -17,9 +15,7 @@ class TestFreeTrial:
         assert data["trial_used"] is False
         assert data["trial_available"] is True
 
-    async def test_start_trial_grants_premium_once(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_start_trial_grants_premium_once(self, client: AsyncClient, auth_headers: dict):
         r = await client.post("/api/subscription/trial", headers=auth_headers)
         assert r.status_code == 200
         data = r.json()

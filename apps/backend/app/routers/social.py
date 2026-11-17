@@ -12,8 +12,6 @@ from app.models.user import User
 from app.schemas.social import (
     CommentCreate,
     CommentUpdate,
-    CursorPaginatedResponse,
-    LikeToggleResponse,
     PostCreate,
     PostUpdate,
     ReportCreate,
@@ -24,6 +22,7 @@ router = APIRouter(prefix="/api", tags=["Social"])
 
 
 # ===================== FEED =====================
+
 
 @router.get("/feed")
 async def get_feed(
@@ -105,6 +104,7 @@ async def search_posts(
 
 # ===================== POSTS =====================
 
+
 @router.post("/posts", status_code=status.HTTP_201_CREATED)
 async def create_post(
     data: PostCreate,
@@ -177,6 +177,7 @@ async def delete_post(
 
 # ===================== LIKES =====================
 
+
 @router.post("/posts/{post_id}/like")
 async def toggle_like(
     post_id: uuid.UUID,
@@ -208,6 +209,7 @@ async def get_post_likes(
 
 
 # ===================== SAVED (BOOKMARK) =====================
+
 
 @router.post("/posts/{post_id}/save")
 async def toggle_save(
@@ -242,6 +244,7 @@ async def get_saved_feed(
 
 
 # ===================== COMMENTS =====================
+
 
 @router.post("/posts/{post_id}/comments", status_code=status.HTTP_201_CREATED)
 async def create_comment(
@@ -278,9 +281,7 @@ async def get_comment_replies(
     db: AsyncSession = Depends(get_db),
 ):
     """Obtener replies a un comentario."""
-    return await social_service.get_replies(
-        db, comment_id, page, limit, user_id=current_user.id
-    )
+    return await social_service.get_replies(db, comment_id, page, limit, user_id=current_user.id)
 
 
 @router.get("/posts/{post_id}/comments")
@@ -296,9 +297,7 @@ async def get_comments(
     if not post:
         raise HTTPException(status_code=404, detail="Post no encontrado")
 
-    return await social_service.get_comments(
-        db, post_id, page, limit, user_id=current_user.id
-    )
+    return await social_service.get_comments(db, post_id, page, limit, user_id=current_user.id)
 
 
 @router.put("/comments/{comment_id}")
@@ -355,6 +354,7 @@ async def delete_comment(
 
 
 # ===================== REPORTS =====================
+
 
 @router.post("/reports", status_code=status.HTTP_201_CREATED)
 async def create_report(

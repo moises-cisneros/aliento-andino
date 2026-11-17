@@ -2,21 +2,21 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.dependencies.auth import get_current_admin
 from app.models.user import User
-from pydantic import BaseModel
-from sqlalchemy import select
-
 from app.schemas.social import BanRequest, ReportUpdateStatus
 from app.services import audit_service, auth_service, social_service, user_service
 
 
 class SetAdminRequest(BaseModel):
     is_admin: bool
+
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Social"])
 
@@ -44,14 +44,16 @@ async def update_report(
     db: AsyncSession = Depends(get_db),
 ):
     """Actualizar estado de un reporte."""
-    report = await social_service.update_report_status(
-        db, report_id, data.status, current_admin.id
-    )
+    report = await social_service.update_report_status(db, report_id, data.status, current_admin.id)
     if not report:
         raise HTTPException(status_code=404, detail="Reporte no encontrado")
 
     await audit_service.log(
-        db, current_admin, "report.update", "report", str(report_id),
+        db,
+        current_admin,
+        "report.update",
+        "report",
+        str(report_id),
         {"status": data.status},
     )
     return {
@@ -86,9 +88,7 @@ async def admin_delete_comment(
     success = await social_service.admin_delete_comment(db, comment_id)
     if not success:
         raise HTTPException(status_code=404, detail="Comentario no encontrado")
-    await audit_service.log(
-        db, current_admin, "comment.delete", "comment", str(comment_id)
-    )
+    await audit_service.log(db, current_admin, "comment.delete", "comment", str(comment_id))
     return {"message": "Comentario eliminado por admin"}
 
 
@@ -107,7 +107,11 @@ async def ban_user(
     if not success:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     await audit_service.log(
-        db, current_admin, "user.ban", "user", str(user_id),
+        db,
+        current_admin,
+        "user.ban",
+        "user",
+        str(user_id),
         {"reason": data.reason},
     )
     return {"message": "Usuario baneado correctamente"}
@@ -148,8 +152,12 @@ async def list_users(
 ):
     """Lista paginada de usuarios para administración."""
     return await user_service.admin_list_users(
-        db, page=page, limit=limit, search=search,
-        is_banned=is_banned, is_admin=is_admin,
+        db,
+        page=page,
+        limit=limit,
+        search=search,
+        is_banned=is_banned,
+        is_admin=is_admin,
     )
 
 
@@ -175,16 +183,17 @@ async def set_admin(
 ):
     """Da o quita el rol de admin a un usuario."""
     if user_id == current_admin.id and not payload.is_admin:
-        raise HTTPException(
-            status_code=422, detail="No puedes quitarte el admin a ti mismo"
-        )
+        raise HTTPException(status_code=422, detail="No puedes quitarte el admin a ti mismo")
     res = await user_service.admin_set_admin(db, user_id, payload.is_admin)
     if res is None:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     await audit_service.log(
-        db, current_admin,
+        db,
+        current_admin,
         "user.grant_admin" if payload.is_admin else "user.revoke_admin",
-        "user", str(user_id), {"is_admin": payload.is_admin},
+        "user",
+        str(user_id),
+        {"is_admin": payload.is_admin},
     )
     return res
 
@@ -196,9 +205,7 @@ async def reset_user_password(
     db: AsyncSession = Depends(get_db),
 ):
     """Dispara el envío del email de reseteo de contraseña al usuario."""
-    user = (
-        await db.execute(select(User).where(User.id == user_id))
-    ).scalar_one_or_none()
+    user = (await db.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     if user.auth_provider != "local":
@@ -207,7 +214,11 @@ async def reset_user_password(
         }
     await auth_service.forgot_password(user.email, db)
     await audit_service.log(
-        db, current_admin, "user.reset_password", "user", str(user_id),
+        db,
+        current_admin,
+        "user.reset_password",
+        "user",
+        str(user_id),
         {"email": user.email},
     )
     return {"message": f"Se envió el email de reseteo a {user.email}."}

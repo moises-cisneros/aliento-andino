@@ -6,15 +6,16 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
-
 # --- Regex para validar notas musicales ---
 NOTE_PATTERN = re.compile(r"^[A-G][#b]?[0-8]$")
 
 
 # ===================== CATEGORY =====================
 
+
 class CategoryCreate(BaseModel):
     """Schema para crear categoría."""
+
     name: str = Field(min_length=1, max_length=100)
     description: str | None = None
     icon: str | None = None
@@ -23,6 +24,7 @@ class CategoryCreate(BaseModel):
 
 class CategoryUpdate(BaseModel):
     """Schema para editar categoría (todos opcionales)."""
+
     name: str | None = Field(None, min_length=1, max_length=100)
     description: str | None = None
     icon: str | None = None
@@ -32,6 +34,7 @@ class CategoryUpdate(BaseModel):
 
 class CategoryResponse(BaseModel):
     """Schema de respuesta de categoría."""
+
     id: uuid.UUID
     name: str
     description: str | None = None
@@ -46,6 +49,7 @@ class CategoryResponse(BaseModel):
 
 class CategoryWithCount(BaseModel):
     """Categoría con conteo de lecciones (para listado público)."""
+
     id: uuid.UUID
     name: str
     description: str | None = None
@@ -59,8 +63,10 @@ class CategoryWithCount(BaseModel):
 
 # ===================== NOTE SEQUENCE =====================
 
+
 class NoteSequenceCreate(BaseModel):
     """Schema para crear una nota en la secuencia."""
+
     position: int = Field(ge=1)
     note: str = Field(max_length=10)
     duration: float = Field(gt=0)
@@ -94,6 +100,7 @@ class NoteSequenceCreate(BaseModel):
 
 class NoteSequenceResponse(BaseModel):
     """Schema de respuesta de una nota."""
+
     id: uuid.UUID
     position: int
     note: str
@@ -110,8 +117,10 @@ class NoteSequenceResponse(BaseModel):
 
 # ===================== LESSON =====================
 
+
 class LessonCreate(BaseModel):
     """Schema para crear lección con sus notas."""
+
     category_id: uuid.UUID
     title: str = Field(min_length=3, max_length=255)
     description: str = Field(min_length=1)
@@ -137,6 +146,7 @@ class LessonCreate(BaseModel):
 
 class LessonUpdate(BaseModel):
     """Schema para editar lección (sin notas)."""
+
     category_id: uuid.UUID | None = None
     title: str | None = Field(None, min_length=3, max_length=255)
     description: str | None = None
@@ -163,11 +173,13 @@ class LessonUpdate(BaseModel):
 
 class NotesUpdateRequest(BaseModel):
     """Schema para reemplazar toda la secuencia de notas."""
+
     notes: list[NoteSequenceCreate]
 
 
 class LessonResponse(BaseModel):
     """Schema de respuesta de lección."""
+
     id: uuid.UUID
     category_id: uuid.UUID
     title: str
@@ -195,6 +207,7 @@ class LessonResponse(BaseModel):
 
 class LessonWithNotes(LessonResponse):
     """Lección con secuencia de notas completa (para detalle)."""
+
     notes: list[NoteSequenceResponse] = []
     category_name: str | None = None
     creator_name: str | None = None
@@ -204,6 +217,7 @@ class LessonWithNotes(LessonResponse):
 
 class LessonListItem(LessonResponse):
     """Lección para listado con info extra del usuario."""
+
     category_name: str | None = None
     notes_count: int = 0
     user_best_score: float | None = None
@@ -212,6 +226,7 @@ class LessonListItem(LessonResponse):
 
 class LessonAdminListItem(LessonResponse):
     """Lección para listado admin."""
+
     category_name: str | None = None
     notes_count: int = 0
     creator_name: str | None = None
@@ -219,8 +234,10 @@ class LessonAdminListItem(LessonResponse):
 
 # ===================== PRACTICE SESSION =====================
 
+
 class PracticeSubmitRequest(BaseModel):
     """Schema para enviar resultado de práctica."""
+
     lesson_id: uuid.UUID
     # UUID generado en el cliente para idempotencia: si llega dos veces (p. ej.
     # un reintento de sincronización offline), no se duplica la sesión ni el XP.
@@ -238,6 +255,7 @@ class PracticeSubmitRequest(BaseModel):
 
 class PracticeSessionResponse(BaseModel):
     """Schema de respuesta de sesión de práctica."""
+
     id: uuid.UUID
     user_id: uuid.UUID
     lesson_id: uuid.UUID
@@ -261,6 +279,7 @@ class PracticeSessionResponse(BaseModel):
 
 class PracticeSubmitResponse(BaseModel):
     """Respuesta después de enviar práctica."""
+
     session: PracticeSessionResponse
     ai_feedback: str | None = None
     xp_earned: int = 0
@@ -271,8 +290,10 @@ class PracticeSubmitResponse(BaseModel):
 
 # ===================== PROGRESS / STATS =====================
 
+
 class ProgressStats(BaseModel):
     """Estadísticas generales del usuario."""
+
     total_sessions: int = 0
     total_lessons_played: int = 0
     average_score: float = 0.0
@@ -285,6 +306,7 @@ class ProgressStats(BaseModel):
 
 class WeeklyDataPoint(BaseModel):
     """Dato de un día para el gráfico semanal."""
+
     date: str  # "2026-04-01"
     sessions_count: int = 0
     average_score: float = 0.0
@@ -293,6 +315,7 @@ class WeeklyDataPoint(BaseModel):
 
 class AdminStatsOverview(BaseModel):
     """Estadísticas para dashboard admin."""
+
     total_lessons: int = 0
     total_categories: int = 0
     total_practice_sessions: int = 0
@@ -304,8 +327,10 @@ class AdminStatsOverview(BaseModel):
 
 # ===================== PAGINACIÓN =====================
 
+
 class PaginatedResponse(BaseModel):
     """Respuesta paginada genérica."""
+
     items: list = []
     total: int = 0
     page: int = 1

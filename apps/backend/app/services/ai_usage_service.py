@@ -6,7 +6,7 @@ Los precios por 1M de tokens son configurables.
 """
 
 import logging
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy import Date, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,9 +31,7 @@ def _extract_usage(response) -> tuple[int, int]:
     return (int(inp), int(out))
 
 
-async def record_from_response(
-    response, kind: str, model: str | None = None, user_id=None
-) -> None:
+async def record_from_response(response, kind: str, model: str | None = None, user_id=None) -> None:
     """Registra el uso de tokens de una respuesta de generate_content."""
     inp, out = _extract_usage(response)
     if inp == 0 and out == 0:
@@ -75,22 +73,25 @@ def cost_usd(input_tokens: int, output_tokens: int) -> float:
 
 async def real_usage_summary(db: AsyncSession) -> dict:
     """Agregado del uso REAL registrado: totales, 30 días y desglose por tipo."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     d30 = now - timedelta(days=30)
 
     async def _agg(*conditions):
-        row = (await db.execute(
-            select(
-                func.count(AiUsageLog.id),
-                func.coalesce(func.sum(AiUsageLog.input_tokens), 0),
-                func.coalesce(func.sum(AiUsageLog.output_tokens), 0),
-            ).where(*conditions) if conditions else
-            select(
-                func.count(AiUsageLog.id),
-                func.coalesce(func.sum(AiUsageLog.input_tokens), 0),
-                func.coalesce(func.sum(AiUsageLog.output_tokens), 0),
+        row = (
+            await db.execute(
+                select(
+                    func.count(AiUsageLog.id),
+                    func.coalesce(func.sum(AiUsageLog.input_tokens), 0),
+                    func.coalesce(func.sum(AiUsageLog.output_tokens), 0),
+                ).where(*conditions)
+                if conditions
+                else select(
+                    func.count(AiUsageLog.id),
+                    func.coalesce(func.sum(AiUsageLog.input_tokens), 0),
+                    func.coalesce(func.sum(AiUsageLog.output_tokens), 0),
+                )
             )
-        )).one()
+        ).one()
         calls, inp, out = int(row[0]), int(row[1]), int(row[2])
         return {
             "calls": calls,
@@ -104,14 +105,16 @@ async def real_usage_summary(db: AsyncSession) -> dict:
     last30 = await _agg(AiUsageLog.created_at >= d30)
 
     by_kind = {}
-    rows = (await db.execute(
-        select(
-            AiUsageLog.kind,
-            func.count(AiUsageLog.id),
-            func.coalesce(func.sum(AiUsageLog.input_tokens), 0),
-            func.coalesce(func.sum(AiUsageLog.output_tokens), 0),
-        ).group_by(AiUsageLog.kind)
-    )).all()
+    rows = (
+        await db.execute(
+            select(
+                AiUsageLog.kind,
+                func.count(AiUsageLog.id),
+                func.coalesce(func.sum(AiUsageLog.input_tokens), 0),
+                func.coalesce(func.sum(AiUsageLog.output_tokens), 0),
+            ).group_by(AiUsageLog.kind)
+        )
+    ).all()
     for kind, calls, inp, out in rows:
         by_kind[kind] = {
             "calls": int(calls),
@@ -127,19 +130,19 @@ async def real_usage_summary(db: AsyncSession) -> dict:
 async def real_usage_over_time(db: AsyncSession, days: int = 30) -> list[dict]:
     """Tokens reales por día (suma de total_tokens)."""
     since = date.today() - timedelta(days=days)
-    rows = (await db.execute(
-        select(
-            cast(AiUsageLog.created_at, Date).label("day"),
-            func.coalesce(func.sum(AiUsageLog.total_tokens), 0).label("tokens"),
+    rows = (
+        await db.execute(
+            select(
+                cast(AiUsageLog.created_at, Date).label("day"),
+                func.coalesce(func.sum(AiUsageLog.total_tokens), 0).label("tokens"),
+            )
+            .where(AiUsageLog.created_at >= since)
+            .group_by("day")
+            .order_by("day")
         )
-        .where(AiUsageLog.created_at >= since)
-        .group_by("day")
-        .order_by("day")
-    )).all()
+    ).all()
     return [{"name": str(r.day), "value": int(r.tokens)} for r in rows]
 
 
 async def has_any(db: AsyncSession) -> bool:
-    return ((await db.execute(
-        select(func.count(AiUsageLog.id))
-    )).scalar() or 0) > 0
+    return ((await db.execute(select(func.count(AiUsageLog.id)))).scalar() or 0) > 0

@@ -1,17 +1,17 @@
 """Router admin de analytics: métricas y series temporales para gráficos."""
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func, select, cast, Date
+from sqlalchemy import Date, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import get_db
 from app.dependencies.auth import get_current_admin
+from app.models.lesson import Category, Lesson, PracticeSession
+from app.models.social import Comment, Like, Post, Report
 from app.models.user import User
-from app.models.lesson import PracticeSession, Lesson, Category
-from app.models.social import Post, Comment, Like, Report
 from app.services import ai_usage_service
 
 router = APIRouter(prefix="/api/admin/analytics", tags=["Admin Analytics"])
@@ -24,20 +24,26 @@ async def get_overview(
 ):
     """KPIs globales del sistema."""
     total_users = (await db.execute(select(func.count()).select_from(User))).scalar() or 0
-    active_users = (await db.execute(
-        select(func.count()).select_from(User).where(User.is_active == True, User.is_banned == False)
-    )).scalar() or 0
-    banned_users = (await db.execute(
-        select(func.count()).select_from(User).where(User.is_banned == True)
-    )).scalar() or 0
+    active_users = (
+        await db.execute(
+            select(func.count())
+            .select_from(User)
+            .where(User.is_active == True, User.is_banned == False)
+        )
+    ).scalar() or 0
+    banned_users = (
+        await db.execute(select(func.count()).select_from(User).where(User.is_banned == True))
+    ).scalar() or 0
     total_lessons = (await db.execute(select(func.count()).select_from(Lesson))).scalar() or 0
-    total_sessions = (await db.execute(select(func.count()).select_from(PracticeSession))).scalar() or 0
+    total_sessions = (
+        await db.execute(select(func.count()).select_from(PracticeSession))
+    ).scalar() or 0
     total_posts = (await db.execute(select(func.count()).select_from(Post))).scalar() or 0
     total_comments = (await db.execute(select(func.count()).select_from(Comment))).scalar() or 0
     total_likes = (await db.execute(select(func.count()).select_from(Like))).scalar() or 0
-    pending_reports = (await db.execute(
-        select(func.count()).select_from(Report).where(Report.status == "pending")
-    )).scalar() or 0
+    pending_reports = (
+        await db.execute(select(func.count()).select_from(Report).where(Report.status == "pending"))
+    ).scalar() or 0
 
     return {
         "total_users": total_users,
@@ -60,15 +66,17 @@ async def get_users_over_time(
 ):
     """Usuarios registrados agrupados por día."""
     since = date.today() - timedelta(days=days)
-    rows = (await db.execute(
-        select(
-            cast(User.created_at, Date).label("day"),
-            func.count().label("count"),
+    rows = (
+        await db.execute(
+            select(
+                cast(User.created_at, Date).label("day"),
+                func.count().label("count"),
+            )
+            .where(User.created_at >= since)
+            .group_by("day")
+            .order_by("day")
         )
-        .where(User.created_at >= since)
-        .group_by("day")
-        .order_by("day")
-    )).all()
+    ).all()
     return [{"name": str(r.day), "value": r.count} for r in rows]
 
 
@@ -80,15 +88,17 @@ async def get_practice_over_time(
 ):
     """Sesiones de práctica por día."""
     since = date.today() - timedelta(days=days)
-    rows = (await db.execute(
-        select(
-            cast(PracticeSession.created_at, Date).label("day"),
-            func.count().label("count"),
+    rows = (
+        await db.execute(
+            select(
+                cast(PracticeSession.created_at, Date).label("day"),
+                func.count().label("count"),
+            )
+            .where(PracticeSession.created_at >= since)
+            .group_by("day")
+            .order_by("day")
         )
-        .where(PracticeSession.created_at >= since)
-        .group_by("day")
-        .order_by("day")
-    )).all()
+    ).all()
     return [{"name": str(r.day), "value": r.count} for r in rows]
 
 
@@ -101,23 +111,32 @@ async def get_social_over_time(
     """Actividad social (posts, comentarios, likes) por día."""
     since = date.today() - timedelta(days=days)
 
-    posts_rows = (await db.execute(
-        select(cast(Post.created_at, Date).label("day"), func.count().label("count"))
-        .where(Post.created_at >= since)
-        .group_by("day").order_by("day")
-    )).all()
+    posts_rows = (
+        await db.execute(
+            select(cast(Post.created_at, Date).label("day"), func.count().label("count"))
+            .where(Post.created_at >= since)
+            .group_by("day")
+            .order_by("day")
+        )
+    ).all()
 
-    comments_rows = (await db.execute(
-        select(cast(Comment.created_at, Date).label("day"), func.count().label("count"))
-        .where(Comment.created_at >= since)
-        .group_by("day").order_by("day")
-    )).all()
+    comments_rows = (
+        await db.execute(
+            select(cast(Comment.created_at, Date).label("day"), func.count().label("count"))
+            .where(Comment.created_at >= since)
+            .group_by("day")
+            .order_by("day")
+        )
+    ).all()
 
-    likes_rows = (await db.execute(
-        select(cast(Like.created_at, Date).label("day"), func.count().label("count"))
-        .where(Like.created_at >= since)
-        .group_by("day").order_by("day")
-    )).all()
+    likes_rows = (
+        await db.execute(
+            select(cast(Like.created_at, Date).label("day"), func.count().label("count"))
+            .where(Like.created_at >= since)
+            .group_by("day")
+            .order_by("day")
+        )
+    ).all()
 
     return {
         "posts": [{"name": str(r.day), "value": r.count} for r in posts_rows],
@@ -132,12 +151,14 @@ async def get_lessons_by_category(
     db: AsyncSession = Depends(get_db),
 ):
     """Lecciones agrupadas por categoría (para pie chart)."""
-    rows = (await db.execute(
-        select(Category.name, func.count(Lesson.id).label("count"))
-        .join(Lesson, Lesson.category_id == Category.id)
-        .group_by(Category.name)
-        .order_by(func.count(Lesson.id).desc())
-    )).all()
+    rows = (
+        await db.execute(
+            select(Category.name, func.count(Lesson.id).label("count"))
+            .join(Lesson, Lesson.category_id == Category.id)
+            .group_by(Category.name)
+            .order_by(func.count(Lesson.id).desc())
+        )
+    ).all()
     return [{"name": r.name, "value": r.count} for r in rows]
 
 
@@ -147,10 +168,11 @@ async def get_lessons_by_difficulty(
     db: AsyncSession = Depends(get_db),
 ):
     """Lecciones agrupadas por dificultad."""
-    rows = (await db.execute(
-        select(Lesson.difficulty, func.count().label("count"))
-        .group_by(Lesson.difficulty)
-    )).all()
+    rows = (
+        await db.execute(
+            select(Lesson.difficulty, func.count().label("count")).group_by(Lesson.difficulty)
+        )
+    ).all()
     return [{"name": r.difficulty, "value": r.count} for r in rows]
 
 
@@ -160,10 +182,9 @@ async def get_reports_by_status(
     db: AsyncSession = Depends(get_db),
 ):
     """Reportes agrupados por estado (pie chart)."""
-    rows = (await db.execute(
-        select(Report.status, func.count().label("count"))
-        .group_by(Report.status)
-    )).all()
+    rows = (
+        await db.execute(select(Report.status, func.count().label("count")).group_by(Report.status))
+    ).all()
     return [{"name": r.status, "value": r.count} for r in rows]
 
 
@@ -175,11 +196,14 @@ async def get_reports_over_time(
 ):
     """Reportes creados por día."""
     since = date.today() - timedelta(days=days)
-    rows = (await db.execute(
-        select(cast(Report.created_at, Date).label("day"), func.count().label("count"))
-        .where(Report.created_at >= since)
-        .group_by("day").order_by("day")
-    )).all()
+    rows = (
+        await db.execute(
+            select(cast(Report.created_at, Date).label("day"), func.count().label("count"))
+            .where(Report.created_at >= since)
+            .group_by("day")
+            .order_by("day")
+        )
+    ).all()
     return [{"name": str(r.day), "value": r.count} for r in rows]
 
 
@@ -190,12 +214,14 @@ async def get_top_lessons(
     db: AsyncSession = Depends(get_db),
 ):
     """Lecciones más practicadas."""
-    rows = (await db.execute(
-        select(Lesson.title, Lesson.total_plays)
-        .where(Lesson.total_plays > 0)
-        .order_by(Lesson.total_plays.desc())
-        .limit(limit)
-    )).all()
+    rows = (
+        await db.execute(
+            select(Lesson.title, Lesson.total_plays)
+            .where(Lesson.total_plays > 0)
+            .order_by(Lesson.total_plays.desc())
+            .limit(limit)
+        )
+    ).all()
     return [{"name": r.title, "value": r.total_plays} for r in rows]
 
 
@@ -210,17 +236,21 @@ async def get_funnel(
     db: AsyncSession = Depends(get_db),
 ):
     """Embudo de conversión: registrados → practicaron → premium."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     registered = (await db.execute(select(func.count()).select_from(User))).scalar() or 0
-    practiced = (await db.execute(
-        select(func.count(func.distinct(PracticeSession.user_id)))
-    )).scalar() or 0
-    premium = (await db.execute(
-        select(func.count()).select_from(User).where(
-            User.subscription_status == "premium",
-            User.subscription_expires_at > now,
+    practiced = (
+        await db.execute(select(func.count(func.distinct(PracticeSession.user_id))))
+    ).scalar() or 0
+    premium = (
+        await db.execute(
+            select(func.count())
+            .select_from(User)
+            .where(
+                User.subscription_status == "premium",
+                User.subscription_expires_at > now,
+            )
         )
-    )).scalar() or 0
+    ).scalar() or 0
 
     def pct(a: int, b: int) -> float:
         return round(a * 100 / b, 1) if b else 0.0
@@ -241,30 +271,44 @@ async def get_retention(
     db: AsyncSession = Depends(get_db),
 ):
     """Usuarios activos (con práctica) en los últimos 7 y 30 días + premium."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     d7 = now - timedelta(days=7)
     d30 = now - timedelta(days=30)
     total = (await db.execute(select(func.count()).select_from(User))).scalar() or 0
-    active7 = (await db.execute(
-        select(func.count(func.distinct(PracticeSession.user_id)))
-        .where(PracticeSession.created_at >= d7)
-    )).scalar() or 0
-    active30 = (await db.execute(
-        select(func.count(func.distinct(PracticeSession.user_id)))
-        .where(PracticeSession.created_at >= d30)
-    )).scalar() or 0
-    active_premium = (await db.execute(
-        select(func.count()).select_from(User).where(
-            User.subscription_status == "premium",
-            User.subscription_expires_at > now,
+    active7 = (
+        await db.execute(
+            select(func.count(func.distinct(PracticeSession.user_id))).where(
+                PracticeSession.created_at >= d7
+            )
         )
-    )).scalar() or 0
-    expired_premium = (await db.execute(
-        select(func.count()).select_from(User).where(
-            User.subscription_status == "premium",
-            User.subscription_expires_at <= now,
+    ).scalar() or 0
+    active30 = (
+        await db.execute(
+            select(func.count(func.distinct(PracticeSession.user_id))).where(
+                PracticeSession.created_at >= d30
+            )
         )
-    )).scalar() or 0
+    ).scalar() or 0
+    active_premium = (
+        await db.execute(
+            select(func.count())
+            .select_from(User)
+            .where(
+                User.subscription_status == "premium",
+                User.subscription_expires_at > now,
+            )
+        )
+    ).scalar() or 0
+    expired_premium = (
+        await db.execute(
+            select(func.count())
+            .select_from(User)
+            .where(
+                User.subscription_status == "premium",
+                User.subscription_expires_at <= now,
+            )
+        )
+    ).scalar() or 0
 
     def pct(a: int, b: int) -> float:
         return round(a * 100 / b, 1) if b else 0.0
@@ -288,18 +332,20 @@ async def get_premium_over_time(
 ):
     """Altas de premium por día (usando subscription_started_at)."""
     since = date.today() - timedelta(days=days)
-    rows = (await db.execute(
-        select(
-            cast(User.subscription_started_at, Date).label("day"),
-            func.count().label("count"),
+    rows = (
+        await db.execute(
+            select(
+                cast(User.subscription_started_at, Date).label("day"),
+                func.count().label("count"),
+            )
+            .where(
+                User.subscription_started_at.isnot(None),
+                cast(User.subscription_started_at, Date) >= since,
+            )
+            .group_by("day")
+            .order_by("day")
         )
-        .where(
-            User.subscription_started_at.isnot(None),
-            cast(User.subscription_started_at, Date) >= since,
-        )
-        .group_by("day")
-        .order_by("day")
-    )).all()
+    ).all()
     return [{"name": str(r.day), "value": r.count} for r in rows]
 
 
@@ -310,17 +356,19 @@ async def get_lesson_performance(
     db: AsyncSession = Depends(get_db),
 ):
     """Lecciones donde más cuesta: menor score promedio (con ≥1 práctica)."""
-    rows = (await db.execute(
-        select(
-            Lesson.title.label("title"),
-            func.count(PracticeSession.id).label("attempts"),
-            func.avg(PracticeSession.score).label("avg_score"),
+    rows = (
+        await db.execute(
+            select(
+                Lesson.title.label("title"),
+                func.count(PracticeSession.id).label("attempts"),
+                func.avg(PracticeSession.score).label("avg_score"),
+            )
+            .join(PracticeSession, PracticeSession.lesson_id == Lesson.id)
+            .group_by(Lesson.id, Lesson.title)
+            .order_by(func.avg(PracticeSession.score).asc())
+            .limit(limit)
         )
-        .join(PracticeSession, PracticeSession.lesson_id == Lesson.id)
-        .group_by(Lesson.id, Lesson.title)
-        .order_by(func.avg(PracticeSession.score).asc())
-        .limit(limit)
-    )).all()
+    ).all()
     return [
         {
             "title": r.title,
@@ -356,17 +404,19 @@ async def get_ai_usage(
     db: AsyncSession = Depends(get_db),
 ):
     """Uso y costo ESTIMADO de la IA (feedback de práctica con Gemini)."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     d30 = now - timedelta(days=30)
     has_feedback = PracticeSession.ai_feedback.isnot(None)
-    total = (await db.execute(
-        select(func.count()).select_from(PracticeSession).where(has_feedback)
-    )).scalar() or 0
-    last30 = (await db.execute(
-        select(func.count()).select_from(PracticeSession).where(
-            has_feedback, PracticeSession.created_at >= d30
+    total = (
+        await db.execute(select(func.count()).select_from(PracticeSession).where(has_feedback))
+    ).scalar() or 0
+    last30 = (
+        await db.execute(
+            select(func.count())
+            .select_from(PracticeSession)
+            .where(has_feedback, PracticeSession.created_at >= d30)
         )
-    )).scalar() or 0
+    ).scalar() or 0
 
     per_call = _ai_cost_per_call()
 
@@ -396,8 +446,8 @@ async def get_ai_usage(
             "Se registran los tokens REALES de cada llamada a Gemini (feedback de "
             "práctica y tutor Vivi). El bloque 'estimado' queda como referencia "
             "histórica (llamadas de feedback × tokens promedio)."
-            if has_real else
-            "Todavía no hay llamadas con tokens registrados; se muestra el "
+            if has_real
+            else "Todavía no hay llamadas con tokens registrados; se muestra el "
             "estimado (llamadas de feedback × tokens promedio × precio de Gemini "
             "Flash). El registro real empieza con las próximas llamadas a la IA."
         ),
@@ -415,16 +465,18 @@ async def get_ai_usage_over_time(
         return await ai_usage_service.real_usage_over_time(db, days=days)
 
     since = date.today() - timedelta(days=days)
-    rows = (await db.execute(
-        select(
-            cast(PracticeSession.created_at, Date).label("day"),
-            func.count().label("count"),
+    rows = (
+        await db.execute(
+            select(
+                cast(PracticeSession.created_at, Date).label("day"),
+                func.count().label("count"),
+            )
+            .where(
+                PracticeSession.ai_feedback.isnot(None),
+                PracticeSession.created_at >= since,
+            )
+            .group_by("day")
+            .order_by("day")
         )
-        .where(
-            PracticeSession.ai_feedback.isnot(None),
-            PracticeSession.created_at >= since,
-        )
-        .group_by("day")
-        .order_by("day")
-    )).all()
+    ).all()
     return [{"name": str(r.day), "value": r.count} for r in rows]

@@ -1,10 +1,10 @@
 """Servicio de configuración de afinación y tolerancias para instrumentos andinos."""
 
-from typing import Dict, List
 from fastapi import HTTPException
+
 from app.schemas.tuning import InstrumentTuningResponse
 
-ANDEAN_TUNING_CONFIG: Dict[str, dict] = {
+ANDEAN_TUNING_CONFIG: dict[str, dict] = {
     "quena": {
         "instrument": "quena",
         "base_hz": 392.00,  # Sol4 (G4)
@@ -28,7 +28,7 @@ ANDEAN_TUNING_CONFIG: Dict[str, dict] = {
 
 class TuningService:
     @staticmethod
-    def get_all_tolerances() -> List[InstrumentTuningResponse]:
+    def get_all_tolerances() -> list[InstrumentTuningResponse]:
         """Retorna la lista de tolerancias para todos los instrumentos soportados."""
         return [InstrumentTuningResponse(**data) for data in ANDEAN_TUNING_CONFIG.values()]
 

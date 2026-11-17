@@ -1,6 +1,7 @@
 """Router de autenticación con todos los endpoints de auth."""
 
 import logging
+from datetime import UTC
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
@@ -64,7 +65,9 @@ def _clear_refresh_cookie(response: Response) -> None:
     summary="Registrar nuevo usuario",
 )
 @limiter.limit("5/minute")
-async def register(request: Request, response: Response, data: RegisterRequest, db: AsyncSession = Depends(get_db)):
+async def register(
+    request: Request, response: Response, data: RegisterRequest, db: AsyncSession = Depends(get_db)
+):
     """
     Registrar un nuevo usuario con email y contraseña.
     Retorna tokens JWT y datos del usuario.
@@ -84,7 +87,9 @@ async def register(request: Request, response: Response, data: RegisterRequest, 
     summary="Iniciar sesión",
 )
 @limiter.limit("10/minute")
-async def login(request: Request, response: Response, data: LoginRequest, db: AsyncSession = Depends(get_db)):
+async def login(
+    request: Request, response: Response, data: LoginRequest, db: AsyncSession = Depends(get_db)
+):
     """
     Autenticar usuario con email y contraseña.
     Retorna tokens JWT y datos del usuario.
@@ -104,7 +109,12 @@ async def login(request: Request, response: Response, data: LoginRequest, db: As
     summary="Autenticación con Google",
 )
 @limiter.limit("10/minute")
-async def google(request: Request, response: Response, data: GoogleAuthRequest, db: AsyncSession = Depends(get_db)):
+async def google(
+    request: Request,
+    response: Response,
+    data: GoogleAuthRequest,
+    db: AsyncSession = Depends(get_db),
+):
     """
     Autenticar o registrar usuario con Google OAuth.
     Si el usuario no existe, se crea automáticamente.
@@ -124,7 +134,12 @@ async def google(request: Request, response: Response, data: GoogleAuthRequest, 
     summary="Refrescar access token",
 )
 @limiter.limit("10/minute")
-async def refresh(request: Request, response: Response, data: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
+async def refresh(
+    request: Request,
+    response: Response,
+    data: RefreshTokenRequest,
+    db: AsyncSession = Depends(get_db),
+):
     """
     Generar nuevos tokens usando un refresh token válido (rotación).
     Acepta refresh token via httpOnly cookie (web) o body (mobile).
@@ -270,6 +285,7 @@ async def delete_me(
 
 # ============== VERIFICACIÓN DE EMAIL ==============
 
+
 class VerifyEmailRequest(BaseModel):
     code: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
 
@@ -293,15 +309,13 @@ async def send_verification_code(
         )
 
     import secrets
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
     from app.services.email_service import send_email_verification_code
 
     code = f"{secrets.randbelow(1_000_000):06d}"
     current_user.email_verification_code = code
-    current_user.email_verification_expires = (
-        datetime.now(timezone.utc) + timedelta(minutes=15)
-    )
+    current_user.email_verification_expires = datetime.now(UTC) + timedelta(minutes=15)
     await db.commit()
 
     try:
@@ -329,21 +343,18 @@ async def verify_email(
     db: AsyncSession = Depends(get_db),
 ):
     """Validar el código y marcar is_verified=True."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     if current_user.is_verified:
         return MessageResponse(message="Tu email ya estaba verificado")
 
-    if (
-        not current_user.email_verification_code
-        or not current_user.email_verification_expires
-    ):
+    if not current_user.email_verification_code or not current_user.email_verification_expires:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Primero solicitá el código",
         )
 
-    if current_user.email_verification_expires < datetime.now(timezone.utc):
+    if current_user.email_verification_expires < datetime.now(UTC):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="El código expiró. Pedí uno nuevo.",

@@ -49,9 +49,7 @@ async def upload_media(
     # Validar tamaño
     max_size = MAX_IMAGE_SIZE if is_image else MAX_VIDEO_SIZE
     if len(content) > max_size:
-        raise ValueError(
-            f"Archivo demasiado grande ({len(content)} bytes, máx {max_size})"
-        )
+        raise ValueError(f"Archivo demasiado grande ({len(content)} bytes, máx {max_size})")
 
     # Import diferido para no cargar la SDK si no se usa
     from google.cloud import storage

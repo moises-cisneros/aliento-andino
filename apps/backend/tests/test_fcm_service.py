@@ -31,9 +31,7 @@ def force_app_ready(monkeypatch):
 
 
 async def test_empty_tokens_short_circuits():
-    sent, invalid = await fcm_service.send_to_tokens(
-        tokens=[], title="t", body="b"
-    )
+    sent, invalid = await fcm_service.send_to_tokens(tokens=[], title="t", body="b")
     assert sent == 0
     assert invalid == []
 
@@ -48,9 +46,7 @@ async def test_batches_in_chunks_of_500(force_app_ready, monkeypatch):
     monkeypatch.setattr(messaging, "send_each_for_multicast", fake_send)
 
     tokens = [f"token-{i}" for i in range(600)]
-    sent, invalid = await fcm_service.send_to_tokens(
-        tokens=tokens, title="Hola", body="Mundo"
-    )
+    sent, invalid = await fcm_service.send_to_tokens(tokens=tokens, title="Hola", body="Mundo")
 
     # 600 tokens -> dos lotes (500 + 100)
     assert calls == [500, 100]
@@ -67,9 +63,7 @@ async def test_collects_invalid_tokens_with_correct_index(force_app_ready, monke
     monkeypatch.setattr(messaging, "send_each_for_multicast", fake_send)
 
     tokens = [f"token-{i}" for i in range(3)]
-    sent, invalid = await fcm_service.send_to_tokens(
-        tokens=tokens, title="t", body="b"
-    )
+    sent, invalid = await fcm_service.send_to_tokens(tokens=tokens, title="t", body="b")
 
     assert sent == 2
     assert len(invalid) == 1

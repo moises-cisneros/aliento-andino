@@ -2,7 +2,6 @@
 
 import uuid
 
-import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -72,9 +71,7 @@ class TestSavePost:
         saved2 = await client.get("/api/me/saved", headers=auth_headers)
         assert all(p["id"] != post_id for p in saved2.json()["items"])
 
-    async def test_feed_post_exposes_is_saved_flag(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_feed_post_exposes_is_saved_flag(self, client: AsyncClient, auth_headers: dict):
         resp = await client.post(
             "/api/posts",
             headers=auth_headers,
@@ -114,17 +111,13 @@ class TestCommentLike:
         assert comment.json()["is_liked_by_me"] is False
 
         # Otro usuario da like al comentario.
-        like = await client.post(
-            f"/api/comments/{comment_id}/like", headers=other
-        )
+        like = await client.post(f"/api/comments/{comment_id}/like", headers=other)
         assert like.status_code == 200, like.text
         assert like.json()["liked"] is True
         assert like.json()["likes_count"] == 1
 
         # Se refleja en el listado para ese usuario.
-        listing = await client.get(
-            f"/api/posts/{post_id}/comments", headers=other
-        )
+        listing = await client.get(f"/api/posts/{post_id}/comments", headers=other)
         target = next(c for c in listing.json()["items"] if c["id"] == comment_id)
         assert target["likes_count"] == 1
         assert target["is_liked_by_me"] is True
@@ -134,17 +127,13 @@ class TestCommentLike:
         assert any(n["type"] == "comment_like" for n in notifs.json()["items"])
 
         # Toggle → quita el like.
-        unlike = await client.post(
-            f"/api/comments/{comment_id}/like", headers=other
-        )
+        unlike = await client.post(f"/api/comments/{comment_id}/like", headers=other)
         assert unlike.json()["liked"] is False
         assert unlike.json()["likes_count"] == 0
 
 
 class TestEditComment:
-    async def test_owner_can_edit_comment(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_owner_can_edit_comment(self, client: AsyncClient, auth_headers: dict):
         post = await client.post(
             "/api/posts",
             headers=auth_headers,

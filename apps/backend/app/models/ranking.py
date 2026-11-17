@@ -25,9 +25,7 @@ class UserXP(Base):
 
     __tablename__ = "user_xp"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -42,9 +40,7 @@ class UserXP(Base):
     longest_streak: Mapped[int] = mapped_column(Integer, default=0)
     # "Congeladores" de racha: protegen la racha ante UN día perdido. Se ganan
     # con hitos de racha (cada 7 días) y se consumen automáticamente al volver.
-    streak_freezes: Mapped[int] = mapped_column(
-        Integer, default=0, server_default="0"
-    )
+    streak_freezes: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     total_practice_sessions: Mapped[int] = mapped_column(Integer, default=0)
     total_practice_minutes: Mapped[float] = mapped_column(Float, default=0.0)
     total_lessons_completed: Mapped[int] = mapped_column(Integer, default=0)
@@ -52,9 +48,7 @@ class UserXP(Base):
     average_score: Mapped[float] = mapped_column(Float, default=0.0)
     last_practice_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     week_start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), onupdate=func.now(), nullable=True
     )
@@ -71,9 +65,7 @@ class Achievement(Base):
 
     __tablename__ = "achievements"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str] = mapped_column(String(500), nullable=False)
@@ -85,9 +77,7 @@ class Achievement(Base):
     rarity: Mapped[str] = mapped_column(String(20), default="common")
     order: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self) -> str:
         return f"<Achievement {self.code}>"
@@ -98,13 +88,9 @@ class UserAchievement(Base):
 
     __tablename__ = "user_achievements"
 
-    __table_args__ = (
-        UniqueConstraint("user_id", "achievement_id", name="uq_user_achievement"),
-    )
+    __table_args__ = (UniqueConstraint("user_id", "achievement_id", name="uq_user_achievement"),)
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),

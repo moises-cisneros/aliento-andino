@@ -68,11 +68,13 @@ async def register_token(
         existing.user_id = current_user.id
         existing.platform = data.platform
     else:
-        db.add(NotificationToken(
-            user_id=current_user.id,
-            token=data.token,
-            platform=data.platform,
-        ))
+        db.add(
+            NotificationToken(
+                user_id=current_user.id,
+                token=data.token,
+                platform=data.platform,
+            )
+        )
     await db.commit()
     return MessageResponse(message="Token registrado")
 
@@ -110,9 +112,7 @@ async def send_test_notification(
         )
 
     result = await db.execute(
-        select(NotificationToken.token).where(
-            NotificationToken.user_id == current_user.id
-        )
+        select(NotificationToken.token).where(NotificationToken.user_id == current_user.id)
     )
     tokens = [row[0] for row in result.all()]
     if not tokens:
@@ -130,9 +130,7 @@ async def send_test_notification(
 
     # Limpiar tokens inválidos
     if invalid:
-        await db.execute(
-            delete(NotificationToken).where(NotificationToken.token.in_(invalid))
-        )
+        await db.execute(delete(NotificationToken).where(NotificationToken.token.in_(invalid)))
         await db.commit()
 
     if success_count == 0:
@@ -141,12 +139,11 @@ async def send_test_notification(
             detail="No se pudo enviar la notificación (revisar configuración FCM)",
         )
 
-    return MessageResponse(
-        message=f"Enviado a {success_count} dispositivo(s)"
-    )
+    return MessageResponse(message=f"Enviado a {success_count} dispositivo(s)")
 
 
 # ============== HISTORIAL IN-APP ==============
+
 
 @router.get("", response_model=NotificationListResponse)
 async def list_notifications(
@@ -164,14 +161,16 @@ async def list_notifications(
     items = list(result.scalars().all())
 
     total_result = await db.execute(
-        select(func.count()).select_from(Notification).where(
-            Notification.user_id == current_user.id
-        )
+        select(func.count())
+        .select_from(Notification)
+        .where(Notification.user_id == current_user.id)
     )
     total = total_result.scalar() or 0
 
     unread_result = await db.execute(
-        select(func.count()).select_from(Notification).where(
+        select(func.count())
+        .select_from(Notification)
+        .where(
             Notification.user_id == current_user.id,
             Notification.is_read.is_(False),
         )
@@ -192,7 +191,9 @@ async def unread_count(
 ):
     """Cantidad de notificaciones no leídas (para el badge de la campanita)."""
     result = await db.execute(
-        select(func.count()).select_from(Notification).where(
+        select(func.count())
+        .select_from(Notification)
+        .where(
             Notification.user_id == current_user.id,
             Notification.is_read.is_(False),
         )
@@ -239,6 +240,4 @@ async def mark_all_read(
         .values(is_read=True)
     )
     await db.commit()
-    return MessageResponse(
-        message=f"{result.rowcount} notificaciones marcadas como leídas"
-    )
+    return MessageResponse(message=f"{result.rowcount} notificaciones marcadas como leídas")

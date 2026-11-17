@@ -18,6 +18,7 @@ from app.schemas.lesson import (
 
 # ===================== CATEGORÍAS =====================
 
+
 async def get_categories(db: AsyncSession, include_inactive: bool = False) -> list[Category]:
     """Obtener todas las categorías ordenadas por campo 'order'."""
     query = select(Category).order_by(Category.order)
@@ -43,14 +44,16 @@ async def get_categories_with_count(db: AsyncSession) -> list[dict]:
     rows = result.all()
     categories = []
     for cat, count in rows:
-        categories.append({
-            "id": cat.id,
-            "name": cat.name,
-            "description": cat.description,
-            "icon": cat.icon,
-            "order": cat.order,
-            "lessons_count": count,
-        })
+        categories.append(
+            {
+                "id": cat.id,
+                "name": cat.name,
+                "description": cat.description,
+                "icon": cat.icon,
+                "order": cat.order,
+                "lessons_count": count,
+            }
+        )
     return categories
 
 
@@ -69,9 +72,7 @@ async def create_category(db: AsyncSession, data: CategoryCreate) -> Category:
     return category
 
 
-async def update_category(
-    db: AsyncSession, category: Category, data: CategoryUpdate
-) -> Category:
+async def update_category(db: AsyncSession, category: Category, data: CategoryUpdate) -> Category:
     """Actualizar categoría existente."""
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -98,9 +99,7 @@ FREE_DIFFICULTIES = {"principiante"}
 def lesson_requires_premium(lesson: Lesson) -> bool:
     """True si la lección exige suscripción premium (nivel no-principiante o
     marcada explícitamente como premium)."""
-    return bool(lesson.is_premium) or (
-        (lesson.difficulty or "").lower() not in FREE_DIFFICULTIES
-    )
+    return bool(lesson.is_premium) or ((lesson.difficulty or "").lower() not in FREE_DIFFICULTIES)
 
 
 async def get_genres(db: AsyncSession) -> list[str]:
@@ -175,33 +174,35 @@ async def get_lessons_paginated(
 
     items = []
     for lesson in lessons:
-        items.append({
-            "id": lesson.id,
-            "category_id": lesson.category_id,
-            "title": lesson.title,
-            "description": lesson.description,
-            "difficulty": lesson.difficulty,
-            "tempo_bpm": lesson.tempo_bpm,
-            "time_signature": lesson.time_signature,
-            "key_signature": lesson.key_signature,
-            "genre": lesson.genre,
-            "artist": lesson.artist,
-            "thumbnail_url": lesson.thumbnail_url,
-            "audio_preview_url": lesson.audio_preview_url,
-            "duration_seconds": lesson.duration_seconds,
-            "order": lesson.order,
-            "is_active": lesson.is_active,
-            "is_premium": lesson.is_premium,
-            "total_plays": lesson.total_plays,
-            "average_score": lesson.average_score,
-            "created_by": lesson.created_by,
-            "created_at": lesson.created_at,
-            "updated_at": lesson.updated_at,
-            "category_name": lesson.category.name if lesson.category else None,
-            "notes_count": len(lesson.notes) if lesson.notes else 0,
-            "user_best_score": best_scores.get(lesson.id),
-            "requires_premium": lesson_requires_premium(lesson),
-        })
+        items.append(
+            {
+                "id": lesson.id,
+                "category_id": lesson.category_id,
+                "title": lesson.title,
+                "description": lesson.description,
+                "difficulty": lesson.difficulty,
+                "tempo_bpm": lesson.tempo_bpm,
+                "time_signature": lesson.time_signature,
+                "key_signature": lesson.key_signature,
+                "genre": lesson.genre,
+                "artist": lesson.artist,
+                "thumbnail_url": lesson.thumbnail_url,
+                "audio_preview_url": lesson.audio_preview_url,
+                "duration_seconds": lesson.duration_seconds,
+                "order": lesson.order,
+                "is_active": lesson.is_active,
+                "is_premium": lesson.is_premium,
+                "total_plays": lesson.total_plays,
+                "average_score": lesson.average_score,
+                "created_by": lesson.created_by,
+                "created_at": lesson.created_at,
+                "updated_at": lesson.updated_at,
+                "category_name": lesson.category.name if lesson.category else None,
+                "notes_count": len(lesson.notes) if lesson.notes else 0,
+                "user_best_score": best_scores.get(lesson.id),
+                "requires_premium": lesson_requires_premium(lesson),
+            }
+        )
 
     return {"items": items, "total": total, "page": page, "pages": pages}
 
@@ -241,9 +242,7 @@ async def get_recommended_lessons(
             .group_by(PracticeSession.lesson_id)
         )
     ).all()
-    best_by_lesson: dict[uuid.UUID, float] = {
-        lid: float(score) for lid, score in score_rows
-    }
+    best_by_lesson: dict[uuid.UUID, float] = {lid: float(score) for lid, score in score_rows}
 
     lessons = list(
         (
@@ -286,33 +285,35 @@ async def get_recommended_lessons(
 
     items = []
     for lesson in chosen:
-        items.append({
-            "id": lesson.id,
-            "category_id": lesson.category_id,
-            "title": lesson.title,
-            "description": lesson.description,
-            "difficulty": lesson.difficulty,
-            "tempo_bpm": lesson.tempo_bpm,
-            "time_signature": lesson.time_signature,
-            "key_signature": lesson.key_signature,
-            "genre": lesson.genre,
-            "artist": lesson.artist,
-            "thumbnail_url": lesson.thumbnail_url,
-            "audio_preview_url": lesson.audio_preview_url,
-            "duration_seconds": lesson.duration_seconds,
-            "order": lesson.order,
-            "is_active": lesson.is_active,
-            "is_premium": lesson.is_premium,
-            "total_plays": lesson.total_plays,
-            "average_score": lesson.average_score,
-            "created_by": lesson.created_by,
-            "created_at": lesson.created_at,
-            "updated_at": lesson.updated_at,
-            "category_name": lesson.category.name if lesson.category else None,
-            "notes_count": 0,  # liviano
-            "user_best_score": best_by_lesson.get(lesson.id),
-            "requires_premium": lesson_requires_premium(lesson),
-        })
+        items.append(
+            {
+                "id": lesson.id,
+                "category_id": lesson.category_id,
+                "title": lesson.title,
+                "description": lesson.description,
+                "difficulty": lesson.difficulty,
+                "tempo_bpm": lesson.tempo_bpm,
+                "time_signature": lesson.time_signature,
+                "key_signature": lesson.key_signature,
+                "genre": lesson.genre,
+                "artist": lesson.artist,
+                "thumbnail_url": lesson.thumbnail_url,
+                "audio_preview_url": lesson.audio_preview_url,
+                "duration_seconds": lesson.duration_seconds,
+                "order": lesson.order,
+                "is_active": lesson.is_active,
+                "is_premium": lesson.is_premium,
+                "total_plays": lesson.total_plays,
+                "average_score": lesson.average_score,
+                "created_by": lesson.created_by,
+                "created_at": lesson.created_at,
+                "updated_at": lesson.updated_at,
+                "category_name": lesson.category.name if lesson.category else None,
+                "notes_count": 0,  # liviano
+                "user_best_score": best_by_lesson.get(lesson.id),
+                "requires_premium": lesson_requires_premium(lesson),
+            }
+        )
 
     return items
 
@@ -369,23 +370,17 @@ async def get_lesson_detail(
 
     if user_id:
         # Mejor score
-        best_q = (
-            select(func.max(PracticeSession.score))
-            .where(
-                PracticeSession.user_id == user_id,
-                PracticeSession.lesson_id == lesson_id,
-            )
+        best_q = select(func.max(PracticeSession.score)).where(
+            PracticeSession.user_id == user_id,
+            PracticeSession.lesson_id == lesson_id,
         )
         best_result = await db.execute(best_q)
         detail["user_best_score"] = best_result.scalar()
 
         # Cantidad de intentos
-        count_q = (
-            select(func.count())
-            .where(
-                PracticeSession.user_id == user_id,
-                PracticeSession.lesson_id == lesson_id,
-            )
+        count_q = select(func.count()).where(
+            PracticeSession.user_id == user_id,
+            PracticeSession.lesson_id == lesson_id,
         )
         count_result = await db.execute(count_q)
         detail["user_attempts"] = count_result.scalar() or 0
@@ -403,9 +398,7 @@ async def get_lesson_sequence(db: AsyncSession, lesson_id: uuid.UUID) -> list[No
     return list(result.scalars().all())
 
 
-async def create_lesson(
-    db: AsyncSession, data: LessonCreate, admin_id: uuid.UUID
-) -> Lesson:
+async def create_lesson(db: AsyncSession, data: LessonCreate, admin_id: uuid.UUID) -> Lesson:
     """Crear lección con su secuencia de notas."""
     # Validar positions consecutivas
     if data.notes:
@@ -442,9 +435,7 @@ async def create_lesson(
     return lesson
 
 
-async def update_lesson(
-    db: AsyncSession, lesson: Lesson, data: LessonUpdate
-) -> Lesson:
+async def update_lesson(db: AsyncSession, lesson: Lesson, data: LessonUpdate) -> Lesson:
     """Actualizar datos de lección (sin notas)."""
     update_data = data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -466,9 +457,7 @@ async def replace_lesson_notes(
             raise ValueError("Las posiciones de las notas deben ser consecutivas empezando en 1")
 
     # Eliminar notas existentes
-    existing = await db.execute(
-        select(NoteSequence).where(NoteSequence.lesson_id == lesson_id)
-    )
+    existing = await db.execute(select(NoteSequence).where(NoteSequence.lesson_id == lesson_id))
     for note in existing.scalars().all():
         await db.delete(note)
 
@@ -529,31 +518,33 @@ async def get_admin_lessons_paginated(
 
     items = []
     for lesson in lessons:
-        items.append({
-            "id": lesson.id,
-            "category_id": lesson.category_id,
-            "title": lesson.title,
-            "description": lesson.description,
-            "difficulty": lesson.difficulty,
-            "tempo_bpm": lesson.tempo_bpm,
-            "time_signature": lesson.time_signature,
-            "key_signature": lesson.key_signature,
-            "genre": lesson.genre,
-            "artist": lesson.artist,
-            "thumbnail_url": lesson.thumbnail_url,
-            "audio_preview_url": lesson.audio_preview_url,
-            "duration_seconds": lesson.duration_seconds,
-            "order": lesson.order,
-            "is_active": lesson.is_active,
-            "is_premium": lesson.is_premium,
-            "total_plays": lesson.total_plays,
-            "average_score": lesson.average_score,
-            "created_by": lesson.created_by,
-            "created_at": lesson.created_at,
-            "updated_at": lesson.updated_at,
-            "category_name": lesson.category.name if lesson.category else None,
-            "notes_count": len(lesson.notes) if lesson.notes else 0,
-            "creator_name": lesson.creator.full_name if lesson.creator else None,
-        })
+        items.append(
+            {
+                "id": lesson.id,
+                "category_id": lesson.category_id,
+                "title": lesson.title,
+                "description": lesson.description,
+                "difficulty": lesson.difficulty,
+                "tempo_bpm": lesson.tempo_bpm,
+                "time_signature": lesson.time_signature,
+                "key_signature": lesson.key_signature,
+                "genre": lesson.genre,
+                "artist": lesson.artist,
+                "thumbnail_url": lesson.thumbnail_url,
+                "audio_preview_url": lesson.audio_preview_url,
+                "duration_seconds": lesson.duration_seconds,
+                "order": lesson.order,
+                "is_active": lesson.is_active,
+                "is_premium": lesson.is_premium,
+                "total_plays": lesson.total_plays,
+                "average_score": lesson.average_score,
+                "created_by": lesson.created_by,
+                "created_at": lesson.created_at,
+                "updated_at": lesson.updated_at,
+                "category_name": lesson.category.name if lesson.category else None,
+                "notes_count": len(lesson.notes) if lesson.notes else 0,
+                "creator_name": lesson.creator.full_name if lesson.creator else None,
+            }
+        )
 
     return {"items": items, "total": total, "page": page, "pages": pages}

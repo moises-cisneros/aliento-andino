@@ -4,8 +4,6 @@ Cubre la construcción del prompt (función pura, sin red) y la degradación
 con gracia cuando Vertex AI no está configurado.
 """
 
-import pytest
-
 from app.config import settings
 from app.services import gemini_service
 from app.services.gemini_service import _build_prompt
@@ -47,9 +45,7 @@ class TestBuildPrompt:
         assert "principiante" in prompt
 
     def test_note_errors_are_sampled(self):
-        errors = [
-            {"expected": "C4", "played": "D4", "position": i} for i in range(20)
-        ]
+        errors = [{"expected": "C4", "played": "D4", "position": i} for i in range(20)]
         prompt = _build_prompt(skill_level="beginner", errors_detail=errors, **_BASE_KWARGS)
         assert "Muestra de errores" in prompt
         # Se limita a 10 muestras: pos0..pos9 sí, pos15 no.

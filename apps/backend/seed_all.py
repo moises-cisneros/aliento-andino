@@ -10,13 +10,12 @@ Genera:
 
 import asyncio
 import random
-import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy import func, select
 
 from app.database import async_session
-from app.models.lesson import Category, Lesson, PracticeSession
+from app.models.lesson import Lesson, PracticeSession
 from app.models.ranking import Achievement, UserAchievement, UserXP
 from app.models.social import Comment, Follow, Like, Post, Report
 from app.models.user import User
@@ -25,29 +24,109 @@ from app.utils.security import hash_password
 # ── Datos realistas de usuarios ──────────────────────────────────────────
 
 FIRST_NAMES = [
-    "Alejandro", "Valentina", "Sebastián", "Camila", "Mateo",
-    "Isabella", "Santiago", "Sofía", "Daniel", "Mariana",
-    "Andrés", "Lucía", "Diego", "Gabriela", "Nicolás",
-    "Carolina", "Fernando", "Paula", "Miguel", "Andrea",
-    "Carlos", "María", "José", "Elena", "David",
-    "Laura", "Rafael", "Ana", "Pedro", "Julia",
-    "Luis", "Natalia", "Jorge", "Daniela", "Roberto",
-    "Catalina", "Eduardo", "Fernanda", "Marco", "Renata",
-    "Pablo", "Verónica", "Tomás", "Claudia", "Ricardo",
-    "Mónica", "Javier", "Silvia", "Emilio", "Patricia",
+    "Alejandro",
+    "Valentina",
+    "Sebastián",
+    "Camila",
+    "Mateo",
+    "Isabella",
+    "Santiago",
+    "Sofía",
+    "Daniel",
+    "Mariana",
+    "Andrés",
+    "Lucía",
+    "Diego",
+    "Gabriela",
+    "Nicolás",
+    "Carolina",
+    "Fernando",
+    "Paula",
+    "Miguel",
+    "Andrea",
+    "Carlos",
+    "María",
+    "José",
+    "Elena",
+    "David",
+    "Laura",
+    "Rafael",
+    "Ana",
+    "Pedro",
+    "Julia",
+    "Luis",
+    "Natalia",
+    "Jorge",
+    "Daniela",
+    "Roberto",
+    "Catalina",
+    "Eduardo",
+    "Fernanda",
+    "Marco",
+    "Renata",
+    "Pablo",
+    "Verónica",
+    "Tomás",
+    "Claudia",
+    "Ricardo",
+    "Mónica",
+    "Javier",
+    "Silvia",
+    "Emilio",
+    "Patricia",
 ]
 
 LAST_NAMES = [
-    "García", "Rodríguez", "Martínez", "López", "González",
-    "Hernández", "Pérez", "Sánchez", "Ramírez", "Torres",
-    "Flores", "Rivera", "Gómez", "Díaz", "Cruz",
-    "Morales", "Reyes", "Gutiérrez", "Ortiz", "Ramos",
-    "Vargas", "Castillo", "Mendoza", "Rojas", "Herrera",
-    "Medina", "Aguilar", "Peña", "Castro", "Jiménez",
-    "Ruiz", "Delgado", "Romero", "Navarro", "Domínguez",
-    "Vega", "Soto", "Guerrero", "Campos", "Espinoza",
-    "Molina", "Contreras", "Sandoval", "Figueroa", "Córdoba",
-    "Silva", "Ríos", "Acosta", "Valencia", "Paredes",
+    "García",
+    "Rodríguez",
+    "Martínez",
+    "López",
+    "González",
+    "Hernández",
+    "Pérez",
+    "Sánchez",
+    "Ramírez",
+    "Torres",
+    "Flores",
+    "Rivera",
+    "Gómez",
+    "Díaz",
+    "Cruz",
+    "Morales",
+    "Reyes",
+    "Gutiérrez",
+    "Ortiz",
+    "Ramos",
+    "Vargas",
+    "Castillo",
+    "Mendoza",
+    "Rojas",
+    "Herrera",
+    "Medina",
+    "Aguilar",
+    "Peña",
+    "Castro",
+    "Jiménez",
+    "Ruiz",
+    "Delgado",
+    "Romero",
+    "Navarro",
+    "Domínguez",
+    "Vega",
+    "Soto",
+    "Guerrero",
+    "Campos",
+    "Espinoza",
+    "Molina",
+    "Contreras",
+    "Sandoval",
+    "Figueroa",
+    "Córdoba",
+    "Silva",
+    "Ríos",
+    "Acosta",
+    "Valencia",
+    "Paredes",
 ]
 
 BIOS = [
@@ -66,7 +145,11 @@ BIOS = [
     "Compositor en formación",
     "Músico de hobby, ingeniero de profesión",
     "Aprendiendo con Aliento Andino",
-    None, None, None, None, None,  # Algunos sin bio
+    None,
+    None,
+    None,
+    None,
+    None,  # Algunos sin bio
 ]
 
 POST_CONTENTS = [
@@ -120,7 +203,7 @@ COMMENT_CONTENTS = [
     "¡La comunidad de Aliento Andino es genial!",
 ]
 
-NOW = datetime.now(timezone.utc)
+NOW = datetime.now(UTC)
 
 
 def random_date_within(days_back: int) -> datetime:
@@ -170,7 +253,7 @@ async def seed_users(db) -> list[User]:
             break
 
         full_name = f"{first} {last}"
-        base_username = f"{first.lower().replace('é','e').replace('á','a').replace('í','i').replace('ó','o').replace('ú','u')}{last.lower()[:3].replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u')}"
+        base_username = f"{first.lower().replace('é', 'e').replace('á', 'a').replace('í', 'i').replace('ó', 'o').replace('ú', 'u')}{last.lower()[:3].replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u')}"
         username = base_username
         if username in used_usernames:
             username = f"{base_username}{random.randint(1, 99)}"
@@ -220,9 +303,7 @@ async def seed_user_xp(db, users: list[User]) -> list[UserXP]:
     xp_records = []
     for user in users:
         # Verificar si ya tiene XP
-        result = await db.execute(
-            select(UserXP).where(UserXP.user_id == user.id)
-        )
+        result = await db.execute(select(UserXP).where(UserXP.user_id == user.id))
         existing = result.scalar_one_or_none()
         if existing:
             xp_records.append(existing)
@@ -264,7 +345,9 @@ async def seed_user_xp(db, users: list[User]) -> list[UserXP]:
         level = max(1, total_xp // 500 + 1)
         weekly_xp = random.randint(0, min(total_xp, 800))
         avg_score = round(random.uniform(50, 98), 1) if sessions > 0 else 0.0
-        last_practice = (NOW - timedelta(days=random.randint(0, 14))).date() if sessions > 0 else None
+        last_practice = (
+            (NOW - timedelta(days=random.randint(0, 14))).date() if sessions > 0 else None
+        )
 
         xp = UserXP(
             user_id=user.id,
@@ -315,9 +398,7 @@ async def seed_practice_sessions(db, users: list[User]) -> list[PracticeSession]
     sessions = []
     for user in users:
         # Cantidad de sesiones según su XP
-        result = await db.execute(
-            select(UserXP).where(UserXP.user_id == user.id)
-        )
+        result = await db.execute(select(UserXP).where(UserXP.user_id == user.id))
         user_xp = result.scalar_one_or_none()
         num_sessions = min(
             user_xp.total_practice_sessions if user_xp else random.randint(1, 5),
@@ -443,9 +524,7 @@ async def seed_social(db, users: list[User]) -> None:
 
         # Actualizar posts_count
         for user in users:
-            r = await db.execute(
-                select(func.count(Post.id)).where(Post.user_id == user.id)
-            )
+            r = await db.execute(select(func.count(Post.id)).where(Post.user_id == user.id))
             user.posts_count = r.scalar() or 0
 
         await db.flush()
@@ -488,9 +567,7 @@ async def seed_social(db, users: list[User]) -> None:
 
         # Actualizar likes_count
         for post in all_posts:
-            r = await db.execute(
-                select(func.count(Like.id)).where(Like.post_id == post.id)
-            )
+            r = await db.execute(select(func.count(Like.id)).where(Like.post_id == post.id))
             post.likes_count = r.scalar() or 0
 
         await db.flush()
@@ -506,7 +583,9 @@ async def seed_social(db, users: list[User]) -> None:
         commented_posts = random.sample(all_posts, min(30, len(all_posts)))
         for post in commented_posts:
             num_comments = random.randint(1, 4)
-            commenters = random.sample([u for u in users if u.id != post.user_id], min(num_comments, len(users) - 1))
+            commenters = random.sample(
+                [u for u in users if u.id != post.user_id], min(num_comments, len(users) - 1)
+            )
             for commenter in commenters:
                 comment = Comment(
                     post_id=post.id,
@@ -522,9 +601,7 @@ async def seed_social(db, users: list[User]) -> None:
 
         # Actualizar comments_count
         for post in all_posts:
-            r = await db.execute(
-                select(func.count(Comment.id)).where(Comment.post_id == post.id)
-            )
+            r = await db.execute(select(func.count(Comment.id)).where(Comment.post_id == post.id))
             post.comments_count = r.scalar() or 0
 
         await db.flush()
@@ -553,9 +630,7 @@ async def seed_achievements_for_users(db, users: list[User]) -> None:
     unlocked = 0
     for user in users:
         # Obtener XP del usuario
-        result = await db.execute(
-            select(UserXP).where(UserXP.user_id == user.id)
-        )
+        result = await db.execute(select(UserXP).where(UserXP.user_id == user.id))
         user_xp = result.scalar_one_or_none()
         if not user_xp:
             continue
@@ -573,29 +648,38 @@ async def seed_achievements_for_users(db, users: list[User]) -> None:
                 if ach.requirement_value <= user_xp.longest_streak:
                     qualifies = True
             elif ach.category == "score":
-                if ach.code == "first_perfect" and user_xp.total_perfect_scores >= 1:
-                    qualifies = True
-                elif ach.code == "perfect_10" and user_xp.total_perfect_scores >= 10:
-                    qualifies = True
-                elif ach.code == "score_avg_90" and user_xp.average_score >= 90:
+                if (
+                    ach.code == "first_perfect"
+                    and user_xp.total_perfect_scores >= 1
+                    or ach.code == "perfect_10"
+                    and user_xp.total_perfect_scores >= 10
+                    or ach.code == "score_avg_90"
+                    and user_xp.average_score >= 90
+                ):
                     qualifies = True
             elif ach.category == "social":
-                if ach.code == "first_post" and user.posts_count >= 1:
-                    qualifies = True
-                elif ach.code == "followers_10" and user.followers_count >= 10:
-                    qualifies = True
-                elif ach.code == "followers_100" and user.followers_count >= 100:
+                if (
+                    ach.code == "first_post"
+                    and user.posts_count >= 1
+                    or ach.code == "followers_10"
+                    and user.followers_count >= 10
+                    or ach.code == "followers_100"
+                    and user.followers_count >= 100
+                ):
                     qualifies = True
             elif ach.category == "milestone":
-                if ach.code == "level_5" and user_xp.level >= 5:
-                    qualifies = True
-                elif ach.code == "level_10" and user_xp.level >= 10:
-                    qualifies = True
-                elif ach.code == "level_25" and user_xp.level >= 25:
-                    qualifies = True
-                elif ach.code == "hours_10" and user_xp.total_practice_minutes >= 600:
-                    qualifies = True
-                elif ach.code == "hours_100" and user_xp.total_practice_minutes >= 6000:
+                if (
+                    ach.code == "level_5"
+                    and user_xp.level >= 5
+                    or ach.code == "level_10"
+                    and user_xp.level >= 10
+                    or ach.code == "level_25"
+                    and user_xp.level >= 25
+                    or ach.code == "hours_10"
+                    and user_xp.total_practice_minutes >= 600
+                    or ach.code == "hours_100"
+                    and user_xp.total_practice_minutes >= 6000
+                ):
                     qualifies = True
 
             if qualifies:
@@ -819,6 +903,7 @@ async def main():
             await db.rollback()
             print(f"\n❌ Error durante el seed: {e}")
             import traceback
+
             traceback.print_exc()
             raise
 

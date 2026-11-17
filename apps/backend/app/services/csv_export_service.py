@@ -34,13 +34,26 @@ async def users_csv(
     is_admin: bool | None = None,
 ) -> str:
     data = await user_service.admin_list_users(
-        db, page=1, limit=MAX_ROWS, search=search,
-        is_banned=is_banned, is_admin=is_admin,
+        db,
+        page=1,
+        limit=MAX_ROWS,
+        search=search,
+        is_banned=is_banned,
+        is_admin=is_admin,
     )
     headers = [
-        "id", "email", "username", "full_name", "is_active", "is_admin",
-        "is_banned", "ban_reason", "xp_level", "followers_count",
-        "posts_count", "created_at",
+        "id",
+        "email",
+        "username",
+        "full_name",
+        "is_active",
+        "is_admin",
+        "is_banned",
+        "ban_reason",
+        "xp_level",
+        "followers_count",
+        "posts_count",
+        "created_at",
     ]
     rows = [[u.get(h) for h in headers] for u in data["items"]]
     return _to_csv(headers, rows)
@@ -53,13 +66,25 @@ async def subscriptions_csv(
     search: str | None = None,
 ) -> str:
     data = await subscription_service.admin_list_subscriptions(
-        db, page=1, limit=MAX_ROWS, status_filter=status_filter,
-        plan=plan, search=search,
+        db,
+        page=1,
+        limit=MAX_ROWS,
+        status_filter=status_filter,
+        plan=plan,
+        search=search,
     )
     headers = [
-        "id", "email", "username", "full_name", "subscription_status",
-        "subscription_plan", "plan_label", "subscription_started_at",
-        "subscription_expires_at", "subscription_trial_used", "is_premium",
+        "id",
+        "email",
+        "username",
+        "full_name",
+        "subscription_status",
+        "subscription_plan",
+        "plan_label",
+        "subscription_started_at",
+        "subscription_expires_at",
+        "subscription_trial_used",
+        "is_premium",
         "days_until_expiry",
     ]
     rows = [[u.get(h) for h in headers] for u in data["items"]]
@@ -67,20 +92,19 @@ async def subscriptions_csv(
 
 
 async def lesson_performance_csv(db: AsyncSession) -> str:
-    rows_db = (await db.execute(
-        select(
-            Lesson.title.label("title"),
-            func.count(PracticeSession.id).label("attempts"),
-            func.avg(PracticeSession.score).label("avg_score"),
+    rows_db = (
+        await db.execute(
+            select(
+                Lesson.title.label("title"),
+                func.count(PracticeSession.id).label("attempts"),
+                func.avg(PracticeSession.score).label("avg_score"),
+            )
+            .join(PracticeSession, PracticeSession.lesson_id == Lesson.id)
+            .group_by(Lesson.id, Lesson.title)
+            .order_by(func.avg(PracticeSession.score).asc())
+            .limit(MAX_ROWS)
         )
-        .join(PracticeSession, PracticeSession.lesson_id == Lesson.id)
-        .group_by(Lesson.id, Lesson.title)
-        .order_by(func.avg(PracticeSession.score).asc())
-        .limit(MAX_ROWS)
-    )).all()
+    ).all()
     headers = ["title", "attempts", "avg_score"]
-    rows = [
-        [r.title, r.attempts, round(float(r.avg_score or 0), 1)]
-        for r in rows_db
-    ]
+    rows = [[r.title, r.attempts, round(float(r.avg_score or 0), 1)] for r in rows_db]
     return _to_csv(headers, rows)

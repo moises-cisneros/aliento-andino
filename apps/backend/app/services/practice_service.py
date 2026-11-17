@@ -2,9 +2,9 @@
 
 import math
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import func, select, distinct, case
+from sqlalchemy import distinct, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -50,9 +50,8 @@ async def submit_practice(
     # Actualizar total_plays y average_score de la lección
     lesson.total_plays += 1
     # Recalcular promedio
-    avg_q = (
-        select(func.avg(PracticeSession.score))
-        .where(PracticeSession.lesson_id == data.lesson_id)
+    avg_q = select(func.avg(PracticeSession.score)).where(
+        PracticeSession.lesson_id == data.lesson_id
     )
     avg_result = await db.execute(avg_q)
     new_avg = avg_result.scalar()
@@ -117,25 +116,27 @@ async def get_practice_history(
 
     items = []
     for s in sessions:
-        items.append({
-            "id": s.id,
-            "user_id": s.user_id,
-            "lesson_id": s.lesson_id,
-            "score": s.score,
-            "correct_notes": s.correct_notes,
-            "total_notes": s.total_notes,
-            "wrong_notes": s.wrong_notes,
-            "missed_notes": s.missed_notes,
-            "average_tempo": s.average_tempo,
-            "expected_tempo": s.expected_tempo,
-            "tempo_accuracy": s.tempo_accuracy,
-            "total_time_seconds": s.total_time_seconds,
-            "errors_detail": s.errors_detail,
-            "ai_feedback": s.ai_feedback if is_premium else None,
-            "completed": s.completed,
-            "created_at": s.created_at,
-            "lesson_title": s.lesson.title if s.lesson else None,
-        })
+        items.append(
+            {
+                "id": s.id,
+                "user_id": s.user_id,
+                "lesson_id": s.lesson_id,
+                "score": s.score,
+                "correct_notes": s.correct_notes,
+                "total_notes": s.total_notes,
+                "wrong_notes": s.wrong_notes,
+                "missed_notes": s.missed_notes,
+                "average_tempo": s.average_tempo,
+                "expected_tempo": s.expected_tempo,
+                "tempo_accuracy": s.tempo_accuracy,
+                "total_time_seconds": s.total_time_seconds,
+                "errors_detail": s.errors_detail,
+                "ai_feedback": s.ai_feedback if is_premium else None,
+                "completed": s.completed,
+                "created_at": s.created_at,
+                "lesson_title": s.lesson.title if s.lesson else None,
+            }
+        )
 
     return {"items": items, "total": total, "page": page, "pages": pages}
 
@@ -155,16 +156,12 @@ async def get_user_progress_stats(db: AsyncSession, user_id: uuid.UUID) -> dict:
     total_lessons_played = distinct_result.scalar() or 0
 
     # Score promedio
-    avg_q = select(func.avg(PracticeSession.score)).where(
-        PracticeSession.user_id == user_id
-    )
+    avg_q = select(func.avg(PracticeSession.score)).where(PracticeSession.user_id == user_id)
     avg_result = await db.execute(avg_q)
     average_score = round(avg_result.scalar() or 0.0, 2)
 
     # Mejor score
-    best_q = select(func.max(PracticeSession.score)).where(
-        PracticeSession.user_id == user_id
-    )
+    best_q = select(func.max(PracticeSession.score)).where(PracticeSession.user_id == user_id)
     best_result = await db.execute(best_q)
     best_score = best_result.scalar() or 0.0
 
@@ -176,12 +173,9 @@ async def get_user_progress_stats(db: AsyncSession, user_id: uuid.UUID) -> dict:
     total_practice_time = time_result.scalar() or 0.0
 
     # Lecciones completadas (mejor score >= 70 en al menos una sesión)
-    completed_q = (
-        select(func.count(distinct(PracticeSession.lesson_id)))
-        .where(
-            PracticeSession.user_id == user_id,
-            PracticeSession.score >= 70,
-        )
+    completed_q = select(func.count(distinct(PracticeSession.lesson_id))).where(
+        PracticeSession.user_id == user_id,
+        PracticeSession.score >= 70,
     )
     completed_result = await db.execute(completed_q)
     lessons_completed = completed_result.scalar() or 0
@@ -232,7 +226,7 @@ async def _calculate_streak(db: AsyncSession, user_id: uuid.UUID) -> int:
     if not dates:
         return 0
 
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     streak = 0
 
     # Verificar si hoy o ayer tienen práctica (para contar racha)
@@ -258,57 +252,50 @@ async def _calculate_streak(db: AsyncSession, user_id: uuid.UUID) -> int:
 
 async def get_weekly_progress(db: AsyncSession, user_id: uuid.UUID) -> list[dict]:
     """Obtener progreso de los últimos 7 días."""
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     week_data = []
 
     for i in range(6, -1, -1):
         day = today - timedelta(days=i)
-        day_start = datetime.combine(day, datetime.min.time()).replace(tzinfo=timezone.utc)
+        day_start = datetime.combine(day, datetime.min.time()).replace(tzinfo=UTC)
         day_end = day_start + timedelta(days=1)
 
         # Sesiones del día
-        count_q = (
-            select(func.count())
-            .where(
-                PracticeSession.user_id == user_id,
-                PracticeSession.created_at >= day_start,
-                PracticeSession.created_at < day_end,
-            )
+        count_q = select(func.count()).where(
+            PracticeSession.user_id == user_id,
+            PracticeSession.created_at >= day_start,
+            PracticeSession.created_at < day_end,
         )
         count_result = await db.execute(count_q)
         sessions_count = count_result.scalar() or 0
 
-        # Score promedio del día  
-        avg_q = (
-            select(func.avg(PracticeSession.score))
-            .where(
-                PracticeSession.user_id == user_id,
-                PracticeSession.created_at >= day_start,
-                PracticeSession.created_at < day_end,
-            )
+        # Score promedio del día
+        avg_q = select(func.avg(PracticeSession.score)).where(
+            PracticeSession.user_id == user_id,
+            PracticeSession.created_at >= day_start,
+            PracticeSession.created_at < day_end,
         )
         avg_result = await db.execute(avg_q)
         avg_score = round(avg_result.scalar() or 0.0, 2)
 
         # Minutos de práctica del día
-        time_q = (
-            select(func.sum(PracticeSession.total_time_seconds))
-            .where(
-                PracticeSession.user_id == user_id,
-                PracticeSession.created_at >= day_start,
-                PracticeSession.created_at < day_end,
-            )
+        time_q = select(func.sum(PracticeSession.total_time_seconds)).where(
+            PracticeSession.user_id == user_id,
+            PracticeSession.created_at >= day_start,
+            PracticeSession.created_at < day_end,
         )
         time_result = await db.execute(time_q)
         practice_seconds = time_result.scalar() or 0.0
         practice_minutes = round(practice_seconds / 60.0, 1)
 
-        week_data.append({
-            "date": day.isoformat(),
-            "sessions_count": sessions_count,
-            "average_score": avg_score,
-            "practice_minutes": practice_minutes,
-        })
+        week_data.append(
+            {
+                "date": day.isoformat(),
+                "sessions_count": sessions_count,
+                "average_score": avg_score,
+                "practice_minutes": practice_minutes,
+            }
+        )
 
     return week_data
 
@@ -316,7 +303,6 @@ async def get_weekly_progress(db: AsyncSession, user_id: uuid.UUID) -> list[dict
 async def get_admin_stats_overview(db: AsyncSession) -> dict:
     """Obtener estadísticas generales para el dashboard admin."""
     from app.models.lesson import Category
-    from app.models.user import User
 
     # Total lecciones activas
     lessons_q = select(func.count()).where(Lesson.is_active == True)  # noqa: E712
@@ -334,10 +320,9 @@ async def get_admin_stats_overview(db: AsyncSession) -> dict:
     total_practice_sessions = sessions_result.scalar() or 0
 
     # Usuarios activos (con al menos 1 práctica en los últimos 30 días)
-    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
-    users_q = (
-        select(func.count(distinct(PracticeSession.user_id)))
-        .where(PracticeSession.created_at >= thirty_days_ago)
+    thirty_days_ago = datetime.now(UTC) - timedelta(days=30)
+    users_q = select(func.count(distinct(PracticeSession.user_id))).where(
+        PracticeSession.created_at >= thirty_days_ago
     )
     users_result = await db.execute(users_q)
     total_users_active = users_result.scalar() or 0

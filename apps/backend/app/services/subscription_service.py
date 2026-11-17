@@ -4,7 +4,7 @@ Activar una suscripción solo marca al usuario como premium y fija el
 vencimiento. No se cobra ni se guardan datos de tarjeta.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, status
 from sqlalchemy import and_, func, or_, select
@@ -45,7 +45,7 @@ def plan_label(plan: str | None) -> str | None:
 async def activate_subscription(db: AsyncSession, user: User, plan: str) -> User:
     """Activa (o extiende) la suscripción premium del usuario."""
     info = PLANS[plan]
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     # Si ya tiene tiempo vigente, se acumula desde el vencimiento; si no, desde hoy.
     base = (
         user.subscription_expires_at
@@ -73,7 +73,7 @@ async def start_trial(db: AsyncSession, user: User) -> User:
             status_code=status.HTTP_409_CONFLICT,
             detail="Ya tenés premium activo",
         )
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     user.subscription_status = "premium"
     user.subscription_plan = "trial"
     user.subscription_started_at = user.subscription_started_at or now
@@ -100,9 +100,7 @@ async def cancel_subscription(db: AsyncSession, user: User) -> User:
 
 
 async def _get_user_or_404(db: AsyncSession, user_id) -> User:
-    user = (
-        await db.execute(select(User).where(User.id == user_id))
-    ).scalar_one_or_none()
+    user = (await db.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     return user
@@ -112,7 +110,7 @@ async def admin_grant(db: AsyncSession, user_id, plan: str) -> User:
     """El admin otorga/extiende premium a un usuario (mensual, anual o prueba)."""
     user = await _get_user_or_404(db, user_id)
     if plan == "trial":
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         base = (
             user.subscription_expires_at
             if (user.subscription_expires_at and user.subscription_expires_at > now)
@@ -168,28 +166,22 @@ async def admin_list_subscriptions(
         )
     where = and_(*conditions) if conditions else True
 
-    total = (
-        await db.execute(select(func.count()).select_from(User).where(where))
-    ).scalar() or 0
+    total = (await db.execute(select(func.count()).select_from(User).where(where))).scalar() or 0
 
     offset = (page - 1) * limit
     result = await db.execute(
-        select(User)
-        .where(where)
-        .order_by(User.created_at.desc())
-        .offset(offset)
-        .limit(limit)
+        select(User).where(where).order_by(User.created_at.desc()).offset(offset).limit(limit)
     )
     users = list(result.scalars().all())
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     items = []
     for u in users:
         exp = u.subscription_expires_at
         days_left = None
         if exp is not None:
             if exp.tzinfo is None:
-                exp = exp.replace(tzinfo=timezone.utc)
+                exp = exp.replace(tzinfo=UTC)
             days_left = max(0, (exp - now).days)
         items.append(
             {
@@ -215,32 +207,23 @@ async def admin_list_subscriptions(
 async def admin_subscription_summary(db: AsyncSession) -> dict:
     """KPIs de suscripciones para el admin. Los ingresos son ESTIMADOS (los
     pagos son simulados: precio del plan × suscripciones activas)."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     async def cnt(condition) -> int:
         return (
-            await db.execute(
-                select(func.count()).select_from(User).where(condition)
-            )
+            await db.execute(select(func.count()).select_from(User).where(condition))
         ).scalar() or 0
 
-    total_users = (
-        await db.execute(select(func.count()).select_from(User))
-    ).scalar() or 0
+    total_users = (await db.execute(select(func.count()).select_from(User))).scalar() or 0
 
     active = User.subscription_expires_at > now
-    premium_active = await cnt(
-        and_(User.subscription_status == "premium", active)
-    )
+    premium_active = await cnt(and_(User.subscription_status == "premium", active))
     monthly = await cnt(and_(User.subscription_plan == "monthly", active))
     annual = await cnt(and_(User.subscription_plan == "annual", active))
     trial = await cnt(and_(User.subscription_plan == "trial", active))
     trials_used = await cnt(User.subscription_trial_used.is_(True))
 
-    mrr = (
-        monthly * plan_price("monthly")
-        + annual * (plan_price("annual") / 12)
-    )
+    mrr = monthly * plan_price("monthly") + annual * (plan_price("annual") / 12)
     return {
         "total_users": total_users,
         "premium_active": premium_active,

@@ -75,7 +75,11 @@ async def grant_subscription(
     """Otorga/extiende premium a un usuario (mensual, anual o prueba)."""
     user = await subscription_service.admin_grant(db, _parse_uuid(user_id), payload.plan)
     await audit_service.log(
-        db, current_admin, "subscription.grant", "user", user_id,
+        db,
+        current_admin,
+        "subscription.grant",
+        "user",
+        user_id,
         {"plan": payload.plan},
     )
     return _sub_state(user)
@@ -90,6 +94,10 @@ async def cancel_subscription_admin(
     """Cancela la suscripción de un usuario (baja a free)."""
     user = await subscription_service.admin_cancel(db, _parse_uuid(user_id))
     await audit_service.log(
-        db, current_admin, "subscription.cancel", "user", user_id,
+        db,
+        current_admin,
+        "subscription.cancel",
+        "user",
+        user_id,
     )
     return _sub_state(user)

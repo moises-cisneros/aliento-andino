@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -58,7 +58,7 @@ async def _cleanup_expired_tokens():
                 result = await session.execute(
                     delete(RefreshToken).where(
                         or_(
-                            RefreshToken.expires_at < datetime.now(timezone.utc),
+                            RefreshToken.expires_at < datetime.now(UTC),
                             RefreshToken.is_revoked.is_(True),
                         )
                     )
@@ -78,7 +78,7 @@ async def _streak_warning_loop():
     Criterio: current_streak >= 1, last_practice_date == ayer, hora local > 20:00.
     Mandamos una sola vez por día (idempotencia simple por bandera en BD futura).
     """
-    from datetime import date, timedelta
+    from datetime import timedelta
 
     from sqlalchemy import select
 
@@ -89,13 +89,12 @@ async def _streak_warning_loop():
     await asyncio.sleep(30)
     while True:
         try:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             yesterday = (now - timedelta(days=1)).date()
 
             async with async_session() as session:
                 result = await session.execute(
-                    select(UserXP.user_id, UserXP.current_streak)
-                    .where(
+                    select(UserXP.user_id, UserXP.current_streak).where(
                         UserXP.current_streak >= 1,
                         UserXP.last_practice_date == yesterday,
                     )
@@ -130,6 +129,7 @@ async def lifespan(app: FastAPI):
     try:
         from app.database import async_session
         from app.services import config_service
+
         async with async_session() as db:
             await config_service.load(db)
         logger.info("Config cargada")
@@ -142,7 +142,7 @@ async def lifespan(app: FastAPI):
     cleanup_task.cancel()
     streak_task.cancel()
     for t in (cleanup_task, streak_task):
-        try:
+        try:  # noqa: SIM105 - explicit await keeps cancellation handling readable
             await t
         except asyncio.CancelledError:
             pass
@@ -173,7 +173,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         if not settings.debug:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-            response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https:; connect-src 'self'"
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; font-src 'self' https:; connect-src 'self'"
+            )
         return response
 
 

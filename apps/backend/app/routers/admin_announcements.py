@@ -2,7 +2,7 @@
 usuarios (todos / premium / free), reutilizando el dispatcher FCM existente.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
@@ -34,7 +34,7 @@ async def send_announcement(
     Devuelve cuántos usuarios se alcanzaron y a cuántos dispositivos se entregó
     el push (los que no tienen push activado igual reciben la notificación en la
     campanita)."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     # Nunca a baneados/inactivos.
     conditions = [User.is_active.is_(True), User.is_banned.is_(False)]
     if payload.segment == "premium":
@@ -60,7 +60,11 @@ async def send_announcement(
         data={"type": "announcement"},
     )
     await audit_service.log(
-        db, current_admin, "announcement.send", "announcement", None,
+        db,
+        current_admin,
+        "announcement.send",
+        "announcement",
+        None,
         {
             "segment": payload.segment,
             "title": payload.title,

@@ -2,16 +2,15 @@
 
 import math
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
-from sqlalchemy import func, select, distinct, and_, or_
+from sqlalchemy import and_, distinct, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.lesson import Lesson, PracticeSession
+from app.models.lesson import PracticeSession
 from app.models.ranking import Achievement, UserAchievement, UserXP
 from app.models.social import Follow, Post
 from app.models.user import User
-
 
 # ===================== CÁLCULOS DE XP =====================
 
@@ -46,8 +45,7 @@ def calculate_session_xp(score: float, difficulty: str, is_completed: bool) -> i
     completion_bonus = 15 if is_completed else 0
 
     total = int(
-        (base_xp + precision_bonus + completion_bonus)
-        * difficulty_multiplier.get(difficulty, 1.0)
+        (base_xp + precision_bonus + completion_bonus) * difficulty_multiplier.get(difficulty, 1.0)
     )
     return total
 
@@ -64,11 +62,12 @@ def xp_for_level(level: int) -> int:
 
 def get_current_week_monday() -> date:
     """Obtener el lunes de la semana actual (UTC)."""
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     return today - timedelta(days=today.weekday())
 
 
 # ===================== XP + STREAK UPDATE =====================
+
 
 async def get_or_create_user_xp(db: AsyncSession, user_id: uuid.UUID) -> UserXP:
     """Obtener o crear registro de XP del usuario."""
@@ -95,7 +94,7 @@ async def process_practice_xp(
     Retorna: {xp_earned, new_level, current_level, new_achievements}
     """
     user_xp = await get_or_create_user_xp(db, user_id)
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     current_monday = get_current_week_monday()
 
     # Resetear weekly_xp si cambió de semana
@@ -145,10 +144,7 @@ async def process_practice_xp(
     elif user_xp.last_practice_date == today - timedelta(days=1):
         user_xp.current_streak += 1
         streak_advanced = True
-    elif (
-        user_xp.last_practice_date == today - timedelta(days=2)
-        and user_xp.streak_freezes > 0
-    ):
+    elif user_xp.last_practice_date == today - timedelta(days=2) and user_xp.streak_freezes > 0:
         # Faltó EXACTAMENTE un día: consumir un congelador y mantener la racha.
         user_xp.streak_freezes -= 1
         user_xp.current_streak += 1
@@ -197,6 +193,7 @@ async def process_practice_xp(
     # Disparar notificaciones push por cada logro desbloqueado.
     if new_achievements:
         from app.services import notification_dispatcher
+
         for ach in new_achievements:
             await notification_dispatcher.notify_user(
                 db,
@@ -213,6 +210,7 @@ async def process_practice_xp(
     # Bonus: si subió de nivel, notif aparte
     if new_level or user_xp.level > old_level:
         from app.services import notification_dispatcher
+
         await notification_dispatcher.notify_user(
             db,
             user_id=user_id,
@@ -231,14 +229,13 @@ async def process_practice_xp(
 
 # ===================== VERIFICACIÓN DE LOGROS =====================
 
+
 async def check_achievements(
     db: AsyncSession, user_id: uuid.UUID, user_xp: UserXP
 ) -> list[Achievement]:
     """Verificar y desbloquear logros nuevos después de actualizar XP/stats."""
     # Obtener logros activos no desbloqueados por este usuario
-    unlocked_q = select(UserAchievement.achievement_id).where(
-        UserAchievement.user_id == user_id
-    )
+    unlocked_q = select(UserAchievement.achievement_id).where(UserAchievement.user_id == user_id)
     result = await db.execute(
         select(Achievement).where(
             Achievement.is_active == True,  # noqa: E712
@@ -285,9 +282,7 @@ async def check_achievements(
         elif ach.category == "social" and ach.code in ("followers_10", "followers_100"):
             unlocked = followers_count >= ach.requirement_value
 
-        elif ach.category == "milestone" and ach.code in (
-            "level_5", "level_10", "level_25"
-        ):
+        elif ach.category == "milestone" and ach.code in ("level_5", "level_10", "level_25"):
             unlocked = user_xp.level >= ach.requirement_value
 
         elif ach.category == "milestone" and ach.code in ("hours_10", "hours_100"):
@@ -307,32 +302,29 @@ async def check_achievements(
 
 # ===================== LEADERBOARDS =====================
 
-async def get_global_leaderboard(
-    db: AsyncSession, user_id: uuid.UUID
-) -> dict:
+
+async def get_global_leaderboard(db: AsyncSession, user_id: uuid.UUID) -> dict:
     """Top 50 usuarios por total_xp + posición del usuario actual."""
     # Top 50
-    result = await db.execute(
-        select(UserXP)
-        .order_by(UserXP.total_xp.desc())
-        .limit(50)
-    )
+    result = await db.execute(select(UserXP).order_by(UserXP.total_xp.desc()).limit(50))
     entries = list(result.scalars().all())
 
     leaderboard = []
     for i, entry in enumerate(entries):
         user = entry.user
-        leaderboard.append({
-            "rank": i + 1,
-            "user_id": entry.user_id,
-            "username": user.username if user else "unknown",
-            "full_name": user.full_name if user else "Unknown",
-            "avatar_url": user.avatar_url if user else None,
-            "total_xp": entry.total_xp,
-            "weekly_xp": entry.weekly_xp,
-            "level": entry.level,
-            "total_lessons_completed": entry.total_lessons_completed,
-        })
+        leaderboard.append(
+            {
+                "rank": i + 1,
+                "user_id": entry.user_id,
+                "username": user.username if user else "unknown",
+                "full_name": user.full_name if user else "Unknown",
+                "avatar_url": user.avatar_url if user else None,
+                "total_xp": entry.total_xp,
+                "weekly_xp": entry.weekly_xp,
+                "level": entry.level,
+                "total_lessons_completed": entry.total_lessons_completed,
+            }
+        )
 
     # Posición del usuario actual
     my_xp_data = await get_or_create_user_xp(db, user_id)
@@ -348,9 +340,7 @@ async def get_global_leaderboard(
     }
 
 
-async def get_friends_leaderboard(
-    db: AsyncSession, user_id: uuid.UUID
-) -> dict:
+async def get_friends_leaderboard(db: AsyncSession, user_id: uuid.UUID) -> dict:
     """Top 50 entre la gente que el usuario sigue (+ él mismo) por total_xp.
 
     Reutiliza el grafo de follows: ranking solo de seguidos + uno mismo, lo que
@@ -360,39 +350,34 @@ async def get_friends_leaderboard(
     # aparece en su propio ranking de amigos, incluso sin seguir a nadie.
     my_xp_data = await get_or_create_user_xp(db, user_id)
 
-    following_ids = select(Follow.following_id).where(
-        Follow.follower_id == user_id
-    )
+    following_ids = select(Follow.following_id).where(Follow.follower_id == user_id)
     # Conjunto: gente que sigo + yo mismo.
     id_filter = or_(UserXP.user_id.in_(following_ids), UserXP.user_id == user_id)
 
     result = await db.execute(
-        select(UserXP)
-        .where(id_filter)
-        .order_by(UserXP.total_xp.desc())
-        .limit(50)
+        select(UserXP).where(id_filter).order_by(UserXP.total_xp.desc()).limit(50)
     )
     entries = list(result.scalars().all())
 
     leaderboard = []
     for i, entry in enumerate(entries):
         user = entry.user
-        leaderboard.append({
-            "rank": i + 1,
-            "user_id": entry.user_id,
-            "username": user.username if user else "unknown",
-            "full_name": user.full_name if user else "Unknown",
-            "avatar_url": user.avatar_url if user else None,
-            "total_xp": entry.total_xp,
-            "weekly_xp": entry.weekly_xp,
-            "level": entry.level,
-            "total_lessons_completed": entry.total_lessons_completed,
-        })
+        leaderboard.append(
+            {
+                "rank": i + 1,
+                "user_id": entry.user_id,
+                "username": user.username if user else "unknown",
+                "full_name": user.full_name if user else "Unknown",
+                "avatar_url": user.avatar_url if user else None,
+                "total_xp": entry.total_xp,
+                "weekly_xp": entry.weekly_xp,
+                "level": entry.level,
+                "total_lessons_completed": entry.total_lessons_completed,
+            }
+        )
 
     # Posición del usuario actual DENTRO del set de amigos.
-    rank_q = select(func.count()).where(
-        and_(id_filter, UserXP.total_xp > my_xp_data.total_xp)
-    )
+    rank_q = select(func.count()).where(and_(id_filter, UserXP.total_xp > my_xp_data.total_xp))
     rank_result = await db.execute(rank_q)
     my_rank = (rank_result.scalar() or 0) + 1
 
@@ -404,9 +389,7 @@ async def get_friends_leaderboard(
     }
 
 
-async def get_weekly_leaderboard(
-    db: AsyncSession, user_id: uuid.UUID
-) -> dict:
+async def get_weekly_leaderboard(db: AsyncSession, user_id: uuid.UUID) -> dict:
     """Top 50 usuarios por weekly_xp + días restantes para reset."""
     current_monday = get_current_week_monday()
 
@@ -424,17 +407,19 @@ async def get_weekly_leaderboard(
     leaderboard = []
     for i, entry in enumerate(entries):
         user = entry.user
-        leaderboard.append({
-            "rank": i + 1,
-            "user_id": entry.user_id,
-            "username": user.username if user else "unknown",
-            "full_name": user.full_name if user else "Unknown",
-            "avatar_url": user.avatar_url if user else None,
-            "total_xp": entry.total_xp,
-            "weekly_xp": entry.weekly_xp,
-            "level": entry.level,
-            "total_lessons_completed": entry.total_lessons_completed,
-        })
+        leaderboard.append(
+            {
+                "rank": i + 1,
+                "user_id": entry.user_id,
+                "username": user.username if user else "unknown",
+                "full_name": user.full_name if user else "Unknown",
+                "avatar_url": user.avatar_url if user else None,
+                "total_xp": entry.total_xp,
+                "weekly_xp": entry.weekly_xp,
+                "level": entry.level,
+                "total_lessons_completed": entry.total_lessons_completed,
+            }
+        )
 
     # Mi posición semanal
     my_xp_data = await get_or_create_user_xp(db, user_id)
@@ -446,7 +431,7 @@ async def get_weekly_leaderboard(
     my_rank = (rank_result.scalar() or 0) + 1
 
     # Días restantes hasta el próximo lunes
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     next_monday = current_monday + timedelta(days=7)
     days_remaining = (next_monday - today).days
 
@@ -462,8 +447,6 @@ async def get_lesson_leaderboard(
     db: AsyncSession, user_id: uuid.UUID, lesson_id: uuid.UUID
 ) -> dict:
     """Top 20 mejores scores en una lección específica."""
-    from sqlalchemy import desc
-    from sqlalchemy.orm import aliased
 
     # Subconsulta: mejor score por usuario en esta lección
     best_scores_q = (
@@ -500,24 +483,23 @@ async def get_lesson_leaderboard(
     leaderboard = []
     for i, s in enumerate(sessions):
         user = users_map.get(s.user_id)
-        leaderboard.append({
-            "rank": i + 1,
-            "user_id": s.user_id,
-            "username": user.username if user else "unknown",
-            "full_name": user.full_name if user else "Unknown",
-            "avatar_url": user.avatar_url if user else None,
-            "score": s.score,
-            "tempo_accuracy": s.tempo_accuracy,
-            "created_at": s.created_at,
-        })
+        leaderboard.append(
+            {
+                "rank": i + 1,
+                "user_id": s.user_id,
+                "username": user.username if user else "unknown",
+                "full_name": user.full_name if user else "Unknown",
+                "avatar_url": user.avatar_url if user else None,
+                "score": s.score,
+                "tempo_accuracy": s.tempo_accuracy,
+                "created_at": s.created_at,
+            }
+        )
 
     # Mi mejor score
-    my_best_q = (
-        select(func.max(PracticeSession.score))
-        .where(
-            PracticeSession.user_id == user_id,
-            PracticeSession.lesson_id == lesson_id,
-        )
+    my_best_q = select(func.max(PracticeSession.score)).where(
+        PracticeSession.user_id == user_id,
+        PracticeSession.lesson_id == lesson_id,
     )
     my_best_result = await db.execute(my_best_q)
     my_best = my_best_result.scalar() or 0.0
@@ -539,9 +521,7 @@ async def get_lesson_leaderboard(
     }
 
 
-async def get_streaks_leaderboard(
-    db: AsyncSession, user_id: uuid.UUID
-) -> dict:
+async def get_streaks_leaderboard(db: AsyncSession, user_id: uuid.UUID) -> dict:
     """Top 30 usuarios por current_streak."""
     result = await db.execute(
         select(UserXP)
@@ -554,20 +534,20 @@ async def get_streaks_leaderboard(
     leaderboard = []
     for i, entry in enumerate(entries):
         user = entry.user
-        leaderboard.append({
-            "rank": i + 1,
-            "user_id": entry.user_id,
-            "username": user.username if user else "unknown",
-            "full_name": user.full_name if user else "Unknown",
-            "avatar_url": user.avatar_url if user else None,
-            "current_streak": entry.current_streak,
-            "longest_streak": entry.longest_streak,
-        })
+        leaderboard.append(
+            {
+                "rank": i + 1,
+                "user_id": entry.user_id,
+                "username": user.username if user else "unknown",
+                "full_name": user.full_name if user else "Unknown",
+                "avatar_url": user.avatar_url if user else None,
+                "current_streak": entry.current_streak,
+                "longest_streak": entry.longest_streak,
+            }
+        )
 
     my_xp_data = await get_or_create_user_xp(db, user_id)
-    rank_q = select(func.count()).where(
-        UserXP.current_streak > my_xp_data.current_streak
-    )
+    rank_q = select(func.count()).where(UserXP.current_streak > my_xp_data.current_streak)
     rank_result = await db.execute(rank_q)
     my_rank = (rank_result.scalar() or 0) + 1
 
@@ -581,10 +561,10 @@ async def get_streaks_leaderboard(
 
 # ===================== MY XP =====================
 
+
 async def get_my_xp(db: AsyncSession, user_id: uuid.UUID) -> dict:
     """Datos completos de XP del usuario actual."""
     user_xp = await get_or_create_user_xp(db, user_id)
-    today = datetime.now(timezone.utc).date()
     current_monday = get_current_week_monday()
 
     # Resetear weekly si cambió semana
@@ -634,9 +614,8 @@ async def get_my_xp(db: AsyncSession, user_id: uuid.UUID) -> dict:
 
 # ===================== LOGROS =====================
 
-async def get_all_achievements(
-    db: AsyncSession, user_id: uuid.UUID
-) -> dict:
+
+async def get_all_achievements(db: AsyncSession, user_id: uuid.UUID) -> dict:
     """Lista todos los logros del sistema con estado del usuario."""
     # Todos los logros activos
     result = await db.execute(
@@ -650,10 +629,7 @@ async def get_all_achievements(
     unlocked_result = await db.execute(
         select(UserAchievement).where(UserAchievement.user_id == user_id)
     )
-    unlocked_map = {
-        ua.achievement_id: ua.unlocked_at
-        for ua in unlocked_result.scalars().all()
-    }
+    unlocked_map = {ua.achievement_id: ua.unlocked_at for ua in unlocked_result.scalars().all()}
 
     # Datos del usuario para progreso
     user_xp = await get_or_create_user_xp(db, user_id)
@@ -677,21 +653,23 @@ async def get_all_achievements(
         # Calcular progreso
         progress = _get_achievement_progress(ach, user_xp, posts_count, followers_count)
 
-        achievements.append({
-            "id": ach.id,
-            "code": ach.code,
-            "name": ach.name,
-            "description": ach.description,
-            "icon": ach.icon,
-            "category": ach.category,
-            "xp_reward": ach.xp_reward,
-            "rarity": ach.rarity,
-            "requirement_type": ach.requirement_type,
-            "requirement_value": ach.requirement_value,
-            "is_unlocked": is_unlocked,
-            "unlocked_at": unlocked_map.get(ach.id),
-            "progress": progress,
-        })
+        achievements.append(
+            {
+                "id": ach.id,
+                "code": ach.code,
+                "name": ach.name,
+                "description": ach.description,
+                "icon": ach.icon,
+                "category": ach.category,
+                "xp_reward": ach.xp_reward,
+                "rarity": ach.rarity,
+                "requirement_type": ach.requirement_type,
+                "requirement_value": ach.requirement_value,
+                "is_unlocked": is_unlocked,
+                "unlocked_at": unlocked_map.get(ach.id),
+                "progress": progress,
+            }
+        )
 
     return {
         "achievements": achievements,
@@ -716,18 +694,14 @@ def _get_achievement_progress(
         return posts_count
     elif ach.category == "social" and ach.code in ("followers_10", "followers_100"):
         return followers_count
-    elif ach.category == "milestone" and ach.code in (
-        "level_5", "level_10", "level_25"
-    ):
+    elif ach.category == "milestone" and ach.code in ("level_5", "level_10", "level_25"):
         return user_xp.level
     elif ach.category == "milestone" and ach.code in ("hours_10", "hours_100"):
         return int(user_xp.total_practice_minutes)
     return 0
 
 
-async def get_recent_achievements(
-    db: AsyncSession, user_id: uuid.UUID
-) -> list[dict]:
+async def get_recent_achievements(db: AsyncSession, user_id: uuid.UUID) -> list[dict]:
     """Últimos 5 logros desbloqueados por el usuario."""
     result = await db.execute(
         select(UserAchievement)
@@ -757,6 +731,7 @@ async def get_recent_achievements(
 
 # ===================== ADMIN =====================
 
+
 async def get_ranking_stats(db: AsyncSession) -> dict:
     """Estadísticas del sistema de rankings para admin."""
     # Total XP distribuido
@@ -765,20 +740,21 @@ async def get_ranking_stats(db: AsyncSession) -> dict:
     total_xp = total_xp_result.scalar() or 0
 
     # Usuarios con XP (> 0)
-    users_with_xp = (await db.execute(
-        select(func.count()).select_from(UserXP).where(UserXP.total_xp > 0)
-    )).scalar() or 0
+    users_with_xp = (
+        await db.execute(select(func.count()).select_from(UserXP).where(UserXP.total_xp > 0))
+    ).scalar() or 0
 
     # Top usuario por XP (tarjeta destacada)
-    top_row = (await db.execute(
-        select(User.username, UserXP.level, UserXP.total_xp)
-        .join(User, User.id == UserXP.user_id)
-        .order_by(UserXP.total_xp.desc())
-        .limit(1)
-    )).first()
+    top_row = (
+        await db.execute(
+            select(User.username, UserXP.level, UserXP.total_xp)
+            .join(User, User.id == UserXP.user_id)
+            .order_by(UserXP.total_xp.desc())
+            .limit(1)
+        )
+    ).first()
     top_user = (
-        {"username": top_row[0], "level": top_row[1], "total_xp": top_row[2]}
-        if top_row else None
+        {"username": top_row[0], "level": top_row[1], "total_xp": top_row[2]} if top_row else None
     )
 
     # Nivel promedio y máximo
@@ -824,7 +800,7 @@ async def get_ranking_stats(db: AsyncSession) -> dict:
     hardest_achievement = hardest_row[0] if hardest_row else None
 
     # Usuarios con racha activa
-    today = datetime.now(timezone.utc).date()
+    today = datetime.now(UTC).date()
     yesterday = today - timedelta(days=1)
     active_streak_q = select(func.count()).where(
         UserXP.current_streak > 0,
@@ -834,9 +810,8 @@ async def get_ranking_stats(db: AsyncSession) -> dict:
     active_streaks = active_streak_result.scalar() or 0
 
     # Racha más larga activa
-    longest_q = (
-        select(func.max(UserXP.current_streak))
-        .where(UserXP.last_practice_date.in_([today, yesterday]))
+    longest_q = select(func.max(UserXP.current_streak)).where(
+        UserXP.last_practice_date.in_([today, yesterday])
     )
     longest_result = await db.execute(longest_q)
     longest = longest_result.scalar() or 0
@@ -883,9 +858,7 @@ async def update_achievement(
     return achievement
 
 
-async def delete_achievement(
-    db: AsyncSession, achievement_id: uuid.UUID
-) -> bool:
+async def delete_achievement(db: AsyncSession, achievement_id: uuid.UUID) -> bool:
     """Soft delete de un logro (admin)."""
     result = await db.execute(select(Achievement).where(Achievement.id == achievement_id))
     achievement = result.scalar_one_or_none()

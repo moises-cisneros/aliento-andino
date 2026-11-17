@@ -23,6 +23,8 @@ select = [
 ignore = [
     "E501",  # line-too-long (handled by formatter)
     "B008",  # function-call-in-default (FastAPI Depends uses this pattern)
+    "B904",  # raise-from inside except (HTTPException re-raise pattern used across routers)
+    "E712",  # SQLAlchemy needs `col == True/False`; the "fix" would change query semantics
 ]
 
 [tool.ruff.format]
@@ -30,7 +32,10 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101"]  # assert allowed in tests
+"tests/**/*.py" = ["S101", "E402", "N818", "C408", "E741"]  # tests: env setup before imports, fakes, terse names
+"seed_*.py" = ["SIM102", "SIM105", "SIM108", "B007", "B905", "F841", "N802"]  # one-off seed scripts
+"reseed_*.py" = ["SIM105"]  # one-off seed scripts
+"app/utils/sql.py" = ["N801", "UP031"]  # SQLAlchemy `greatest` function element is lowercase by design
 "alembic/**/*.py" = ["E402", "F401"]  # alembic migrations have specific patterns
 
 [tool.mypy]

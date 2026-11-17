@@ -6,10 +6,9 @@ from datetime import datetime
 from sqlalchemy import and_, exists, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.social import Follow, Post
+from app.models.social import Follow, Like, Post
 from app.models.user import User
 from app.services.social_service import _build_post_response, _saved_post_ids
-from app.models.social import Like
 from app.utils.sql import greatest
 
 
@@ -102,10 +101,7 @@ async def get_user_posts(
         liked_post_ids = set(liked_result.scalars().all())
 
     saved_post_ids = await _saved_post_ids(db, current_user_id, post_ids)
-    items = [
-        _build_post_response(p, p.id in liked_post_ids, p.id in saved_post_ids)
-        for p in posts
-    ]
+    items = [_build_post_response(p, p.id in liked_post_ids, p.id in saved_post_ids) for p in posts]
     next_cursor = posts[-1].created_at.isoformat() if posts and has_more else None
 
     return {"items": items, "next_cursor": next_cursor, "has_more": has_more}
@@ -139,14 +135,14 @@ async def toggle_follow(
         # Unfollow
         await db.delete(existing)
         await db.execute(
-            update(User).where(User.id == following_id).values(
-                followers_count=greatest(User.followers_count - 1, 0)
-            )
+            update(User)
+            .where(User.id == following_id)
+            .values(followers_count=greatest(User.followers_count - 1, 0))
         )
         await db.execute(
-            update(User).where(User.id == follower_id).values(
-                following_count=greatest(User.following_count - 1, 0)
-            )
+            update(User)
+            .where(User.id == follower_id)
+            .values(following_count=greatest(User.following_count - 1, 0))
         )
         await db.commit()
         await db.refresh(target_user)
@@ -156,23 +152,22 @@ async def toggle_follow(
         follow = Follow(follower_id=follower_id, following_id=following_id)
         db.add(follow)
         await db.execute(
-            update(User).where(User.id == following_id).values(
-                followers_count=User.followers_count + 1
-            )
+            update(User)
+            .where(User.id == following_id)
+            .values(followers_count=User.followers_count + 1)
         )
         await db.execute(
-            update(User).where(User.id == follower_id).values(
-                following_count=User.following_count + 1
-            )
+            update(User)
+            .where(User.id == follower_id)
+            .values(following_count=User.following_count + 1)
         )
         await db.commit()
         await db.refresh(target_user)
 
         # Notificar al usuario seguido
         from app.services import notification_dispatcher
-        follower_result = await db.execute(
-            select(User.username).where(User.id == follower_id)
-        )
+
+        follower_result = await db.execute(select(User.username).where(User.id == follower_id))
         follower_username = follower_result.scalar() or "Alguien"
         await notification_dispatcher.notify_user(
             db,
@@ -208,9 +203,7 @@ async def get_followers(
     limit: int = 20,
 ) -> dict:
     """Obtener lista de seguidores de un usuario."""
-    count_query = (
-        select(func.count()).select_from(Follow).where(Follow.following_id == user_id)
-    )
+    count_query = select(func.count()).select_from(Follow).where(Follow.following_id == user_id)
     total = (await db.execute(count_query)).scalar() or 0
 
     offset = (page - 1) * limit
@@ -223,9 +216,7 @@ async def get_followers(
     )
     follows = list(result.scalars().all())
 
-    followed = await _followed_set(
-        db, current_user_id, [f.follower.id for f in follows]
-    )
+    followed = await _followed_set(db, current_user_id, [f.follower.id for f in follows])
     items = [
         {
             "id": str(f.follower.id),
@@ -249,9 +240,7 @@ async def get_following(
     limit: int = 20,
 ) -> dict:
     """Obtener lista de usuarios que sigue."""
-    count_query = (
-        select(func.count()).select_from(Follow).where(Follow.follower_id == user_id)
-    )
+    count_query = select(func.count()).select_from(Follow).where(Follow.follower_id == user_id)
     total = (await db.execute(count_query)).scalar() or 0
 
     offset = (page - 1) * limit
@@ -264,9 +253,7 @@ async def get_following(
     )
     follows = list(result.scalars().all())
 
-    followed = await _followed_set(
-        db, current_user_id, [f.following.id for f in follows]
-    )
+    followed = await _followed_set(db, current_user_id, [f.following.id for f in follows])
     items = [
         {
             "id": str(f.following.id),
@@ -322,10 +309,7 @@ async def get_user_media(
         liked_post_ids = set(liked_result.scalars().all())
 
     saved_post_ids = await _saved_post_ids(db, current_user_id, post_ids)
-    items = [
-        _build_post_response(p, p.id in liked_post_ids, p.id in saved_post_ids)
-        for p in posts
-    ]
+    items = [_build_post_response(p, p.id in liked_post_ids, p.id in saved_post_ids) for p in posts]
     next_cursor = posts[-1].created_at.isoformat() if posts and has_more else None
 
     return {"items": items, "next_cursor": next_cursor, "has_more": has_more}
@@ -335,9 +319,7 @@ async def get_follow_suggestions(
     db: AsyncSession, current_user_id: uuid.UUID, limit: int = 10
 ) -> list[dict]:
     """Usuarios sugeridos para seguir (no seguidos, ordenados por popularidad)."""
-    following_subq = select(Follow.following_id).where(
-        Follow.follower_id == current_user_id
-    )
+    following_subq = select(Follow.following_id).where(Follow.follower_id == current_user_id)
     result = await db.execute(
         select(User)
         .where(
@@ -383,11 +365,7 @@ async def search_users(
 
     offset = (page - 1) * limit
     result = await db.execute(
-        select(User)
-        .where(where_clause)
-        .order_by(User.username)
-        .offset(offset)
-        .limit(limit)
+        select(User).where(where_clause).order_by(User.username).offset(offset).limit(limit)
     )
     users = list(result.scalars().all())
 
@@ -438,13 +416,9 @@ async def unban_user(
     return True
 
 
-async def admin_set_admin(
-    db: AsyncSession, user_id: uuid.UUID, is_admin: bool
-) -> dict | None:
+async def admin_set_admin(db: AsyncSession, user_id: uuid.UUID, is_admin: bool) -> dict | None:
     """Da o quita el rol de admin a un usuario."""
-    user = (
-        await db.execute(select(User).where(User.id == user_id))
-    ).scalar_one_or_none()
+    user = (await db.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
     if not user:
         return None
     user.is_admin = is_admin
@@ -452,15 +426,11 @@ async def admin_set_admin(
     return {"id": str(user.id), "is_admin": user.is_admin}
 
 
-async def admin_get_user_detail(
-    db: AsyncSession, user_id: uuid.UUID
-) -> dict | None:
+async def admin_get_user_detail(db: AsyncSession, user_id: uuid.UUID) -> dict | None:
     """Detalle de un usuario para el admin: datos + actividad + suscripción."""
     from app.models.lesson import PracticeSession
 
-    user = (
-        await db.execute(select(User).where(User.id == user_id))
-    ).scalar_one_or_none()
+    user = (await db.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
     if not user:
         return None
 
@@ -468,13 +438,9 @@ async def admin_get_user_detail(
     sessions = (
         await db.execute(select(func.count()).select_from(PracticeSession).where(where))
     ).scalar() or 0
-    avg_score = (
-        await db.execute(select(func.avg(PracticeSession.score)).where(where))
-    ).scalar()
+    avg_score = (await db.execute(select(func.avg(PracticeSession.score)).where(where))).scalar()
     distinct_lessons = (
-        await db.execute(
-            select(func.count(func.distinct(PracticeSession.lesson_id))).where(where)
-        )
+        await db.execute(select(func.count(func.distinct(PracticeSession.lesson_id))).where(where))
     ).scalar() or 0
     last_active = (
         await db.execute(select(func.max(PracticeSession.created_at)).where(where))
@@ -535,17 +501,11 @@ async def admin_list_users(
 
     where = and_(*conditions) if conditions else True
 
-    total = (
-        await db.execute(select(func.count()).select_from(User).where(where))
-    ).scalar() or 0
+    total = (await db.execute(select(func.count()).select_from(User).where(where))).scalar() or 0
 
     offset = (page - 1) * limit
     result = await db.execute(
-        select(User)
-        .where(where)
-        .order_by(User.created_at.desc())
-        .offset(offset)
-        .limit(limit)
+        select(User).where(where).order_by(User.created_at.desc()).offset(offset).limit(limit)
     )
     users = list(result.scalars().all())
 

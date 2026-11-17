@@ -3,6 +3,7 @@
 try:
     import pytest
 except ImportError:
+
     class _MockMark:
         @staticmethod
         def asyncio(fn):
@@ -14,17 +15,22 @@ except ImportError:
         @staticmethod
         def raises(expected_exception):
             import contextlib
+
             @contextlib.contextmanager
             def _ctx():
                 class Holder:
                     value = None
+
                 h = Holder()
                 try:
                     yield h
                 except expected_exception as e:
                     h.value = e
                 else:
-                    raise AssertionError(f"Expected {expected_exception} but no exception was raised")
+                    raise AssertionError(
+                        f"Expected {expected_exception} but no exception was raised"
+                    )
+
             return _ctx()
 
     pytest = _MockPytest()

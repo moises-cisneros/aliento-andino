@@ -2,7 +2,7 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -23,6 +23,7 @@ router = APIRouter(tags=["Rankings y Logros"])
 
 
 # ===================== LEADERBOARDS =====================
+
 
 @router.get("/api/rankings/global", response_model=GlobalLeaderboardResponse)
 async def get_global_leaderboard(
@@ -77,6 +78,7 @@ async def get_streaks_leaderboard(
 
 # ===================== MY XP =====================
 
+
 @router.get("/api/rankings/my-xp", response_model=MyXPResponse)
 async def get_my_xp(
     db: AsyncSession = Depends(get_db),
@@ -88,6 +90,7 @@ async def get_my_xp(
 
 
 # ===================== LOGROS =====================
+
 
 @router.get("/api/rankings/achievements", response_model=AchievementsListResponse)
 async def get_achievements(

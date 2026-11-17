@@ -3,11 +3,11 @@
 import logging
 import secrets
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
+from fastapi import HTTPException, status
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
-from fastapi import HTTPException, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -37,11 +37,13 @@ async def _create_tokens(user_id: uuid.UUID, db: AsyncSession) -> tuple[str, str
     """Crear access + refresh token y almacenar el refresh en DB para revocación."""
     access_token = create_access_token(user_id)
     refresh_token, jti = create_refresh_token(user_id)
-    db.add(RefreshToken(
-        token_jti=jti,
-        user_id=user_id,
-        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire_days),
-    ))
+    db.add(
+        RefreshToken(
+            token_jti=jti,
+            user_id=user_id,
+            expires_at=datetime.now(UTC) + timedelta(days=settings.refresh_token_expire_days),
+        )
+    )
     await db.flush()
     return access_token, refresh_token
 
@@ -60,9 +62,7 @@ async def register_user(data: RegisterRequest, db: AsyncSession) -> tuple[User, 
         )
 
     # Verificar que el username no esté en uso
-    existing_username = await db.execute(
-        select(User).where(User.username == data.username)
-    )
+    existing_username = await db.execute(select(User).where(User.username == data.username))
     if existing_username.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -173,9 +173,7 @@ async def google_auth(data: GoogleAuthRequest, db: AsyncSession) -> tuple[User, 
         # Asegurar que el username sea único
         counter = 1
         for _ in range(100):
-            existing = await db.execute(
-                select(User).where(User.username == username)
-            )
+            existing = await db.execute(select(User).where(User.username == username))
             if existing.scalar_one_or_none() is None:
                 break
             username = f"{base_username}_{counter}"
@@ -249,9 +247,7 @@ async def refresh_access_token(refresh_token_str: str, db: AsyncSession) -> tupl
         )
 
     # Verificar que el refresh token no esté revocado
-    result_token = await db.execute(
-        select(RefreshToken).where(RefreshToken.token_jti == jti)
-    )
+    result_token = await db.execute(select(RefreshToken).where(RefreshToken.token_jti == jti))
     stored_token = result_token.scalar_one_or_none()
 
     if stored_token is None or stored_token.is_revoked:
@@ -298,7 +294,7 @@ async def forgot_password(email: str, db: AsyncSession) -> None:
         # Generar código numérico de 6 dígitos
         reset_code = f"{secrets.randbelow(1_000_000):06d}"
         user.password_reset_token = reset_code
-        user.password_reset_expires = datetime.now(timezone.utc) + timedelta(minutes=15)
+        user.password_reset_expires = datetime.now(UTC) + timedelta(minutes=15)
 
         await send_password_reset_email(user.email, reset_code)
         logger.info("Código de reset generado para: %s", email)
@@ -307,13 +303,9 @@ async def forgot_password(email: str, db: AsyncSession) -> None:
         logger.info("Solicitud de reset para email no encontrado o Google: %s", email)
 
 
-async def reset_password(
-    data: ResetPasswordRequest, db: AsyncSession
-) -> tuple[User, str, str]:
+async def reset_password(data: ResetPasswordRequest, db: AsyncSession) -> tuple[User, str, str]:
     """Resetear contraseña y retornar tokens para auto-login."""
-    result = await db.execute(
-        select(User).where(User.password_reset_token == data.token)
-    )
+    result = await db.execute(select(User).where(User.password_reset_token == data.token))
     user = result.scalar_one_or_none()
 
     if user is None:
@@ -323,10 +315,7 @@ async def reset_password(
         )
 
     # Verificar que el token no haya expirado
-    if (
-        user.password_reset_expires is None
-        or user.password_reset_expires < datetime.now(timezone.utc)
-    ):
+    if user.password_reset_expires is None or user.password_reset_expires < datetime.now(UTC):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Token de reset expirado",
@@ -348,18 +337,14 @@ async def reset_password(
     return user, access_token, refresh_token
 
 
-async def update_user_profile(
-    user: User, data: UpdateProfileRequest, db: AsyncSession
-) -> User:
+async def update_user_profile(user: User, data: UpdateProfileRequest, db: AsyncSession) -> User:
     """Actualizar perfil del usuario con los campos proporcionados."""
     update_data = data.model_dump(exclude_unset=True)
 
     # Verificar unicidad del username si se está actualizando
     if "username" in update_data and update_data["username"] is not None:
         existing = await db.execute(
-            select(User).where(
-                User.username == update_data["username"], User.id != user.id
-            )
+            select(User).where(User.username == update_data["username"], User.id != user.id)
         )
         if existing.scalar_one_or_none():
             raise HTTPException(
@@ -379,9 +364,7 @@ async def update_user_profile(
     return user
 
 
-async def change_password(
-    user: User, data: ChangePasswordRequest, db: AsyncSession
-) -> None:
+async def change_password(user: User, data: ChangePasswordRequest, db: AsyncSession) -> None:
     """Cambiar la contraseña verificando la actual."""
     if not user.hashed_password:
         raise HTTPException(
@@ -398,9 +381,7 @@ async def change_password(
     logger.info("Contraseña cambiada para: %s", user.email)
 
 
-async def delete_account(
-    user: User, password: str | None, db: AsyncSession
-) -> None:
+async def delete_account(user: User, password: str | None, db: AsyncSession) -> None:
     """Eliminar definitivamente la cuenta y todos sus datos.
 
     Para cuentas locales exige la contraseña actual. El borrado de datos
@@ -408,7 +389,7 @@ async def delete_account(
     resuelve la cascada de FKs (ondelete=CASCADE); las lecciones creadas por el
     usuario quedan con created_by=NULL (ondelete=SET NULL).
     """
-    if user.hashed_password:
+    if user.hashed_password:  # noqa: SIM102
         if not password or not verify_password(password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

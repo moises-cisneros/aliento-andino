@@ -5,11 +5,12 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-
 # ===================== RANKING ENTRIES =====================
+
 
 class RankingEntry(BaseModel):
     """Entrada de leaderboard global/semanal."""
+
     rank: int
     user_id: uuid.UUID
     username: str
@@ -23,6 +24,7 @@ class RankingEntry(BaseModel):
 
 class StreakRankingEntry(BaseModel):
     """Entrada de leaderboard de rachas."""
+
     rank: int
     user_id: uuid.UUID
     username: str
@@ -34,6 +36,7 @@ class StreakRankingEntry(BaseModel):
 
 class LessonRankingEntry(BaseModel):
     """Entrada de ranking por lección."""
+
     rank: int
     user_id: uuid.UUID
     username: str
@@ -46,8 +49,10 @@ class LessonRankingEntry(BaseModel):
 
 # ===================== LEADERBOARD RESPONSES =====================
 
+
 class GlobalLeaderboardResponse(BaseModel):
     """Respuesta del leaderboard global."""
+
     leaderboard: list[RankingEntry]
     my_rank: int
     my_xp: int
@@ -56,6 +61,7 @@ class GlobalLeaderboardResponse(BaseModel):
 
 class WeeklyLeaderboardResponse(BaseModel):
     """Respuesta del leaderboard semanal."""
+
     leaderboard: list[RankingEntry]
     my_rank: int
     my_weekly_xp: int
@@ -64,6 +70,7 @@ class WeeklyLeaderboardResponse(BaseModel):
 
 class LessonLeaderboardResponse(BaseModel):
     """Respuesta del ranking por lección."""
+
     leaderboard: list[LessonRankingEntry]
     my_best_score: float
     my_rank: int
@@ -71,6 +78,7 @@ class LessonLeaderboardResponse(BaseModel):
 
 class StreakLeaderboardResponse(BaseModel):
     """Respuesta del leaderboard de rachas."""
+
     leaderboard: list[StreakRankingEntry]
     my_rank: int = 0
     my_streak: int
@@ -79,8 +87,10 @@ class StreakLeaderboardResponse(BaseModel):
 
 # ===================== USER XP =====================
 
+
 class MyXPResponse(BaseModel):
     """Datos completos de XP del usuario actual."""
+
     total_xp: int = 0
     weekly_xp: int = 0
     level: int = 1
@@ -101,8 +111,10 @@ class MyXPResponse(BaseModel):
 
 # ===================== ACHIEVEMENTS =====================
 
+
 class AchievementResponse(BaseModel):
     """Logro con estado del usuario."""
+
     id: uuid.UUID
     code: str
     name: str
@@ -120,6 +132,7 @@ class AchievementResponse(BaseModel):
 
 class AchievementsListResponse(BaseModel):
     """Lista de todos los logros con estado del usuario."""
+
     achievements: list[AchievementResponse]
     total_unlocked: int = 0
     total_available: int = 0
@@ -127,6 +140,7 @@ class AchievementsListResponse(BaseModel):
 
 class UserAchievementResponse(BaseModel):
     """Logro desbloqueado por el usuario (recientes)."""
+
     id: uuid.UUID
     achievement_id: uuid.UUID
     code: str
@@ -141,8 +155,10 @@ class UserAchievementResponse(BaseModel):
 
 # ===================== ADMIN =====================
 
+
 class AchievementCreate(BaseModel):
     """Crear nuevo logro (admin)."""
+
     code: str = Field(min_length=1, max_length=50)
     name: str = Field(min_length=1, max_length=100)
     description: str = Field(min_length=1, max_length=500)
@@ -156,6 +172,7 @@ class AchievementCreate(BaseModel):
 
 class AchievementUpdate(BaseModel):
     """Editar logro (admin)."""
+
     name: str | None = None
     description: str | None = None
     icon: str | None = None
@@ -169,6 +186,7 @@ class AchievementUpdate(BaseModel):
 
 class AdminAchievementResponse(BaseModel):
     """Logro para admin (incluye stats)."""
+
     id: uuid.UUID
     code: str
     name: str
@@ -187,6 +205,7 @@ class AdminAchievementResponse(BaseModel):
 
 class TopUserSummary(BaseModel):
     """Usuario con más XP (para la tarjeta destacada de Rankings)."""
+
     username: str
     level: int = 1
     total_xp: int = 0
@@ -194,6 +213,7 @@ class TopUserSummary(BaseModel):
 
 class RankingStatsResponse(BaseModel):
     """Estadísticas del sistema de rankings (admin)."""
+
     total_xp_distributed: int = 0
     # Alias que consume el front (mismo valor que total_xp_distributed).
     total_xp_awarded: int = 0
@@ -210,8 +230,10 @@ class RankingStatsResponse(BaseModel):
 
 # ===================== PRACTICE SUBMIT XP EXTENSION =====================
 
+
 class XPGainResult(BaseModel):
     """Resultado de XP ganado después de practice submit."""
+
     xp_earned: int = 0
     new_level: bool = False
     current_level: int = 1

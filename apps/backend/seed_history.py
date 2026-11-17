@@ -22,7 +22,7 @@ import asyncio
 import os
 import random
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy import delete, func, select, text
 
@@ -56,12 +56,12 @@ from seed_all import (
 )
 
 # ── Parámetros de volumen / profundidad ──────────────────────────────────
-NEW_USERS = 230            # usuarios nuevos a crear (además de admin + emutest)
-DAYS = 365                 # profundidad histórica
+NEW_USERS = 230  # usuarios nuevos a crear (además de admin + emutest)
+DAYS = 365  # profundidad histórica
 SESSIONS_PER_USER = (8, 60)  # rango por usuario (según actividad)
-FEEDBACK_RATE = 0.35       # % de prácticas con ai_feedback (sobre todo premium)
-TUTOR_CALLS = 600          # llamadas al tutor Vivi (ai_usage kind=tutor)
-AUDIT_ENTRIES = 320        # entradas de auditoría
+FEEDBACK_RATE = 0.35  # % de prácticas con ai_feedback (sobre todo premium)
+TUTOR_CALLS = 600  # llamadas al tutor Vivi (ai_usage kind=tutor)
+AUDIT_ENTRIES = 320  # entradas de auditoría
 PRESERVE_EMAILS = {"emutest@pv.com"}
 
 # Modo de ejecución:
@@ -72,16 +72,28 @@ MODE = os.getenv("SEED_MODE", "reset").lower()
 DEMO_DOMAIN = "demo.aliento-andino.com"
 EMAIL_DOMAIN = DEMO_DOMAIN if MODE == "append" else "example.com"
 
-NOW = datetime.now(timezone.utc)
+NOW = datetime.now(UTC)
 TODAY = date.today()
 WEEK_START = TODAY - timedelta(days=TODAY.weekday())  # lunes de esta semana
 
 PLAN_DAYS = {"monthly": 30, "annual": 365}
 
 HASHTAGS = [
-    "piano", "practica", "escalas", "acordes", "jazz", "clasica", "chopin",
-    "principiante", "ritmo", "melodia", "progreso", "motivacion", "teoria",
-    "improvisacion", "tecnica",
+    "piano",
+    "practica",
+    "escalas",
+    "acordes",
+    "jazz",
+    "clasica",
+    "chopin",
+    "principiante",
+    "ritmo",
+    "melodia",
+    "progreso",
+    "motivacion",
+    "teoria",
+    "improvisacion",
+    "tecnica",
 ]
 
 AI_FEEDBACK_SAMPLES = [
@@ -122,7 +134,7 @@ NOTIF_TYPES = [
 def weighted_backdate(max_days: int = DAYS) -> datetime:
     """Fecha en los últimos max_days con FUERTE sesgo a lo reciente."""
     r = random.random()
-    days = int(max_days * (r ** 2.0))  # más densidad cerca de hoy
+    days = int(max_days * (r**2.0))  # más densidad cerca de hoy
     # leve boost de fin de semana
     dt = NOW - timedelta(
         days=days,
@@ -135,7 +147,7 @@ def weighted_backdate(max_days: int = DAYS) -> datetime:
 def date_after(start: datetime, max_days: int = DAYS) -> datetime:
     """Fecha entre `start` y ahora, con sesgo a lo reciente (>= start)."""
     if start.tzinfo is None:
-        start = start.replace(tzinfo=timezone.utc)
+        start = start.replace(tzinfo=UTC)
     span = (NOW - start).total_seconds()
     if span <= 0:
         return NOW
@@ -153,15 +165,26 @@ async def reset_demo_data(db) -> None:
     )
     # Borrar tablas hijas (todas, se regeneran).
     for model in (
-        AiUsageLog, AdminAuditLog, Notification, NotificationToken,
-        SavedPost, CommentLike, PostHashtag, Like, Comment, Report,
-        Post, Follow, UserAchievement, UserXP, PracticeSession, Hashtag,
+        AiUsageLog,
+        AdminAuditLog,
+        Notification,
+        NotificationToken,
+        SavedPost,
+        CommentLike,
+        PostHashtag,
+        Like,
+        Comment,
+        Report,
+        Post,
+        Follow,
+        UserAchievement,
+        UserXP,
+        PracticeSession,
+        Hashtag,
     ):
         await db.execute(delete(model))
     # Refresh tokens de los usuarios a borrar (evita FK).
-    await db.execute(
-        delete(RefreshToken).where(RefreshToken.user_id.in_(to_delete_subq))
-    )
+    await db.execute(delete(RefreshToken).where(RefreshToken.user_id.in_(to_delete_subq)))
     # Finalmente, los usuarios de demo.
     res = await db.execute(
         delete(User).where(
@@ -222,13 +245,23 @@ async def seed_users(db) -> list[User]:
     for u in random.sample(users, num_ban):
         u.is_banned = True
         u.ban_reason = random.choice(
-            ["Spam reiterado", "Lenguaje ofensivo", "Acoso a otros usuarios",
-             "Contenido inapropiado", "Suplantación de identidad"]
+            [
+                "Spam reiterado",
+                "Lenguaje ofensivo",
+                "Acoso a otros usuarios",
+                "Contenido inapropiado",
+                "Suplantación de identidad",
+            ]
         )
 
     await db.commit()
-    premium = sum(1 for u in users if u.subscription_status == "premium" and
-                  u.subscription_expires_at and u.subscription_expires_at > NOW)
+    premium = sum(
+        1
+        for u in users
+        if u.subscription_status == "premium"
+        and u.subscription_expires_at
+        and u.subscription_expires_at > NOW
+    )
     print(f"   ✅ {len(users)} usuarios | premium activos: {premium} | baneados: {num_ban}")
     return users
 
@@ -344,22 +377,36 @@ async def seed_ai_usage(db, sessions, users) -> None:
             continue
         inp = random.randint(380, 620)
         out = random.randint(60, 160)
-        rows.append(AiUsageLog(
-            id=uuid.uuid4(), kind="practice_feedback", model="gemini-2.5-flash",
-            input_tokens=inp, output_tokens=out, total_tokens=inp + out,
-            user_id=s.user_id, created_at=s.created_at,
-        ))
+        rows.append(
+            AiUsageLog(
+                id=uuid.uuid4(),
+                kind="practice_feedback",
+                model="gemini-2.5-flash",
+                input_tokens=inp,
+                output_tokens=out,
+                total_tokens=inp + out,
+                user_id=s.user_id,
+                created_at=s.created_at,
+            )
+        )
     # Llamadas al tutor Vivi.
     active = [u for u in users if not u.is_banned]
     for _ in range(TUTOR_CALLS):
         u = random.choice(active)
         inp = random.randint(700, 1600)
         out = random.randint(120, 420)
-        rows.append(AiUsageLog(
-            id=uuid.uuid4(), kind="tutor", model="gemini-2.5-flash",
-            input_tokens=inp, output_tokens=out, total_tokens=inp + out,
-            user_id=u.id, created_at=date_after(u.created_at, DAYS),
-        ))
+        rows.append(
+            AiUsageLog(
+                id=uuid.uuid4(),
+                kind="tutor",
+                model="gemini-2.5-flash",
+                input_tokens=inp,
+                output_tokens=out,
+                total_tokens=inp + out,
+                user_id=u.id,
+                created_at=date_after(u.created_at, DAYS),
+            )
+        )
     db.add_all(rows)
     await db.commit()
     print(f"   ✅ {len(rows)} registros de uso de IA")
@@ -390,18 +437,27 @@ async def seed_xp(db, users, sessions) -> None:
         else:
             streak = 0
         weekly = sum(
-            35 for s in us
-            if (s.created_at.date() if s.created_at else TODAY) >= WEEK_START
+            35 for s in us if (s.created_at.date() if s.created_at else TODAY) >= WEEK_START
         )
-        records.append(UserXP(
-            id=uuid.uuid4(), user_id=u.id, total_xp=total_xp,
-            weekly_xp=min(weekly, total_xp), level=level,
-            current_streak=streak, longest_streak=max(streak, random.randint(streak, streak + 20)),
-            total_practice_sessions=n, total_practice_minutes=minutes,
-            total_lessons_completed=lessons_done, total_perfect_scores=perfects,
-            average_score=avg, last_practice_date=last_date,
-            week_start_date=WEEK_START, created_at=u.created_at,
-        ))
+        records.append(
+            UserXP(
+                id=uuid.uuid4(),
+                user_id=u.id,
+                total_xp=total_xp,
+                weekly_xp=min(weekly, total_xp),
+                level=level,
+                current_streak=streak,
+                longest_streak=max(streak, random.randint(streak, streak + 20)),
+                total_practice_sessions=n,
+                total_practice_minutes=minutes,
+                total_lessons_completed=lessons_done,
+                total_perfect_scores=perfects,
+                average_score=avg,
+                last_practice_date=last_date,
+                week_start_date=WEEK_START,
+                created_at=u.created_at,
+            )
+        )
         u.xp_level = level
     db.add_all(records)
     await db.commit()
@@ -411,10 +467,17 @@ async def seed_xp(db, users, sessions) -> None:
 # ── Logros desbloqueados ─────────────────────────────────────────────────
 async def seed_achievements(db, users) -> None:
     print("🏆 Desbloqueando logros...")
-    achs = list((await db.execute(
-        select(Achievement).where(Achievement.is_active.is_(True))
-        .order_by(Achievement.requirement_value.asc())
-    )).scalars().all())
+    achs = list(
+        (
+            await db.execute(
+                select(Achievement)
+                .where(Achievement.is_active.is_(True))
+                .order_by(Achievement.requirement_value.asc())
+            )
+        )
+        .scalars()
+        .all()
+    )
     if not achs:
         print("   ⚠️  No hay logros. Corré seed_achievements.py primero. (saltando)")
         return
@@ -428,10 +491,14 @@ async def seed_achievements(db, users) -> None:
         k = min(len(achs), int(x.total_practice_sessions / 6) + random.randint(0, 3))
         for a in achs[:k]:
             unlocked = date_after(u.created_at, DAYS)
-            rows.append(UserAchievement(
-                id=uuid.uuid4(), user_id=u.id, achievement_id=a.id,
-                unlocked_at=unlocked,
-            ))
+            rows.append(
+                UserAchievement(
+                    id=uuid.uuid4(),
+                    user_id=u.id,
+                    achievement_id=a.id,
+                    unlocked_at=unlocked,
+                )
+            )
     db.add_all(rows)
     await db.commit()
     print(f"   ✅ {len(rows)} logros desbloqueados")
@@ -443,8 +510,9 @@ async def seed_social(db, users):
     active = [u for u in users if not u.is_banned]
 
     # Hashtags
-    tag_objs = {t: Hashtag(id=uuid.uuid4(), tag=t, created_at=weighted_backdate(DAYS))
-                for t in HASHTAGS}
+    tag_objs = {
+        t: Hashtag(id=uuid.uuid4(), tag=t, created_at=weighted_backdate(DAYS)) for t in HASHTAGS
+    }
     db.add_all(tag_objs.values())
 
     # Follows
@@ -457,10 +525,14 @@ async def seed_social(db, users):
             if key in follows:
                 continue
             follows.add(key)
-            follow_rows.append(Follow(
-                id=uuid.uuid4(), follower_id=u.id, following_id=tgt.id,
-                created_at=date_after(max(u.created_at, tgt.created_at), DAYS),
-            ))
+            follow_rows.append(
+                Follow(
+                    id=uuid.uuid4(),
+                    follower_id=u.id,
+                    following_id=tgt.id,
+                    created_at=date_after(max(u.created_at, tgt.created_at), DAYS),
+                )
+            )
     db.add_all(follow_rows)
 
     # Posts (60% de los usuarios postean, 1-6 c/u); ~30% con imagen.
@@ -472,14 +544,21 @@ async def seed_social(db, users):
         for _ in range(random.randint(1, 6)):
             has_media = random.random() < 0.30
             media_seed += 1
-            posts.append(Post(
-                id=uuid.uuid4(), user_id=u.id,
-                content=random.choice(POST_CONTENTS),
-                post_type="image" if has_media else "text",
-                media_url=f"https://picsum.photos/seed/pv{media_seed}/800/600" if has_media else None,
-                media_thumbnail_url=f"https://picsum.photos/seed/pv{media_seed}/320/240" if has_media else None,
-                created_at=date_after(u.created_at, DAYS),
-            ))
+            posts.append(
+                Post(
+                    id=uuid.uuid4(),
+                    user_id=u.id,
+                    content=random.choice(POST_CONTENTS),
+                    post_type="image" if has_media else "text",
+                    media_url=f"https://picsum.photos/seed/pv{media_seed}/800/600"
+                    if has_media
+                    else None,
+                    media_thumbnail_url=f"https://picsum.photos/seed/pv{media_seed}/320/240"
+                    if has_media
+                    else None,
+                    created_at=date_after(u.created_at, DAYS),
+                )
+            )
     db.add_all(posts)
     # Persistir padres (hashtags, follows, posts) antes de sus hijos (FK).
     await db.flush()
@@ -490,10 +569,14 @@ async def seed_social(db, users):
         if random.random() > 0.45:
             continue
         for t in random.sample(HASHTAGS, random.randint(1, 3)):
-            ph_rows.append(PostHashtag(
-                id=uuid.uuid4(), post_id=p.id, hashtag_id=tag_objs[t].id,
-                created_at=p.created_at,
-            ))
+            ph_rows.append(
+                PostHashtag(
+                    id=uuid.uuid4(),
+                    post_id=p.id,
+                    hashtag_id=tag_objs[t].id,
+                    created_at=p.created_at,
+                )
+            )
     db.add_all(ph_rows)
 
     # Comments (cada post 0-6) top-level
@@ -503,7 +586,9 @@ async def seed_social(db, users):
         for _ in range(random.randint(0, 6)):
             cu = random.choice(active)
             c = Comment(
-                id=uuid.uuid4(), post_id=p.id, user_id=cu.id,
+                id=uuid.uuid4(),
+                post_id=p.id,
+                user_id=cu.id,
                 content=random.choice(COMMENT_CONTENTS),
                 created_at=date_after(p.created_at, DAYS),
             )
@@ -517,12 +602,16 @@ async def seed_social(db, users):
             continue
         for _ in range(random.randint(1, 2)):
             ru = random.choice(active)
-            replies.append(Comment(
-                id=uuid.uuid4(), post_id=c.post_id, user_id=ru.id,
-                parent_comment_id=c.id,
-                content=random.choice(COMMENT_CONTENTS),
-                created_at=date_after(c.created_at, DAYS),
-            ))
+            replies.append(
+                Comment(
+                    id=uuid.uuid4(),
+                    post_id=c.post_id,
+                    user_id=ru.id,
+                    parent_comment_id=c.id,
+                    content=random.choice(COMMENT_CONTENTS),
+                    created_at=date_after(c.created_at, DAYS),
+                )
+            )
     comments.extend(replies)
     db.add_all(comments)
     # Persistir comments antes de comment_likes (FK).
@@ -538,10 +627,14 @@ async def seed_social(db, users):
             if key in seen:
                 continue
             seen.add(key)
-            like_rows.append(Like(
-                id=uuid.uuid4(), post_id=p.id, user_id=lu.id,
-                created_at=date_after(p.created_at, DAYS),
-            ))
+            like_rows.append(
+                Like(
+                    id=uuid.uuid4(),
+                    post_id=p.id,
+                    user_id=lu.id,
+                    created_at=date_after(p.created_at, DAYS),
+                )
+            )
     db.add_all(like_rows)
 
     # Comment likes (UNIQUE comment+user)
@@ -553,10 +646,14 @@ async def seed_social(db, users):
             if key in seen_cl:
                 continue
             seen_cl.add(key)
-            cl_rows.append(CommentLike(
-                id=uuid.uuid4(), comment_id=c.id, user_id=lu.id,
-                created_at=date_after(c.created_at, DAYS),
-            ))
+            cl_rows.append(
+                CommentLike(
+                    id=uuid.uuid4(),
+                    comment_id=c.id,
+                    user_id=lu.id,
+                    created_at=date_after(c.created_at, DAYS),
+                )
+            )
     db.add_all(cl_rows)
 
     # Saved posts (UNIQUE user+post)
@@ -568,16 +665,22 @@ async def seed_social(db, users):
             if key in seen_sp:
                 continue
             seen_sp.add(key)
-            sp_rows.append(SavedPost(
-                id=uuid.uuid4(), user_id=u.id, post_id=p.id,
-                created_at=date_after(p.created_at, DAYS),
-            ))
+            sp_rows.append(
+                SavedPost(
+                    id=uuid.uuid4(),
+                    user_id=u.id,
+                    post_id=p.id,
+                    created_at=date_after(p.created_at, DAYS),
+                )
+            )
     db.add_all(sp_rows)
 
     await db.commit()
-    print(f"   ✅ follows={len(follow_rows)} posts={len(posts)} comments={len(comments)} "
-          f"likes={len(like_rows)} comment_likes={len(cl_rows)} saved={len(sp_rows)} "
-          f"hashtags={len(tag_objs)}")
+    print(
+        f"   ✅ follows={len(follow_rows)} posts={len(posts)} comments={len(comments)} "
+        f"likes={len(like_rows)} comment_likes={len(cl_rows)} saved={len(sp_rows)} "
+        f"hashtags={len(tag_objs)}"
+    )
     return posts, comments
 
 
@@ -587,36 +690,54 @@ async def seed_reports(db, users, posts, comments, admins) -> None:
     active = [u for u in users if not u.is_banned]
     rows = []
     reviewer = admins[0] if admins else None
-    descs = ["Contenido spam", "Lenguaje ofensivo", "Posible acoso",
-             "Fuera de lugar", "Reincidente", None]
+    descs = [
+        "Contenido spam",
+        "Lenguaje ofensivo",
+        "Posible acoso",
+        "Fuera de lugar",
+        "Reincidente",
+        None,
+    ]
     for p in random.sample(posts, min(len(posts), random.randint(40, 70))):
         reporter = random.choice([u for u in active if u.id != p.user_id])
-        status_val = random.choices(
-            ["pending", "reviewed", "dismissed"], weights=[5, 3, 2]
-        )[0]
+        status_val = random.choices(["pending", "reviewed", "dismissed"], weights=[5, 3, 2])[0]
         created = date_after(p.created_at, DAYS)
-        rows.append(Report(
-            id=uuid.uuid4(), reporter_id=reporter.id, post_id=p.id,
-            reported_user_id=p.user_id, reason=random.choice(REPORT_REASONS),
-            description=random.choice(descs), status=status_val,
-            reviewed_by=reviewer.id if (status_val != "pending" and reviewer) else None,
-            reviewed_at=(created + timedelta(days=random.randint(1, 5)))
-            if status_val != "pending" else None,
-            created_at=created,
-        ))
+        rows.append(
+            Report(
+                id=uuid.uuid4(),
+                reporter_id=reporter.id,
+                post_id=p.id,
+                reported_user_id=p.user_id,
+                reason=random.choice(REPORT_REASONS),
+                description=random.choice(descs),
+                status=status_val,
+                reviewed_by=reviewer.id if (status_val != "pending" and reviewer) else None,
+                reviewed_at=(created + timedelta(days=random.randint(1, 5)))
+                if status_val != "pending"
+                else None,
+                created_at=created,
+            )
+        )
     for c in random.sample(comments, min(len(comments), random.randint(10, 25))):
         reporter = random.choice([u for u in active if u.id != c.user_id])
         status_val = random.choices(["pending", "reviewed", "dismissed"], weights=[5, 3, 2])[0]
         created = date_after(c.created_at, DAYS)
-        rows.append(Report(
-            id=uuid.uuid4(), reporter_id=reporter.id, comment_id=c.id,
-            reported_user_id=c.user_id, reason=random.choice(REPORT_REASONS),
-            description=random.choice(descs), status=status_val,
-            reviewed_by=reviewer.id if (status_val != "pending" and reviewer) else None,
-            reviewed_at=(created + timedelta(days=random.randint(1, 5)))
-            if status_val != "pending" else None,
-            created_at=created,
-        ))
+        rows.append(
+            Report(
+                id=uuid.uuid4(),
+                reporter_id=reporter.id,
+                comment_id=c.id,
+                reported_user_id=c.user_id,
+                reason=random.choice(REPORT_REASONS),
+                description=random.choice(descs),
+                status=status_val,
+                reviewed_by=reviewer.id if (status_val != "pending" and reviewer) else None,
+                reviewed_at=(created + timedelta(days=random.randint(1, 5)))
+                if status_val != "pending"
+                else None,
+                created_at=created,
+            )
+        )
     db.add_all(rows)
     await db.commit()
     print(f"   ✅ {len(rows)} reportes")
@@ -633,16 +754,28 @@ async def seed_notifications(db, users) -> None:
         for _ in range(random.randint(4, 14)):
             t, title, body = random.choice(NOTIF_TYPES)
             created = date_after(u.created_at, 60)
-            rows.append(Notification(
-                id=uuid.uuid4(), user_id=u.id, type=t, title=title, body=body,
-                data={"type": t}, is_read=random.random() < 0.6, created_at=created,
-            ))
+            rows.append(
+                Notification(
+                    id=uuid.uuid4(),
+                    user_id=u.id,
+                    type=t,
+                    title=title,
+                    body=body,
+                    data={"type": t},
+                    is_read=random.random() < 0.6,
+                    created_at=created,
+                )
+            )
         if random.random() < 0.5:
-            tokens.append(NotificationToken(
-                id=uuid.uuid4(), user_id=u.id,
-                token=f"demo-fcm-{uuid.uuid4().hex[:24]}", platform="android",
-                created_at=u.created_at,
-            ))
+            tokens.append(
+                NotificationToken(
+                    id=uuid.uuid4(),
+                    user_id=u.id,
+                    token=f"demo-fcm-{uuid.uuid4().hex[:24]}",
+                    platform="android",
+                    created_at=u.created_at,
+                )
+            )
     db.add_all(rows)
     db.add_all(tokens)
     await db.commit()
@@ -665,11 +798,18 @@ async def seed_audit(db, users, posts, admins) -> None:
             target_id = str(random.choice(posts).id)
         else:
             target_id = None
-        rows.append(AdminAuditLog(
-            id=uuid.uuid4(), admin_id=admin.id, admin_email=admin.email,
-            action=action, target_type=target_type, target_id=target_id,
-            detail=detail, created_at=weighted_backdate(DAYS),
-        ))
+        rows.append(
+            AdminAuditLog(
+                id=uuid.uuid4(),
+                admin_id=admin.id,
+                admin_email=admin.email,
+                action=action,
+                target_type=target_type,
+                target_id=target_id,
+                detail=detail,
+                created_at=weighted_backdate(DAYS),
+            )
+        )
     db.add_all(rows)
     await db.commit()
     print(f"   ✅ {len(rows)} entradas de auditoría")
@@ -760,23 +900,29 @@ async def main():
         if not lessons:
             print("❌ No hay lecciones. Corré seed_lessons.py primero.")
             return
-        admins = list((await db.execute(
-            select(User).where(User.is_admin.is_(True))
-        )).scalars().all())
+        admins = list(
+            (await db.execute(select(User).where(User.is_admin.is_(True)))).scalars().all()
+        )
 
         if MODE == "append":
             # PROD-SEGURO: no borra nada. Guard de idempotencia.
-            existing_demo = (await db.execute(
-                select(func.count()).select_from(User).where(
-                    User.email.like(f"%@{DEMO_DOMAIN}")
+            existing_demo = (
+                await db.execute(
+                    select(func.count())
+                    .select_from(User)
+                    .where(User.email.like(f"%@{DEMO_DOMAIN}"))
                 )
-            )).scalar() or 0
+            ).scalar() or 0
             if existing_demo > 0:
-                print(f"⏭️  Ya hay {existing_demo} usuarios de demo "
-                      f"(@{DEMO_DOMAIN}). Nada que hacer (idempotente).")
+                print(
+                    f"⏭️  Ya hay {existing_demo} usuarios de demo "
+                    f"(@{DEMO_DOMAIN}). Nada que hacer (idempotente)."
+                )
                 return
-            print(f"➕ Modo append: agregando demo SIN borrar nada. "
-                  f"Removible luego con: DELETE FROM users WHERE email LIKE '%@{DEMO_DOMAIN}';")
+            print(
+                f"➕ Modo append: agregando demo SIN borrar nada. "
+                f"Removible luego con: DELETE FROM users WHERE email LIKE '%@{DEMO_DOMAIN}';"
+            )
         else:
             await reset_demo_data(db)
         users = await seed_users(db)
@@ -794,10 +940,16 @@ async def main():
         print("✅ SEED HISTÓRICO COMPLETADO")
         print("=" * 60)
         for label, model in [
-            ("Usuarios", User), ("Prácticas", PracticeSession),
-            ("Uso IA", AiUsageLog), ("XP", UserXP), ("Logros", UserAchievement),
-            ("Posts", Post), ("Comentarios", Comment), ("Likes", Like),
-            ("Reportes", Report), ("Notificaciones", Notification),
+            ("Usuarios", User),
+            ("Prácticas", PracticeSession),
+            ("Uso IA", AiUsageLog),
+            ("XP", UserXP),
+            ("Logros", UserAchievement),
+            ("Posts", Post),
+            ("Comentarios", Comment),
+            ("Likes", Like),
+            ("Reportes", Report),
+            ("Notificaciones", Notification),
             ("Auditoría", AdminAuditLog),
         ]:
             cnt = (await db.execute(select(func.count()).select_from(model))).scalar() or 0

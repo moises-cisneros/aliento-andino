@@ -63,12 +63,8 @@ class TestPracticeIdempotency:
             "generate_practice_feedback",
             new=AsyncMock(return_value=None),
         ):
-            r1 = await client.post(
-                "/api/practice/submit", headers=auth_headers, json=payload
-            )
-            r2 = await client.post(
-                "/api/practice/submit", headers=auth_headers, json=payload
-            )
+            r1 = await client.post("/api/practice/submit", headers=auth_headers, json=payload)
+            r2 = await client.post("/api/practice/submit", headers=auth_headers, json=payload)
 
         assert r1.status_code == 200, r1.text
         assert r2.status_code == 200, r2.text

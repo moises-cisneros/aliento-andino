@@ -1,7 +1,7 @@
 """Modelos de usuario y refresh token para Aliento Andino."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
 from sqlalchemy.dialects.postgresql import UUID
@@ -15,18 +15,13 @@ class User(Base):
 
     __tablename__ = "users"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
-    email: Mapped[str] = mapped_column(
-        String(255), unique=True, index=True, nullable=False
-    )
-    username: Mapped[str] = mapped_column(
-        String(50), unique=True, index=True, nullable=False
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     full_name: Mapped[str] = mapped_column(String(255), nullable=False)
     hashed_password: Mapped[str | None] = mapped_column(
-        String(255), nullable=True  # Nullable para usuarios de Google OAuth
+        String(255),
+        nullable=True,  # Nullable para usuarios de Google OAuth
     )
     avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     bio: Mapped[str | None] = mapped_column(String(1000), nullable=True)
@@ -38,24 +33,19 @@ class User(Base):
 
     # Proveedor de autenticación
     auth_provider: Mapped[str] = mapped_column(
-        String(20), default="local"  # "local" o "google"
+        String(20),
+        default="local",  # "local" o "google"
     )
-    google_id: Mapped[str | None] = mapped_column(
-        String(255), unique=True, nullable=True
-    )
+    google_id: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
 
     # Recuperación de contraseña
-    password_reset_token: Mapped[str | None] = mapped_column(
-        String(255), nullable=True, index=True
-    )
+    password_reset_token: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     password_reset_expires: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
     # Verificación de email (código de 6 dígitos enviado por SMTP)
-    email_verification_code: Mapped[str | None] = mapped_column(
-        String(6), nullable=True
-    )
+    email_verification_code: Mapped[str | None] = mapped_column(String(6), nullable=True)
     email_verification_expires: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
@@ -98,9 +88,7 @@ class User(Base):
     )
 
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), onupdate=func.now(), nullable=True
     )
@@ -116,8 +104,8 @@ class User(Base):
         # Algunos backends (SQLite, ciertos drivers) devuelven datetimes sin
         # zona; los tratamos como UTC para evitar comparar naive con aware.
         if expires.tzinfo is None:
-            expires = expires.replace(tzinfo=timezone.utc)
-        return expires > datetime.now(timezone.utc)
+            expires = expires.replace(tzinfo=UTC)
+        return expires > datetime.now(UTC)
 
     def __repr__(self) -> str:
         return f"<User {self.email}>"
@@ -128,22 +116,14 @@ class RefreshToken(Base):
 
     __tablename__ = "refresh_tokens"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
-    token_jti: Mapped[str] = mapped_column(
-        String(36), unique=True, index=True, nullable=False
-    )
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    token_jti: Mapped[str] = mapped_column(String(36), unique=True, index=True, nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     is_revoked: Mapped[bool] = mapped_column(Boolean, default=False)
-    expires_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self) -> str:
         return f"<RefreshToken {self.token_jti}>"

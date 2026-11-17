@@ -23,6 +23,10 @@ async def list_audit(
 ):
     """Lista paginada del registro de auditoría (más recientes primero)."""
     return await audit_service.list_logs(
-        db, page=page, limit=limit, action=action,
-        target_type=target_type, admin_id=admin_id,
+        db,
+        page=page,
+        limit=limit,
+        action=action,
+        target_type=target_type,
+        admin_id=admin_id,
     )

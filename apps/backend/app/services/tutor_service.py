@@ -67,17 +67,14 @@ _TARGETS_BY_SCREEN = {
 
 # Conjunto plano de nombres válidos (para validar/documentar).
 _HIGHLIGHT_TARGETS = {
-    name: desc
-    for group in _TARGETS_BY_SCREEN.values()
-    for name, desc in group.items()
+    name: desc for group in _TARGETS_BY_SCREEN.values() for name, desc in group.items()
 }
 
 
 def _system_prompt(current_route: str | None = None) -> str:
     rutas = "\n".join(f"  - {r}: {d}" for r, d in _ROUTES.items())
     targets = "\n".join(
-        f"  En {screen}:\n"
-        + "\n".join(f"    - {t}: {d}" for t, d in group.items())
+        f"  En {screen}:\n" + "\n".join(f"    - {t}: {d}" for t, d in group.items())
         for screen, group in _TARGETS_BY_SCREEN.items()
     )
     ubicacion = (
@@ -171,9 +168,7 @@ def _function_declarations():
                 parameters=types.Schema(
                     type="OBJECT",
                     properties={
-                        "lesson_id": types.Schema(
-                            type="STRING", description="UUID de la lección."
-                        ),
+                        "lesson_id": types.Schema(type="STRING", description="UUID de la lección."),
                     },
                     required=["lesson_id"],
                 ),
@@ -234,9 +229,7 @@ async def _tool_list_lessons(db: AsyncSession, category: str = "") -> dict:
 
 async def _tool_get_user_progress(db: AsyncSession, user: User) -> dict:
     """Herramienta servidor: progreso del usuario actual."""
-    xp = (
-        await db.execute(select(UserXP).where(UserXP.user_id == user.id))
-    ).scalar_one_or_none()
+    xp = (await db.execute(select(UserXP).where(UserXP.user_id == user.id))).scalar_one_or_none()
     return {
         "skill_level": getattr(user, "skill_level", None) or "beginner",
         "level": xp.level if xp else 1,
@@ -291,58 +284,79 @@ _FALLBACK_REPLY = (
 def _smart_tutor_fallback(message: str, current_route: str | None, user: User) -> dict:
     """Responde preguntas de forma inteligente y guía al usuario ejecutando acciones de UI."""
     msg = message.lower()
-    
-    if any(k in msg for k in ["practic", "leccion", "lección", "cancion", "canción", "aprender", "tocar"]):
+
+    if any(
+        k in msg
+        for k in ["practic", "leccion", "lección", "cancion", "canción", "aprender", "tocar"]
+    ):
         return {
             "reply": "¡Es muy fácil! En la sección de Lecciones puedes elegir cualquier ejercicio de piano y presionar para comenzar tu práctica.",
             "actions": [
                 {"tool": "navigate_to", "args": {"route": "/lessons"}},
-                {"tool": "highlight_element", "args": {"target": "first_lesson_card", "hint": "Toca aquí para empezar a practicar."}}
-            ]
+                {
+                    "tool": "highlight_element",
+                    "args": {
+                        "target": "first_lesson_card",
+                        "hint": "Toca aquí para empezar a practicar.",
+                    },
+                },
+            ],
         }
-    elif any(k in msg for k in ["progres", "estadistic", "estadístic", "racha", "score", "puntaje"]):
+    elif any(
+        k in msg for k in ["progres", "estadistic", "estadístic", "racha", "score", "puntaje"]
+    ):
         return {
             "reply": "Aquí en 'Mi Progreso' puedes ver tus métricas completas: score promedio, sesiones realizadas y días en racha.",
             "actions": [
                 {"tool": "navigate_to", "args": {"route": "/progress"}},
-                {"tool": "highlight_element", "args": {"target": "progress_stats", "hint": "Revisa tus métricas clave aquí."}}
-            ]
+                {
+                    "tool": "highlight_element",
+                    "args": {"target": "progress_stats", "hint": "Revisa tus métricas clave aquí."},
+                },
+            ],
         }
-    elif any(k in msg for k in ["ranking", "posicion", "posición", "tabla", "lider", "líder", "xp"]):
+    elif any(
+        k in msg for k in ["ranking", "posicion", "posición", "tabla", "lider", "líder", "xp"]
+    ):
         return {
             "reply": "En el Ranking puedes ver tu posición global y semanal comparada con otros estudiantes de Aliento Andino.",
             "actions": [
                 {"tool": "navigate_to", "args": {"route": "/rankings"}},
-                {"tool": "highlight_element", "args": {"target": "rankings_tabs", "hint": "Cambia entre el ranking semanal y global."}}
-            ]
+                {
+                    "tool": "highlight_element",
+                    "args": {
+                        "target": "rankings_tabs",
+                        "hint": "Cambia entre el ranking semanal y global.",
+                    },
+                },
+            ],
         }
     elif any(k in msg for k in ["social", "feed", "publica", "publicó", "comunidad", "post"]):
         return {
             "reply": "En la Red Social puedes interactuar con otros pianistas, ver sus avances y publicar tus propias prácticas.",
             "actions": [
                 {"tool": "navigate_to", "args": {"route": "/social"}},
-                {"tool": "highlight_element", "args": {"target": "create_post_button", "hint": "Publica tu progreso aquí."}}
-            ]
+                {
+                    "tool": "highlight_element",
+                    "args": {"target": "create_post_button", "hint": "Publica tu progreso aquí."},
+                },
+            ],
         }
     elif any(k in msg for k in ["perfil", "configuraci", "configurací", "ajuste", "cuenta"]):
         return {
             "reply": "Te llevo a tu Perfil. Desde aquí puedes modificar tu información y revisar tus grabaciones guardadas.",
-            "actions": [
-                {"tool": "navigate_to", "args": {"route": "/profile"}}
-            ]
+            "actions": [{"tool": "navigate_to", "args": {"route": "/profile"}}],
         }
     elif any(k in msg for k in ["hola", "buen", "saludo", "quien eres", "quién eres"]):
         name = getattr(user, "username", "estudiante")
         return {
             "reply": f"¡Hola {name}! Soy Vivi, tu tutora de piano inteligente. ¿En qué parte de la app te gustaría ayuda hoy?",
-            "actions": []
+            "actions": [],
         }
     else:
         return {
             "reply": "¡Hola! Puedo enseñarte cómo practicar lecciones, mostrarte tu progreso o guiarte por la app. ¿Qué deseas explorar?",
-            "actions": [
-                {"tool": "navigate_to", "args": {"route": "/lessons"}}
-            ]
+            "actions": [{"tool": "navigate_to", "args": {"route": "/lessons"}}],
         }
 
 
@@ -373,7 +387,10 @@ async def run_tutor_turn(
         else:
             try:
                 import google.auth
-                creds, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
+
+                creds, _ = google.auth.default(
+                    scopes=["https://www.googleapis.com/auth/cloud-platform"]
+                )
                 client = genai.Client(
                     vertexai=True,
                     project=settings.vertex_project_id,
@@ -392,9 +409,7 @@ async def run_tutor_turn(
             role = "model" if turn.get("role") == "model" else "user"
             text = (turn.get("text") or "").strip()
             if text:
-                contents.append(
-                    types.Content(role=role, parts=[types.Part(text=text)])
-                )
+                contents.append(types.Content(role=role, parts=[types.Part(text=text)]))
         contents.append(types.Content(role="user", parts=[types.Part(text=message)]))
 
         config = types.GenerateContentConfig(
@@ -428,9 +443,7 @@ async def run_tutor_turn(
                 name = call.name
                 args = dict(call.args or {})
                 if name == "list_lessons":
-                    result = await _tool_list_lessons(
-                        db, category=str(args.get("category", ""))
-                    )
+                    result = await _tool_list_lessons(db, category=str(args.get("category", "")))
                 elif name == "get_user_progress":
                     result = await _tool_get_user_progress(db, user)
                 elif name in _CLIENT_ACTIONS:
@@ -440,9 +453,7 @@ async def run_tutor_turn(
                     result = {"error": f"herramienta desconocida: {name}"}
 
                 tool_parts.append(
-                    types.Part.from_function_response(
-                        name=name, response={"result": result}
-                    )
+                    types.Part.from_function_response(name=name, response={"result": result})
                 )
 
             contents.append(types.Content(role="user", parts=tool_parts))
@@ -455,5 +466,7 @@ async def run_tutor_turn(
         return {"reply": reply, "actions": actions}
 
     except Exception as e:
-        logger.warning("Generación Vertex/Gemini inaccesible (%s), usando respuesta guiada inteligente", e)
+        logger.warning(
+            "Generación Vertex/Gemini inaccesible (%s), usando respuesta guiada inteligente", e
+        )
         return _smart_tutor_fallback(message, current_route, user)
