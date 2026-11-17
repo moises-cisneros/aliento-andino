@@ -19,10 +19,12 @@ Assumption: legacy `POST /api/practice/submit` stays working (no breaking change
 
 ## Tasks
 
-- [ ] T1 (S1-S5) [inline]: Mobile — `PracticeSessionModel` + weighted score + `PracticeSessionRepository` + Drift `is_synced` + sync to new endpoint. (#34 SUB-09-A) — Branch `feat/34-practice-session-serializer`
-- [ ] T2 (S6-S9) [inline]: Backend — `POST /api/v1/practice/session`, `PracticeService.submit_practice_session`, tests. (#35 SUB-09-B) — Branch `feat/35-practice-session-endpoint`
+- [x] T1 (S1-S5) [inline]: Mobile — `PracticeSessionModel` + weighted score + `PracticeSessionRepository` + Drift `is_synced` + sync to new endpoint. (#34 SUB-09-A) — Branch `feat/34-practice-session-serializer`, commit `8181a59`
+- [x] T2 (S6-S9) [inline]: Backend — `POST /api/v1/practice/session`, `PracticeService.submit_practice_session`, tests. (#35 SUB-09-B) — Branch `feat/35-practice-session-endpoint`
 
 ## Log
 
 L1: "Implementa las subissues de la issue #33 (HU-09), realizalo con ODD, en un propio git worktree."
 L2: "Actualiza a como esta definido en los issues y continualos"
+L3: Verification — mobile: `flutter analyze` 0 issues, `flutter test` 120 passed. Backend: `pytest` 150 passed, 1 failed (`test_tutor.py::test_chat_degraded_without_vertex`, unrelated file, untouched). Ruff: no new findings in changed files (pre-existing ones remain).
+L4: Mobile sync treats 404/405/408/429 as transient so queued sessions are not discarded before the endpoint is deployed.

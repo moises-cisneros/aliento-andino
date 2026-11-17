@@ -14,6 +14,7 @@ from app.models.user import User
 from app.schemas.lesson import (
     PaginatedResponse,
     PracticeSessionResponse,
+    PracticeSessionResult,
     PracticeSubmitRequest,
     PracticeSubmitResponse,
     ProgressStats,
@@ -63,6 +64,99 @@ async def _generate_and_save_feedback(
         logger.warning("No se guardó ai_feedback: sesión %s no encontrada", session_id)
         return
     logger.info("ai_feedback guardado para sesión %s", session_id)
+
+
+def _queue_ai_feedback(
+    background_tasks: BackgroundTasks, user: User, session: PracticeSession
+) -> None:
+    """Feedback IA con Gemini: SOLO para usuarios premium (es función de pago)."""
+    if not user.is_premium:
+        return
+    background_tasks.add_task(
+        _generate_and_save_feedback,
+        session_id=session.id,
+        payload={
+            "skill_level": user.skill_level,
+            "lesson_title": session.lesson.title if session.lesson else "Lección",
+            "difficulty": session.lesson.difficulty if session.lesson else "principiante",
+            "tempo_bpm": session.expected_tempo,
+            "score": session.score,
+            "correct_notes": session.correct_notes,
+            "wrong_notes": session.wrong_notes,
+            "missed_notes": session.missed_notes,
+            "total_notes": session.total_notes,
+            "average_tempo": session.average_tempo,
+            "tempo_accuracy": session.tempo_accuracy,
+            "total_time_seconds": session.total_time_seconds,
+            "errors_detail": session.errors_detail,
+        },
+    )
+
+
+def _map_achievements(xp_result: dict) -> list[AchievementResponse]:
+    """Mapear los logros recién desbloqueados a su schema de respuesta."""
+    return [
+        AchievementResponse(
+            id=ach.id,
+            code=ach.code,
+            name=ach.name,
+            description=ach.description,
+            icon=ach.icon,
+            category=ach.category,
+            xp_reward=ach.xp_reward,
+            rarity=ach.rarity,
+            requirement_type=ach.requirement_type,
+            requirement_value=ach.requirement_value,
+            is_unlocked=True,
+            progress=ach.requirement_value,
+        )
+        for ach in xp_result["new_achievements"]
+    ]
+
+
+@router.post("/api/v1/practice/session", response_model=PracticeSessionResult)
+async def submit_practice_session(
+    data: PracticeSubmitRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Registrar una sesión de práctica de forma idempotente (HU-09).
+
+    `client_id` es obligatorio. Un reintento con el mismo `client_id` devuelve la
+    sesión existente (HTTP 200) sin volver a sumar XP. Score fuera de 0..100 → 422.
+    """
+    if data.client_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="client_id es obligatorio",
+        )
+
+    try:
+        session, xp_result = await practice_service.submit_practice_session(
+            db, current_user.id, data
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+
+    result = PracticeSessionResult.model_validate(session)
+    result.lesson_title = session.lesson.title if session.lesson else None
+    result.ai_feedback = _visible_feedback(current_user, session.ai_feedback)
+
+    if xp_result is None:  # reintento idempotente: sin XP ni feedback nuevos
+        user_xp = await ranking_service.get_or_create_user_xp(db, current_user.id)
+        result.current_level = user_xp.level
+        return result
+
+    # La tarea IA usa otra conexión; la sesión debe existir antes de actualizarla.
+    await db.commit()
+    _queue_ai_feedback(background_tasks, current_user, session)
+
+    result.xp_earned = xp_result["xp_earned"]
+    result.new_level = xp_result["new_level"]
+    result.current_level = xp_result["current_level"]
+    result.new_achievements = _map_achievements(xp_result)
+    return result
 
 
 @router.post("/api/practice/submit", response_model=PracticeSubmitResponse)
@@ -126,46 +220,8 @@ async def submit_practice(
     # La tarea IA usa otra conexión; la sesión debe existir antes de actualizarla.
     await db.commit()
 
-    # Feedback IA con Gemini: SOLO para usuarios premium (es función de pago).
-    if current_user.is_premium:
-        background_tasks.add_task(
-            _generate_and_save_feedback,
-            session_id=session.id,
-            payload={
-                "skill_level": current_user.skill_level,
-                "lesson_title": session.lesson.title if session.lesson else "Lección",
-                "difficulty": session.lesson.difficulty if session.lesson else "principiante",
-                "tempo_bpm": session.expected_tempo,
-                "score": session.score,
-                "correct_notes": session.correct_notes,
-                "wrong_notes": session.wrong_notes,
-                "missed_notes": session.missed_notes,
-                "total_notes": session.total_notes,
-                "average_tempo": session.average_tempo,
-                "tempo_accuracy": session.tempo_accuracy,
-                "total_time_seconds": session.total_time_seconds,
-                "errors_detail": session.errors_detail,
-            },
-        )
-
-    # Mapear logros nuevos
-    new_achievements = [
-        AchievementResponse(
-            id=ach.id,
-            code=ach.code,
-            name=ach.name,
-            description=ach.description,
-            icon=ach.icon,
-            category=ach.category,
-            xp_reward=ach.xp_reward,
-            rarity=ach.rarity,
-            requirement_type=ach.requirement_type,
-            requirement_value=ach.requirement_value,
-            is_unlocked=True,
-            progress=ach.requirement_value,
-        )
-        for ach in xp_result["new_achievements"]
-    ]
+    _queue_ai_feedback(background_tasks, current_user, session)
+    new_achievements = _map_achievements(xp_result)
 
     return PracticeSubmitResponse(
         session=PracticeSessionResponse(

@@ -277,6 +277,18 @@ class PracticeSessionResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class PracticeSessionResult(PracticeSessionResponse):
+    """Respuesta de POST /api/v1/practice/session: la sesión más el XP otorgado.
+
+    En un reintento idempotente (mismo client_id) `xp_earned` es 0.
+    """
+
+    xp_earned: int = 0
+    new_level: bool = False
+    current_level: int = 1
+    new_achievements: list = []
+
+
 class PracticeSubmitResponse(BaseModel):
     """Respuesta después de enviar práctica."""
 
