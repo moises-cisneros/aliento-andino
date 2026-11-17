@@ -1,66 +1,97 @@
+#!/usr/bin/env node
 import { execSync } from "node:child_process"
+import { pathToFileURL } from "node:url"
 
 /**
- * Script de automatización de ciclo de vida de Historias de Usuario (HUs).
- * Verifica si todas las subtareas/sub-issues de una HU madre están completadas (checkboxes marcados).
- * Si no quedan tareas pendientes (- [ ]), cierra la issue madre automáticamente.
+ * User story (HU) lifecycle automation.
+ *
+ * A parent HU lists its sub-issues as a task list ("- [ ] #13 — [SUB-02-A] ..."). GitHub never
+ * ticks those boxes in the issue body, so the real signal is the state of each referenced
+ * sub-issue: when every one of them is closed, the HU is done and gets closed.
+ *
+ * Usage:
+ *   node scripts/auto-close-parent-hu.mjs             close every completed HU
+ *   node scripts/auto-close-parent-hu.mjs --dry-run   only report what would be closed
  */
-function checkAndCloseParentHUs() {
-  console.log("🔍 Verificando Historias de Usuario (HUs) abiertas en el repositorio...")
 
-  let issuesJson = ""
+// A sub-issue reference is a task-list item that starts with an issue number.
+const SUB_ISSUE_LINE = /^\s*- \[[ xX]\] #(\d+)\b/gm
+
+export function parseSubIssueRefs(body) {
+  const refs = new Set()
+  for (const match of (body ?? "").matchAll(SUB_ISSUE_LINE)) {
+    refs.add(Number(match[1]))
+  }
+  return [...refs]
+}
+
+function isUserStory(issue) {
+  return (
+    issue.labels?.some((l) => l.name === "type:feature") || /^\[?HU-\d+\]?/i.test(issue.title ?? "")
+  )
+}
+
+/**
+ * Open HUs whose sub-issues are all closed. A HU with no sub-issue references, or with a
+ * reference that cannot be found, is never closed.
+ */
+export function findCompletedParents(issues) {
+  const stateByNumber = new Map(issues.map((i) => [i.number, i.state]))
+
+  return issues.filter((issue) => {
+    if (issue.state !== "OPEN" || !isUserStory(issue)) return false
+    const refs = parseSubIssueRefs(issue.body)
+    return refs.length > 0 && refs.every((n) => stateByNumber.get(n) === "CLOSED")
+  })
+}
+
+function listIssues() {
+  const json = execSync(
+    "gh issue list --state all --limit 500 --json number,title,body,labels,state",
+    { encoding: "utf-8", stdio: ["inherit", "pipe", "inherit"] }
+  )
+  return JSON.parse(json || "[]")
+}
+
+function checkAndCloseParentHUs({ dryRun }) {
+  console.log("Checking open user stories (HU) against the state of their sub-issues...")
+
+  let issues
   try {
-    issuesJson = execSync(
-      "gh issue list --state open --limit 100 --json number,title,body,labels",
-      {
-        encoding: "utf-8",
-        stdio: ["inherit", "pipe", "inherit"],
-      }
-    )
+    issues = listIssues()
   } catch (error) {
-    console.error("❌ Error al consultar issues con gh CLI:", error.message)
+    console.error("Could not list issues with the gh CLI:", error.message)
     process.exit(1)
   }
 
-  const issues = JSON.parse(issuesJson || "[]")
+  const completed = findCompletedParents(issues)
   let closedCount = 0
 
-  for (const issue of issues) {
-    const isFeature =
-      issue.labels?.some((l) => l.name === "type:feature") ||
-      /^HU-\d+/i.test(issue.title) ||
-      /^\[HU-\d+\]/i.test(issue.title)
+  for (const issue of completed) {
+    const refs = parseSubIssueRefs(issue.body)
+    console.log(
+      `HU #${issue.number} ("${issue.title}"): sub-issues ${refs.map((n) => `#${n}`).join(", ")} are closed.`
+    )
 
-    if (!isFeature) continue
+    if (dryRun) continue
 
-    const body = issue.body || ""
-    const uncheckedBoxes = body.match(/- \[\s\]/g) || []
-    const checkedBoxes = body.match(/- \[[xX]\]/g) || []
-
-    // Si tiene checkboxes definidos y ya no queda NINGUNO sin marcar:
-    if (checkedBoxes.length > 0 && uncheckedBoxes.length === 0) {
-      console.log(
-        `✅ HU Madre #${issue.number} ("${issue.title}") tiene todas sus tareas completadas (${checkedBoxes.length}/${checkedBoxes.length}).`
-      )
-      console.log(`🔒 Procediendo al cierre automático de la issue #${issue.number}...`)
-
-      const comment =
-        `🎉 **Historia de Usuario Completada**\n\n` +
-        `Todas las subtareas y sub-issues vinculadas a esta Historia de Usuario han sido resueltas y cerradas mediante sus respectivos Pull Requests.\n\n` +
-        `Cerrando automáticamente la issue madre.`
-
-      try {
-        execSync(`gh issue close ${issue.number} --comment "${comment}"`, {
-          stdio: "inherit",
-        })
-        closedCount++
-      } catch (err) {
-        console.error(`⚠️ No se pudo cerrar la issue #${issue.number}:`, err.message)
-      }
+    const comment =
+      "All sub-issues linked to this user story are resolved and closed. " +
+      "Closing the parent issue automatically."
+    try {
+      execSync(`gh issue close ${issue.number} --reason completed --comment "${comment}"`, {
+        stdio: "inherit",
+      })
+      closedCount++
+    } catch (error) {
+      console.error(`Could not close issue #${issue.number}:`, error.message)
     }
   }
 
-  console.log(`✨ Verificación completada. HUs madres cerradas en esta ejecución: ${closedCount}.`)
+  const verb = dryRun ? "would close" : "closed"
+  console.log(`Done. HUs ${verb}: ${dryRun ? completed.length : closedCount}.`)
 }
 
-checkAndCloseParentHUs()
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  checkAndCloseParentHUs({ dryRun: process.argv.includes("--dry-run") })
+}
