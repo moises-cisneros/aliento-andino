@@ -18,18 +18,19 @@ import {
   LucideTrendingUp,
   LucideSettings,
   LucideScrollText,
+  LucideIconData,
 } from '@lucide/angular';
 import { SidebarService } from '../../../core/services/sidebar.service';
 
 interface NavLink {
   label: string;
-  icon: any;
+  icon: LucideIconData;
   route: string;
 }
 
 interface NavGroup {
   label: string;
-  icon: any;
+  icon: LucideIconData;
   children: { label: string; route: string }[];
 }
 

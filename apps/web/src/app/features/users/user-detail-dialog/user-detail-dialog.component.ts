@@ -290,7 +290,9 @@ export class UserDetailDialogComponent implements OnInit {
   ngOnInit(): void {
     this.userService.getUserDetail(this.user.id).subscribe({
       next: (d) => this.detail.set(d),
-      error: () => {},
+      error: () => {
+        this.snackBar.open('Error al cargar el detalle del usuario', 'OK', { duration: 3000 });
+      },
     });
   }
 
