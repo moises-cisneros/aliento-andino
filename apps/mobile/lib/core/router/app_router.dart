@@ -37,6 +37,8 @@ import '../../features/profile/presentation/screens/privacy_policy_screen.dart';
 import '../../features/profile/presentation/screens/recordings_list_screen.dart';
 import '../../features/profile/presentation/screens/settings_screen.dart';
 import '../../features/profile/presentation/screens/terms_screen.dart';
+import '../../features/profile/presentation/screens/achievements_screen.dart'
+    as profile_achievements;
 import '../../features/rankings/presentation/screens/achievements_screen.dart';
 import '../../features/rankings/presentation/screens/lesson_ranking_screen.dart';
 import '../../features/rankings/presentation/screens/my_xp_screen.dart';
@@ -243,6 +245,11 @@ class AppRouter {
       ),
       // Rutas de rankings fuera del shell (sin bottomNav)
       GoRoute(path: '/my-xp', builder: (context, state) => const MyXPScreen()),
+      GoRoute(
+        path: '/profile/achievements',
+        builder: (context, state) =>
+            const profile_achievements.AchievementsScreen(),
+      ),
       GoRoute(
         path: '/achievements',
         builder: (context, state) => const AchievementsScreen(),

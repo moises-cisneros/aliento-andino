@@ -174,7 +174,8 @@ class _MyProfileViewState extends State<_MyProfileView>
                         // Logros recientes
                         ProfileAchievementsRow(
                           achievements: state.recentAchievements,
-                          onViewAll: () => context.push('/achievements'),
+                          onViewAll: () =>
+                              context.push('/profile/achievements'),
                         ),
 
                         const SizedBox(height: 20),
@@ -200,9 +201,10 @@ class _MyProfileViewState extends State<_MyProfileView>
                           onTap: () => context.push('/rankings'),
                         ),
                         ProfileMenuItem(
+                          key: const Key('profile_achievements'),
                           icon: Icons.emoji_events,
                           title: 'Mis logros',
-                          onTap: () => context.push('/achievements'),
+                          onTap: () => context.push('/profile/achievements'),
                         ),
                         ProfileMenuItem(
                           key: TutorTargets.keyFor('profile_saved'),
