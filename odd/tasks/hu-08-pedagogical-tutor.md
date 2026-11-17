@@ -1,4 +1,5 @@
 # Feature: HU-08 Agente Tutor Pedagógico con SLM Local On-Device
+
 Issues: #30 (HU-08), #31 (SUB-08-A), #32 (SUB-08-B)
 Sprint: 2 | Area: mobile / ml | Worktree: hu-08-pedagogical-tutor
 
