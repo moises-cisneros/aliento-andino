@@ -6,6 +6,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../data/models/lesson_model.dart';
 import '../../data/repositories/lesson_repository.dart';
+import '../../../instrument_select/presentation/widgets/instrument_selector_appbar.dart';
 import '../bloc/lessons/lessons_bloc.dart';
 import '../bloc/lessons/lessons_event.dart';
 import '../bloc/lessons/lessons_state.dart';
@@ -81,6 +82,7 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
       appBar: AppBar(
         title: const Text('Lecciones'),
         actions: [
+          const InstrumentSelectorAction(),
           const PendingSyncBadge(),
           IconButton(
             icon: const Icon(Icons.bar_chart_rounded),

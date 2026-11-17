@@ -9,6 +9,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
 import 'features/auth/data/repositories/auth_repository.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/instrument_select/bloc/active_instrument_bloc.dart';
 import 'features/lessons/data/repositories/lesson_repository.dart';
 import 'features/lessons/data/repositories/practice_repository.dart';
 import 'features/lessons/presentation/bloc/lessons/lessons_bloc.dart';
@@ -98,6 +99,7 @@ class App extends StatelessWidget {
       child: MultiBlocProvider(
         providers: [
           BlocProvider(create: (_) => ThemeCubit(prefs)),
+          BlocProvider(create: (_) => ActiveInstrumentBloc(prefs: prefs)),
           BlocProvider.value(value: authBloc),
           BlocProvider(
             create: (_) => LessonsBloc(lessonRepository: lessonRepository),

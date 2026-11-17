@@ -1,6 +1,31 @@
 /// Instrumentos de viento andino soportados en Aliento Andino.
 enum InstrumentType { quena, zampona, tarka }
 
+/// Extension on [InstrumentType] providing labels and domain metadata.
+extension InstrumentTypeExtension on InstrumentType {
+  String get displayName {
+    switch (this) {
+      case InstrumentType.quena:
+        return 'Quena';
+      case InstrumentType.zampona:
+        return 'Zampoña';
+      case InstrumentType.tarka:
+        return 'Tarka';
+    }
+  }
+
+  double get defaultToleranceCents {
+    switch (this) {
+      case InstrumentType.quena:
+        return 15.0;
+      case InstrumentType.zampona:
+        return 20.0;
+      case InstrumentType.tarka:
+        return 25.0;
+    }
+  }
+}
+
 /// Instrumentos/timbres disponibles para el sintetizador ([ToneSynth]).
 ///
 /// Quena, Zampoña y Tarka son los instrumentos andinos canónicos principales.

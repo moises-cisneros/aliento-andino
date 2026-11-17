@@ -5,6 +5,7 @@ import '../../../../core/connectivity/offline_banner.dart';
 import '../../../../core/network/network_error.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../instrument_select/presentation/widgets/instrument_selector_appbar.dart';
 import '../../../notifications/presentation/widgets/notification_bell.dart';
 import '../../data/models/post_model.dart';
 import '../../data/repositories/social_repository.dart';
@@ -56,6 +57,7 @@ class _FeedViewState extends State<_FeedView> with AutoRefreshOnResume {
         appBar: AppBar(
           title: const Text('Feed'),
           actions: [
+            const InstrumentSelectorAction(),
             IconButton(
               key: TutorTargets.keyFor('search_button'),
               icon: Icon(Icons.search, color: cs.onSurface),

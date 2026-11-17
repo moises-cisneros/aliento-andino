@@ -253,8 +253,37 @@ class TunerBloc extends Bloc<TunerEvent, TunerState> {
     Emitter<TunerState> emit,
   ) {
     _currentInstrument = event.instrument;
+    _currentTolerance = event.instrument.defaultToleranceCents;
     if (state is TunerActiveState) {
-      emit((state as TunerActiveState).copyWith(instrument: event.instrument));
+      final current = state as TunerActiveState;
+      if (current.frequencyHz > 0) {
+        final noteInfo = _closestAndeanNote(
+          current.frequencyHz,
+          event.instrument,
+        );
+        final eval = _pitchDetector.evaluateTuning(
+          detectedHz: current.frequencyHz,
+          targetHz: noteInfo.frequency,
+          toleranceCents: _currentTolerance,
+        );
+        emit(
+          current.copyWith(
+            instrument: event.instrument,
+            toleranceCents: _currentTolerance,
+            noteName: noteInfo.name,
+            targetFrequencyHz: noteInfo.frequency,
+            centsDeviation: eval.centsDeviation.clamp(-50.0, 50.0),
+            isTuned: eval.isTuned,
+          ),
+        );
+      } else {
+        emit(
+          current.copyWith(
+            instrument: event.instrument,
+            toleranceCents: _currentTolerance,
+          ),
+        );
+      }
     }
   }
 
@@ -265,33 +294,66 @@ class TunerBloc extends Bloc<TunerEvent, TunerState> {
     return super.close();
   }
 
-  /// Busca la nota andina más cercana a la frecuencia detectada.
+  /// Busca la nota andina más cercana a la frecuencia detectada según el instrumento.
   static ({String name, double frequency}) _closestAndeanNote(
     double detectedHz,
     InstrumentType instrument,
   ) {
-    // Notas comunes en temperamento igual (A4 = 440 Hz) para viento andino
-    const notes = [
-      ('Sol3', 196.00),
-      ('La3', 220.00),
-      ('Si3', 246.94),
-      ('Do4', 261.63),
-      ('Re4', 293.66),
-      ('Mi4', 329.63),
-      ('Fa#4', 369.99),
-      ('Sol4', 392.00),
-      ('La4', 440.00),
-      ('Si4', 493.88),
-      ('Do5', 523.25),
-      ('Re5', 587.33),
-      ('Mi5', 659.25),
-      ('Fa#5', 739.99),
-      ('Sol5', 783.99),
-      ('La5', 880.00),
-      ('Si5', 987.77),
-      ('Do6', 1046.50),
-      ('Re6', 1174.66),
-    ];
+    final List<(String, double)> notes;
+    switch (instrument) {
+      case InstrumentType.tarka:
+        notes = const [
+          ('Do5', 523.25),
+          ('Re5', 587.33),
+          ('Mi5', 659.25),
+          ('Fa5', 698.46),
+          ('Sol5', 783.99),
+          ('La5', 880.00),
+          ('Si5', 987.77),
+        ];
+        break;
+      case InstrumentType.zampona:
+        notes = const [
+          ('Sol4', 392.00),
+          ('La4', 440.00),
+          ('Si4', 493.88),
+          ('Do5', 523.25),
+          ('Re5', 587.33),
+          ('Mi5', 659.25),
+          ('Fa#5', 739.99),
+          ('Sol5', 783.99),
+          ('La5', 880.00),
+          ('Si5', 987.77),
+          ('Do6', 1046.50),
+          ('Re6', 1174.66),
+          ('Mi6', 1318.51),
+          ('Fa#6', 1479.98),
+        ];
+        break;
+      case InstrumentType.quena:
+        notes = const [
+          ('Sol3', 196.00),
+          ('La3', 220.00),
+          ('Si3', 246.94),
+          ('Do4', 261.63),
+          ('Re4', 293.66),
+          ('Mi4', 329.63),
+          ('Fa#4', 369.99),
+          ('Sol4', 392.00),
+          ('La4', 440.00),
+          ('Si4', 493.88),
+          ('Do5', 523.25),
+          ('Re5', 587.33),
+          ('Mi5', 659.25),
+          ('Fa#5', 739.99),
+          ('Sol5', 783.99),
+          ('La5', 880.00),
+          ('Si5', 987.77),
+          ('Do6', 1046.50),
+          ('Re6', 1174.66),
+        ];
+        break;
+    }
 
     var bestNote = notes.first;
     var minDiff = (detectedHz - bestNote.$2).abs();

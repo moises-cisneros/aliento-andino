@@ -17,6 +17,7 @@ import '../widgets/profile_xp_card.dart';
 import '../../../../core/connectivity/offline_banner.dart';
 import '../../../../core/network/network_error.dart';
 import '../../../../core/utils/auto_refresh_mixin.dart';
+import '../../../instrument_select/presentation/widgets/instrument_selector_appbar.dart';
 import '../../../tutor/presentation/tutor_targets.dart';
 
 /// Pantalla principal del tab Perfil.
@@ -54,6 +55,7 @@ class _MyProfileViewState extends State<_MyProfileView>
       appBar: AppBar(
         title: const Text('Mi Perfil'),
         actions: [
+          const InstrumentSelectorAction(),
           IconButton(
             onPressed: () => context.push('/settings'),
             icon: Icon(
