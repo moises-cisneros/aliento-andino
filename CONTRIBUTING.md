@@ -111,6 +111,30 @@ docs/30-actualizar-estandares-calidad
 
 Tipos permitidos: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`. **Prohibido realizar commits directos sobre `main` o `staging`.**
 
+#### Trabajar en un `git worktree`
+
+Implementá cada rama en un worktree propio, **no** con `git checkout -b` en el checkout principal. El checkout principal queda intacto (en `main` o en la rama que tengas abierta en el IDE) y podés tener varias ramas en paralelo sin `stash` ni cambios de rama.
+
+```bash
+# Desde el checkout principal: un worktree hermano por rama, basado en main actualizado
+git fetch origin
+git worktree add -b feat/59-descarga-offline ../aliento-andino-worktrees/hu-18-offline origin/main
+
+cd ../aliento-andino-worktrees/hu-18-offline
+pnpm install:all          # o solo el área que toques (cada worktree tiene sus propias dependencias)
+# ... implementar, commitear, abrir el PR desde esta carpeta ...
+
+# Al mergear el PR: limpiar
+cd -
+git worktree remove ../aliento-andino-worktrees/hu-18-offline
+git branch -d feat/59-descarga-offline
+```
+
+- Ubicación: `<padre-del-repo>/aliento-andino-worktrees/<nombre>`, siempre fuera del repo.
+- La identidad Git (`user.name` / `user.email`) se verifica en cada worktree antes del primer commit.
+- Cada worktree necesita su propio índice `.codegraph/` (`gentle-ai codegraph init --cwd <worktree>`); no lo copies ni lo enlaces desde otro checkout.
+- Un mismo branch no puede estar abierto en dos worktrees a la vez: git lo impide.
+
 ---
 
 ### 2.3 Commits
