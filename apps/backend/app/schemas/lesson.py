@@ -294,6 +294,7 @@ class PracticeSessionResponse(BaseModel):
     completed: bool
     created_at: datetime
     lesson_title: str | None = None
+    lesson_instrument: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -359,6 +360,16 @@ class AdminStatsOverview(BaseModel):
 
 
 # ===================== PAGINACIÓN =====================
+
+
+class PracticeHistoryResponse(BaseModel):
+    """Respuesta de GET /api/v1/practice/history (HU-10)."""
+
+    items: list[PracticeSessionResponse] = []
+    total: int = 0
+    page: int = 1
+    size: int = 20
+    pages: int = 1
 
 
 class PaginatedResponse(BaseModel):
