@@ -22,7 +22,7 @@ Sprint: 2 | Area: mobile / ml | Worktree: hu-08-pedagogical-tutor
 ## Tasks
 
 - [x] T1: SUB-08-A Configuración de Runtime SLM Local On-Device (S1, S2, S3, S4, S5, S11, S12, S13) | route: inline | commit: feat(mobile): add on-device slm runtime engine with rule-based fallback
-- [ ] T2: SUB-08-B Síntesis de Telemetría a Prompt Pedagógico y Renderizado (S6, S7, S8, S9, S10, S11, S12, S13) | route: inline | commit: pending
+- [x] T2: SUB-08-B Síntesis de Telemetría a Prompt Pedagógico y Renderizado (S6, S7, S8, S9, S10, S11, S12, S13) | route: inline | commit: feat(mobile): build pedagogical prompt synthesizer and tutor feedback card
 
 ## Log
 
