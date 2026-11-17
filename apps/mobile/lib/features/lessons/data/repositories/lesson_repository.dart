@@ -233,13 +233,27 @@ class LessonRepository {
   /// Descarga una lección (notas + audio) y la marca como disponible para
   /// practicar sin conexión. Todo o nada: ver [LessonDownloadService].
   Future<void> downloadLesson(String lessonId) {
+    return _requireDownloads().downloadLesson(lessonId);
+  }
+
+  /// Elimina la lección descargada (base local y archivo de audio).
+  Future<void> deleteDownloadedLesson(String lessonId) {
+    return _requireDownloads().deleteDownloadedLesson(lessonId);
+  }
+
+  /// Descargas con el espacio que ocupan; detecta audios borrados a mano.
+  Future<OfflineDownloads> getOfflineDownloads() {
+    return _requireDownloads().listDownloads();
+  }
+
+  LessonDownloadService _requireDownloads() {
     final service = _downloads;
     if (service == null) {
       throw StateError(
         'LessonRepository was created without a download service',
       );
     }
-    return service.downloadLesson(lessonId);
+    return service;
   }
 
   /// Lecciones descargadas para uso offline.

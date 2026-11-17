@@ -186,6 +186,23 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
+  /// Removes the offline package of a lesson: clears the downloaded mark and
+  /// the audio path and drops its notes. The catalog metadata row stays so the
+  /// lesson keeps showing up (as not downloaded) in cached lists.
+  Future<void> clearLessonDownload(String lessonId) {
+    return transaction(() async {
+      await (update(cachedLessons)..where((t) => t.id.equals(lessonId))).write(
+        const CachedLessonsCompanion(
+          downloadedAt: Value(null),
+          audioLocalPath: Value(null),
+        ),
+      );
+      await (delete(
+        cachedNotes,
+      )..where((t) => t.lessonId.equals(lessonId))).go();
+    });
+  }
+
   // ---------------- Notas ----------------
 
   /// Reemplaza la secuencia de notas de una lección (idempotente).

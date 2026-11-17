@@ -30,6 +30,25 @@ class LessonDownloadException implements Exception {
   String toString() => 'LessonDownloadException: $cause';
 }
 
+/// A downloaded lesson and the disk space its audio takes.
+class OfflineDownloadEntry {
+  final OfflineLesson lesson;
+  final int audioBytes;
+
+  const OfflineDownloadEntry({required this.lesson, required this.audioBytes});
+}
+
+/// Result of listing downloads: the valid ones plus the ids that were found
+/// inconsistent (audio file missing) and flagged for re-download.
+class OfflineDownloads {
+  final List<OfflineDownloadEntry> entries;
+  final List<String> stale;
+
+  const OfflineDownloads({required this.entries, required this.stale});
+
+  int get totalBytes => entries.fold(0, (sum, e) => sum + e.audioBytes);
+}
+
 /// Downloads a lesson package (notes JSON + reference audio) and persists it
 /// in the local Drift database so it can be practiced without a connection.
 ///
@@ -71,6 +90,39 @@ class LessonDownloadService {
 
   Future<bool> isLessonDownloaded(String lessonId) =>
       _dao.isDownloaded(lessonId);
+
+  /// Deletes the downloaded package (database rows and audio file).
+  Future<void> deleteDownloadedLesson(String lessonId) async {
+    final audioPath = await _dao.removeDownload(lessonId);
+    if (audioPath != null) await _deleteQuietly(File(audioPath));
+    _notifier(lessonId).value = DownloadStatus.idle;
+  }
+
+  /// Downloaded lessons with the space their audio uses.
+  ///
+  /// Lessons whose audio file vanished from the filesystem (user cleaned the
+  /// storage by hand) are un-marked as downloaded so they show up as
+  /// needing a re-download; their ids come back in [OfflineDownloads.stale].
+  Future<OfflineDownloads> listDownloads() async {
+    final entries = <OfflineDownloadEntry>[];
+    final stale = <String>[];
+    for (final lesson in await _dao.listOfflineLessons()) {
+      final path = lesson.localAudioPath;
+      var bytes = 0;
+      if (path != null) {
+        final file = File(path);
+        if (!await file.exists()) {
+          await _dao.removeDownload(lesson.id);
+          _notifier(lesson.id).value = DownloadStatus.idle;
+          stale.add(lesson.id);
+          continue;
+        }
+        bytes = await file.length();
+      }
+      entries.add(OfflineDownloadEntry(lesson: lesson, audioBytes: bytes));
+    }
+    return OfflineDownloads(entries: entries, stale: stale);
+  }
 
   /// Downloads [lessonId]. Throws [InsufficientStorageException] when the disk
   /// is full and [LessonDownloadException] for any other failure.
@@ -132,11 +184,15 @@ class LessonDownloadService {
 
   Future<void> _rollback(File? partial, File? newAudio) async {
     for (final file in [partial, newAudio]) {
-      try {
-        if (file != null && await file.exists()) await file.delete();
-      } catch (_) {
-        // Best effort: a leftover file is better than masking the real error.
-      }
+      if (file != null) await _deleteQuietly(file);
+    }
+  }
+
+  Future<void> _deleteQuietly(File file) async {
+    try {
+      if (await file.exists()) await file.delete();
+    } catch (_) {
+      // Best effort: a leftover file is better than masking the real error.
     }
   }
 
