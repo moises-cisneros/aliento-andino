@@ -199,6 +199,13 @@ $$T = b \log_{2}(n + 1)$$
 | **Web**     | `pnpm test` (Angular / Vitest) |    $\ge 75\%$    | Unitarias de servicios reactivos (Signals), Auth Guard, componentes standalone.            |
 | **Mobile**  | `flutter test` + `bloc_test`   |    $\ge 75\%$    | Unitarias de BLoC (eventos y transiciones), parsers de digitación, widgets táctiles Fitts. |
 
+**Criterio oficial de cobertura Mobile:** se mide como cobertura de líneas sobre `apps/mobile/lib/` **excluyendo los archivos generados** por `build_runner` (`*.g.dart`, `*.freezed.dart`): no contienen lógica escrita a mano y diluyen la métrica. El cálculo es reproducible y es el que aplica CI (el job `mobile-quality` falla si baja de 75%):
+
+```bash
+cd apps/mobile && flutter test --coverage
+node scripts/mobile-coverage.mjs apps/mobile/coverage/lcov.info --min 75
+```
+
 ---
 
 ## 4. Criterios de Aceptación (Definition of Done - DoD)
