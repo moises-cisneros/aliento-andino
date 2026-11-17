@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.social import Follow, Like, Post
 from app.models.user import User
+from app.schemas.user import UserUpdate
 from app.services.social_service import _build_post_response, _saved_post_ids
 from app.utils.sql import greatest
 
@@ -530,3 +531,13 @@ async def admin_list_users(
     pages = (total + limit - 1) // limit if limit > 0 else 1
 
     return {"items": items, "total": total, "page": page, "pages": pages}
+
+
+async def update_user(db: AsyncSession, user: User, update_data: UserUpdate) -> User:
+    """Actualiza datos de perfil, preferencias de instrumento y calibración respiratoria."""
+    payload = update_data.model_dump(exclude_unset=True)
+    for field, value in payload.items():
+        setattr(user, field, value)
+    await db.commit()
+    await db.refresh(user)
+    return user

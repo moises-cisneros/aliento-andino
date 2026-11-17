@@ -109,6 +109,8 @@ class UserResponse(BaseModel):
     is_verified: bool
     auth_provider: str
     skill_level: str | None = None
+    preferred_instruments: list[str] | None = None
+    breath_sensitivity_rms: float | None = None
     notifications_push_enabled: bool = True
     notifications_email_enabled: bool = True
     # Suscripción (pago simulado)

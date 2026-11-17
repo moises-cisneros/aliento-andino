@@ -10,6 +10,7 @@ from app.schemas.auth import (
     UpdateProfileRequest,
     UserResponse,
 )
+from app.schemas.user import UserUpdate
 
 __all__ = [
     "RegisterRequest",
@@ -20,6 +21,7 @@ __all__ = [
     "ResetPasswordRequest",
     "UpdateProfileRequest",
     "UserResponse",
+    "UserUpdate",
     "TokenResponse",
     "MessageResponse",
 ]

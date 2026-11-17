@@ -3,8 +3,8 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, func
+from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -64,6 +64,10 @@ class User(Base):
 
     # Nivel auto-declarado durante el onboarding ("beginner", "intermediate", "advanced")
     skill_level: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
+    # Preferencias de instrumento y calibración respiratoria (HU-19 / SUB-19-B)
+    preferred_instruments: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    breath_sensitivity_rms: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     # Preferencias de notificaciones (default ambas en True)
     notifications_push_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
