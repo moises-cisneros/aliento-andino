@@ -15,6 +15,7 @@ const sidebars: SidebarsConfig = {
       items: [
         "primeros-pasos/registro-y-perfil",
         "primeros-pasos/calibracion-soplo",
+        "calibracion/soplo-suave",
         "primeros-pasos/calibracion-postura",
       ],
     },
@@ -22,7 +23,14 @@ const sidebars: SidebarsConfig = {
       type: "category",
       label: "3. Instrumentos Andinos",
       collapsed: false,
-      items: ["instrumentos/quena", "instrumentos/zampona", "instrumentos/tarka"],
+      items: [
+        "instrumentos/quena",
+        "quena/embocadura",
+        "instrumentos/zampona",
+        "zampona/tecnica-ira-arca",
+        "instrumentos/tarka",
+        "tarka/digitacion",
+      ],
     },
     {
       type: "category",
