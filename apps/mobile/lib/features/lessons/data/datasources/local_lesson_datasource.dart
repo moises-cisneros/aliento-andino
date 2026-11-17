@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../../core/database/daos/offline_lessons_dao.dart';
 import '../models/category_model.dart';
 import '../models/lesson_model.dart';
 import '../models/note_sequence_model.dart';
@@ -91,10 +92,38 @@ class LocalLessonDataSource {
     bool markDownloaded = false,
   }) async {
     await _db.upsertLessons([_toCompanion(lesson)]);
-    await _db.replaceLessonNotes(lesson.id, [
+    await _db.replaceLessonNotes(
+      lesson.id,
+      _toNoteCompanions(lesson.id, notes),
+    );
+    if (markDownloaded) {
+      await _db.markLessonDownloaded(lesson.id, DateTime.now());
+    }
+  }
+
+  /// Persists a complete offline package (lesson + notes + audio path +
+  /// downloaded mark) in a single transaction.
+  Future<void> saveDownload(
+    LessonModel lesson,
+    List<NoteSequenceModel> notes, {
+    String? localAudioPath,
+  }) {
+    return OfflineLessonsDao(_db).saveDownload(
+      lesson: _toCompanion(lesson),
+      notes: _toNoteCompanions(lesson.id, notes),
+      localAudioPath: localAudioPath,
+      downloadedAt: DateTime.now(),
+    );
+  }
+
+  List<CachedNotesCompanion> _toNoteCompanions(
+    String lessonId,
+    List<NoteSequenceModel> notes,
+  ) {
+    return [
       for (final n in notes)
         CachedNotesCompanion.insert(
-          lessonId: lesson.id,
+          lessonId: lessonId,
           position: n.position,
           note: n.note,
           duration: n.duration,
@@ -105,10 +134,7 @@ class LocalLessonDataSource {
           isChord: Value(n.isChord),
           chordGroup: Value(n.chordGroup),
         ),
-    ]);
-    if (markDownloaded) {
-      await _db.markLessonDownloaded(lesson.id, DateTime.now());
-    }
+    ];
   }
 
   Future<List<NoteSequenceModel>> getNotes(String lessonId) async {
@@ -141,6 +167,7 @@ class LocalLessonDataSource {
       categoryId: l.categoryId,
       title: l.title,
       difficulty: l.difficulty,
+      instrument: Value(l.instrument),
       description: Value(l.description),
       tempoBpm: Value(l.tempoBpm),
       timeSignature: Value(l.timeSignature),
@@ -164,6 +191,7 @@ class LocalLessonDataSource {
       categoryId: r.categoryId,
       title: r.title,
       description: r.description,
+      instrument: r.instrument,
       difficulty: r.difficulty,
       tempoBpm: r.tempoBpm,
       timeSignature: r.timeSignature ?? '4/4',

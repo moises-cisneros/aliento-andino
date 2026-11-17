@@ -13,6 +13,7 @@ from app.models.lesson import PracticeSession
 from app.models.user import User
 from app.schemas.lesson import (
     PaginatedResponse,
+    PracticeHistoryResponse,
     PracticeSessionResponse,
     PracticeSessionResult,
     PracticeSubmitRequest,
@@ -296,6 +297,26 @@ async def get_practice_session(
     )
 
 
+@router.get("/api/v1/practice/history", response_model=PracticeHistoryResponse)
+async def get_practice_history_v1(
+    page: int = Query(1, ge=1),
+    size: int = Query(20, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Historial paginado de prácticas, más recientes primero (HU-10).
+
+    `page < 1` o `size > 100` → 422. El feedback IA solo se expone a premium.
+    """
+    return await practice_service.get_practice_history(
+        db,
+        user_id=current_user.id,
+        page=page,
+        size=size,
+        is_premium=current_user.is_premium,
+    )
+
+
 @router.get("/api/practice/history", response_model=PaginatedResponse)
 async def get_practice_history(
     lesson_id: uuid.UUID | None = Query(None),
@@ -310,7 +331,7 @@ async def get_practice_history(
         user_id=current_user.id,
         lesson_id=lesson_id,
         page=page,
-        limit=limit,
+        size=limit,
         is_premium=current_user.is_premium,
     )
 

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
@@ -22,6 +23,7 @@ import 'features/auth/data/services/email_verification_service.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/lessons/data/repositories/lesson_repository.dart';
+import 'features/lessons/data/services/lesson_download_service.dart';
 import 'features/lessons/data/repositories/practice_repository.dart';
 import 'features/notifications/data/notification_repository.dart';
 import 'features/onboarding/data/onboarding_storage.dart';
@@ -88,9 +90,15 @@ void main() async {
   final localLessonDataSource = LocalLessonDataSource(appDatabase);
 
   // Repositorios de lecciones (cache-aware)
+  final lessonDownloadService = LessonDownloadService(
+    api: apiClient.dio,
+    db: appDatabase,
+    audioDirectory: getApplicationDocumentsDirectory,
+  );
   final lessonRepository = LessonRepository(
     apiClient: apiClient,
     local: localLessonDataSource,
+    downloads: lessonDownloadService,
   );
   final practiceRepository = PracticeRepository(
     apiClient: apiClient,

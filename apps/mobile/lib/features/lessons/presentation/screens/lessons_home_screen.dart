@@ -38,15 +38,31 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
 
   late Future<List<LessonModel>> _recommendedFuture;
   int _goalTick = 0;
+  Set<String> _downloadedIds = const {};
 
   @override
   void initState() {
     super.initState();
     context.read<LessonsBloc>().add(const LessonsLoadCategories());
     _recommendedFuture = context.read<LessonRepository>().getRecommended();
+    _loadDownloadedIds();
+  }
+
+  /// Ids de las lecciones disponibles sin conexión (para el ícono offline).
+  Future<void> _loadDownloadedIds() async {
+    try {
+      final downloaded = await context
+          .read<LessonRepository>()
+          .getDownloadedLessons();
+      if (!mounted) return;
+      setState(() => _downloadedIds = {for (final l in downloaded) l.id});
+    } catch (_) {
+      // El ícono es informativo: si falla la lectura local, no se muestra.
+    }
   }
 
   void _refreshRecommended() {
+    _loadDownloadedIds();
     setState(() {
       _recommendedFuture = context.read<LessonRepository>().getRecommended();
       _goalTick++; // refresca la tarjeta de meta diaria
@@ -84,6 +100,14 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
         actions: [
           const InstrumentSelectorAction(),
           const PendingSyncBadge(),
+          IconButton(
+            icon: const Icon(Icons.offline_pin_outlined),
+            tooltip: 'Lecciones sin conexión',
+            onPressed: () async {
+              await context.push('/offline-lessons');
+              if (mounted) _loadDownloadedIds();
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.bar_chart_rounded),
             tooltip: 'Mi progreso',
@@ -214,6 +238,7 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
                   lesson: lesson,
                   locked: locked,
                   premiumLocked: premiumLocked,
+                  isDownloaded: _downloadedIds.contains(lesson.id),
                   onTap: premiumLocked
                       ? () => _openPaywall()
                       : locked

@@ -13,6 +13,7 @@ from sqlalchemy import (
     String,
     Text,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -144,6 +145,10 @@ class PracticeSession(Base):
     """Sesión de práctica de un usuario en una lección."""
 
     __tablename__ = "practice_sessions"
+    # Composite index for the paginated history query (user_id filter + newest first).
+    __table_args__ = (
+        Index("ix_practice_sessions_user_id_created_at", "user_id", text("created_at DESC")),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(

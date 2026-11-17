@@ -130,15 +130,17 @@ async def get_session_by_client_id(
 async def get_practice_history(
     db: AsyncSession,
     user_id: uuid.UUID,
-    lesson_id: uuid.UUID | None = None,
     page: int = 1,
-    limit: int = 20,
+    size: int = 20,
+    *,
+    lesson_id: uuid.UUID | None = None,
     is_premium: bool = False,
 ) -> dict:
     """Obtener historial de prácticas del usuario.
 
     `is_premium` controla si se incluye el `ai_feedback` (función de pago): para
     usuarios sin suscripción se devuelve None aunque la columna tenga valor.
+    La consulta usa el índice compuesto `(user_id, created_at DESC)`.
     """
     query = (
         select(PracticeSession)
@@ -154,9 +156,9 @@ async def get_practice_history(
     total_result = await db.execute(count_query)
     total = total_result.scalar() or 0
 
-    pages = max(1, math.ceil(total / limit))
-    offset = (page - 1) * limit
-    query = query.order_by(PracticeSession.created_at.desc()).offset(offset).limit(limit)
+    pages = max(1, math.ceil(total / size))
+    offset = (page - 1) * size
+    query = query.order_by(PracticeSession.created_at.desc()).offset(offset).limit(size)
 
     result = await db.execute(query)
     sessions = list(result.scalars().all())
@@ -182,10 +184,11 @@ async def get_practice_history(
                 "completed": s.completed,
                 "created_at": s.created_at,
                 "lesson_title": s.lesson.title if s.lesson else None,
+                "lesson_instrument": s.lesson.instrument if s.lesson else None,
             }
         )
 
-    return {"items": items, "total": total, "page": page, "pages": pages}
+    return {"items": items, "total": total, "page": page, "size": size, "pages": pages}
 
 
 async def get_user_progress_stats(db: AsyncSession, user_id: uuid.UUID) -> dict:

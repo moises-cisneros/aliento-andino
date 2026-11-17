@@ -25,6 +25,7 @@ class CachedLessons extends Table {
   TextColumn get categoryId => text()();
   TextColumn get title => text()();
   TextColumn get description => text().withDefault(const Constant(''))();
+  TextColumn get instrument => text().withDefault(const Constant('quena'))();
   TextColumn get difficulty => text()();
   IntColumn get tempoBpm => integer().withDefault(const Constant(0))();
   TextColumn get timeSignature => text().nullable()();
@@ -113,7 +114,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'aliento_andino'));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -125,6 +126,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 3) {
         await m.addColumn(pendingPractice, pendingPractice.isSynced);
+      }
+      if (from < 4) {
+        await m.addColumn(cachedLessons, cachedLessons.instrument);
       }
     },
   );
@@ -180,6 +184,23 @@ class AppDatabase extends _$AppDatabase {
     await (update(cachedLessons)..where((t) => t.id.equals(lessonId))).write(
       CachedLessonsCompanion(downloadedAt: Value(when)),
     );
+  }
+
+  /// Removes the offline package of a lesson: clears the downloaded mark and
+  /// the audio path and drops its notes. The catalog metadata row stays so the
+  /// lesson keeps showing up (as not downloaded) in cached lists.
+  Future<void> clearLessonDownload(String lessonId) {
+    return transaction(() async {
+      await (update(cachedLessons)..where((t) => t.id.equals(lessonId))).write(
+        const CachedLessonsCompanion(
+          downloadedAt: Value(null),
+          audioLocalPath: Value(null),
+        ),
+      );
+      await (delete(
+        cachedNotes,
+      )..where((t) => t.lessonId.equals(lessonId))).go();
+    });
   }
 
   // ---------------- Notas ----------------

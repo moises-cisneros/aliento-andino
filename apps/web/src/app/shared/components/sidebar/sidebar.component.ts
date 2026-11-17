@@ -18,19 +18,19 @@ import {
   LucideTrendingUp,
   LucideSettings,
   LucideScrollText,
-  LucideIconData,
+  LucideIconInput,
 } from '@lucide/angular';
 import { SidebarService } from '../../../core/services/sidebar.service';
 
 interface NavLink {
   label: string;
-  icon: LucideIconData;
+  icon: LucideIconInput;
   route: string;
 }
 
 interface NavGroup {
   label: string;
-  icon: LucideIconData;
+  icon: LucideIconInput;
   children: { label: string; route: string }[];
 }
 
@@ -490,6 +490,7 @@ export class SidebarComponent {
         { label: 'Resumen', route: '/admin/lessons/dashboard' },
         { label: 'Categorías', route: '/admin/lessons/categories' },
         { label: 'Lista', route: '/admin/lessons/list' },
+        { label: 'Digitaciones', route: '/admin/fingerings' },
       ],
     },
     {

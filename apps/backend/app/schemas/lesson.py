@@ -81,9 +81,8 @@ class NoteSequenceCreate(BaseModel):
     @classmethod
     def validate_note(cls, v: str, info) -> str:
         """Validar formato de nota musical o silencio."""
-        # Si es silencio, aceptar "REST"
-        if info.data.get("is_rest"):
-            return v if v else "REST"
+        if v.upper() == "REST" or info.data.get("is_rest"):
+            return "REST"
         if not NOTE_PATTERN.match(v):
             raise ValueError(
                 f"Formato de nota inválido: '{v}'. Usar notación científica (ej: C4, F#4, Bb3)"
@@ -129,6 +128,8 @@ class LessonCreate(BaseModel):
     tempo_bpm: int = Field(ge=40, le=200)
     time_signature: str = "4/4"
     key_signature: str = "C"
+    genre: str | None = None
+    artist: str | None = None
     thumbnail_url: str | None = None
     audio_preview_url: str | None = None
     duration_seconds: int | None = None
@@ -164,12 +165,15 @@ class LessonUpdate(BaseModel):
     tempo_bpm: int | None = Field(None, ge=40, le=200)
     time_signature: str | None = None
     key_signature: str | None = None
+    genre: str | None = None
+    artist: str | None = None
     thumbnail_url: str | None = None
     audio_preview_url: str | None = None
     duration_seconds: int | None = None
     is_premium: bool | None = None
     order: int | None = None
     is_active: bool | None = None
+    notes: list[NoteSequenceCreate] | None = None
 
     @field_validator("instrument")
     @classmethod
@@ -294,6 +298,7 @@ class PracticeSessionResponse(BaseModel):
     completed: bool
     created_at: datetime
     lesson_title: str | None = None
+    lesson_instrument: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -359,6 +364,16 @@ class AdminStatsOverview(BaseModel):
 
 
 # ===================== PAGINACIÓN =====================
+
+
+class PracticeHistoryResponse(BaseModel):
+    """Respuesta de GET /api/v1/practice/history (HU-10)."""
+
+    items: list[PracticeSessionResponse] = []
+    total: int = 0
+    page: int = 1
+    size: int = 20
+    pages: int = 1
 
 
 class PaginatedResponse(BaseModel):
