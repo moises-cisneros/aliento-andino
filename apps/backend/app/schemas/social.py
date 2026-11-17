@@ -128,6 +128,19 @@ class LikeToggleResponse(BaseModel):
     likes_count: int
 
 
+class ReactionToggleResponse(BaseModel):
+    """Respuesta de alternancia de reacción sobre una publicación.
+
+    Contrato de SUB-11-A (HU-11) para ``POST /posts/{post_id}/react``. La
+    reacción primaria de la red social es el «me gusta», por lo que comparte la
+    forma de [LikeToggleResponse]: estado de la reacción del usuario actual y
+    conteo total actualizado del post.
+    """
+
+    liked: bool
+    likes_count: int
+
+
 # ===================== FOLLOW =====================
 
 

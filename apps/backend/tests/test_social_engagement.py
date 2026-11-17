@@ -180,3 +180,49 @@ class TestEditComment:
             json={"content": "Hackeado"},
         )
         assert edit.status_code == 403, edit.text
+
+
+class TestPostReaction:
+    """[SUB-11-A] Endpoint de contrato POST /posts/{post_id}/react."""
+
+    async def test_react_toggles_like_and_count(
+        self, client: AsyncClient, auth_headers: dict, db_session: AsyncSession
+    ):
+        reactor = await _make_user(
+            client, db_session, email="reactor@example.com", username="reactoruser"
+        )
+        post = await client.post(
+            "/api/posts",
+            headers=auth_headers,
+            json={"content": "Post para reaccionar", "post_type": "text"},
+        )
+        assert post.status_code == 201, post.text
+        post_id = post.json()["id"]
+
+        # Reaccionar (contrato /react) activa el «me gusta».
+        react = await client.post(f"/api/posts/{post_id}/react", headers=reactor)
+        assert react.status_code == 200, react.text
+        assert react.json() == {"liked": True, "likes_count": 1}
+
+        # El post expone is_liked_by_me para quien reaccionó.
+        detail = await client.get(f"/api/posts/{post_id}", headers=reactor)
+        assert detail.json()["is_liked_by_me"] is True
+        assert detail.json()["likes_count"] == 1
+
+        # Toggle de nuevo quita la reacción (idempotente).
+        again = await client.post(f"/api/posts/{post_id}/react", headers=reactor)
+        assert again.status_code == 200
+        assert again.json() == {"liked": False, "likes_count": 0}
+
+    async def test_react_to_deleted_post_returns_404(self, client: AsyncClient, auth_headers: dict):
+        post = await client.post(
+            "/api/posts",
+            headers=auth_headers,
+            json={"content": "Post a eliminar", "post_type": "text"},
+        )
+        post_id = post.json()["id"]
+        deleted = await client.delete(f"/api/posts/{post_id}", headers=auth_headers)
+        assert deleted.status_code in (200, 204), deleted.text
+
+        react = await client.post(f"/api/posts/{post_id}/react", headers=auth_headers)
+        assert react.status_code == 404

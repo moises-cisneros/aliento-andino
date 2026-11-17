@@ -14,6 +14,7 @@ from app.schemas.social import (
     CommentUpdate,
     PostCreate,
     PostUpdate,
+    ReactionToggleResponse,
     ReportCreate,
 )
 from app.services import social_service
@@ -190,6 +191,27 @@ async def toggle_like(
         raise HTTPException(status_code=404, detail="Post no encontrado")
 
     return await social_service.toggle_like(db, post_id, current_user.id)
+
+
+@router.post("/posts/{post_id}/react", response_model=ReactionToggleResponse)
+async def toggle_reaction(
+    post_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ReactionToggleResponse:
+    """[SUB-11-A] Alterna la reacción (me gusta) sobre un post.
+
+    Endpoint del contrato de HU-11 (``POST /posts/{post_id}/react``). Delega en
+    la lógica existente de ``toggle_like`` sin duplicarla y la expone con la
+    respuesta tipada [ReactionToggleResponse]. Devuelve 404 si el post no existe
+    o fue eliminado (soft delete).
+    """
+    post = await social_service.get_post_by_id(db, post_id)
+    if not post or not post.is_active:
+        raise HTTPException(status_code=404, detail="Post no encontrado")
+
+    result = await social_service.toggle_like(db, post_id, current_user.id)
+    return ReactionToggleResponse(**result)
 
 
 @router.get("/posts/{post_id}/likes")
