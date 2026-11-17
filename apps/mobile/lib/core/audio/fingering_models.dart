@@ -242,3 +242,37 @@ class ZamponaFingering {
     return null;
   }
 }
+
+/// Tarka fingering: six front rectangular holes, `true` = covered.
+class TarkaFingering {
+  final List<bool> holesCovered;
+
+  /// Asserts (debug mode) that [holesCovered] has exactly 6 entries.
+  TarkaFingering(List<bool> holesCovered)
+    : assert(
+        holesCovered.length == holeCount,
+        'holesCovered must have exactly $holeCount entries',
+      ),
+      holesCovered = List.unmodifiable(holesCovered);
+
+  static const int holeCount = 6;
+
+  // Diatonic scale from Do5, uncovering one hole at a time from the bottom.
+  static const Map<int, List<bool>> _byMidi = {
+    72: [true, true, true, true, true, true], // Do5
+    74: [true, true, true, true, true, false], // Re5
+    76: [true, true, true, true, false, false], // Mi5
+    77: [true, true, true, false, false, false], // Fa5
+    79: [true, true, false, false, false, false], // Sol5
+    81: [true, false, false, false, false, false], // La5
+    83: [false, false, false, false, false, false], // Si5
+  };
+
+  /// Returns the fingering for [note], or null when the tarka scale does not
+  /// include it.
+  static TarkaFingering? forNote(String note) {
+    final midi = parseNoteToMidi(note);
+    final holes = midi == null ? null : _byMidi[midi];
+    return holes == null ? null : TarkaFingering(holes);
+  }
+}
