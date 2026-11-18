@@ -152,6 +152,9 @@ async def list_lessons(
     difficulty: str | None = Query(None),
     genre: str | None = Query(None),
     search: str | None = Query(None),
+    instrument: str | None = Query(
+        None, description="Filtro por instrumento andino (quena, zampona, tarka)"
+    ),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
@@ -166,6 +169,7 @@ async def list_lessons(
         difficulty=difficulty,
         genre=genre,
         search=search,
+        instrument=instrument,
         user_id=current_user.id,
     )
 

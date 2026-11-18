@@ -125,6 +125,7 @@ async def get_lessons_paginated(
     difficulty: str | None = None,
     genre: str | None = None,
     search: str | None = None,
+    instrument: str | None = None,
     user_id: uuid.UUID | None = None,
     include_inactive: bool = False,
 ) -> dict:
@@ -135,6 +136,8 @@ async def get_lessons_paginated(
 
     if not include_inactive:
         query = query.where(Lesson.is_active == True)  # noqa: E712
+    if instrument:
+        query = query.where(Lesson.instrument == instrument.lower())
     if category_id:
         query = query.where(Lesson.category_id == category_id)
     if difficulty:
@@ -184,6 +187,7 @@ async def get_lessons_paginated(
                 "category_id": lesson.category_id,
                 "title": lesson.title,
                 "description": lesson.description,
+                "instrument": lesson.instrument,
                 "difficulty": lesson.difficulty,
                 "tempo_bpm": lesson.tempo_bpm,
                 "time_signature": lesson.time_signature,
@@ -532,6 +536,7 @@ async def get_admin_lessons_paginated(
                 "category_id": lesson.category_id,
                 "title": lesson.title,
                 "description": lesson.description,
+                "instrument": lesson.instrument,
                 "difficulty": lesson.difficulty,
                 "tempo_bpm": lesson.tempo_bpm,
                 "time_signature": lesson.time_signature,

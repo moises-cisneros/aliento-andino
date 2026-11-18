@@ -162,6 +162,20 @@ class TestListLessons:
         )
         assert response.status_code == 200
 
+    async def test_list_lessons_filter_by_instrument(
+        self, client: AsyncClient, auth_headers: dict, sample_catalog: dict[str, Lesson]
+    ):
+        response = await client.get(
+            "/api/lessons",
+            params={"instrument": "zampona"},
+            headers=auth_headers,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        items = data.get("items", [])
+        assert len(items) >= 1
+        assert all(item["instrument"] == "zampona" for item in items)
+
 
 class TestLessonServiceUnit:
     """Pruebas unitarias de la clase LessonService."""
@@ -179,6 +193,15 @@ class TestLessonServiceUnit:
         lessons = await LessonService.get_lessons(db=db_session, difficulty="principiante")
         assert len(lessons) >= 1
         assert all(l.difficulty == "principiante" for l in lessons)
+
+    async def test_unit_get_lessons_paginated_filter_instrument(
+        self, db_session: AsyncSession, sample_catalog: dict[str, Lesson]
+    ):
+        from app.services.lesson_service import get_lessons_paginated
+
+        res = await get_lessons_paginated(db=db_session, instrument="tarka")
+        assert res["total"] >= 1
+        assert all(item["instrument"] == "tarka" for item in res["items"])
 
     async def test_unit_get_lessons_invalid_instrument_raises_422(self, db_session: AsyncSession):
         with pytest.raises(HTTPException) as exc_info:
@@ -458,3 +481,77 @@ class TestLessonsV1AdminCrud:
             headers=admin_headers,
         )
         assert response.status_code == 404
+
+
+class TestAndeanCurricularCatalog:
+    """Verificación del catálogo curricular pedagógico andino (HU #142)."""
+
+    def test_catalog_structure_and_andean_distribution(self):
+        from seed_lessons import (
+            CATEGORIES,
+            get_embocadura_lessons,
+            get_escalas_lessons,
+            get_melodias_lessons,
+            get_ritmos_lessons,
+        )
+
+        dummy_cat_id = uuid.uuid4()
+        dummy_admin = uuid.uuid4()
+
+        cat_names = [c["name"] for c in CATEGORIES]
+        assert cat_names == [
+            "Embocadura y Sonido",
+            "Escalas Andinas",
+            "Melodías Tradicionales",
+            "Ritmos y Huaynos",
+        ]
+
+        all_lessons = (
+            get_embocadura_lessons(dummy_cat_id, dummy_admin)
+            + get_escalas_lessons(dummy_cat_id, dummy_admin)
+            + get_melodias_lessons(dummy_cat_id, dummy_admin)
+            + get_ritmos_lessons(dummy_cat_id, dummy_admin)
+        )
+
+        assert len(all_lessons) == 36
+
+        # Distribución equitativa: 12 por instrumento
+        quena_lessons = [l for l in all_lessons if l["lesson"]["instrument"] == "quena"]
+        zampona_lessons = [l for l in all_lessons if l["lesson"]["instrument"] == "zampona"]
+        tarka_lessons = [l for l in all_lessons if l["lesson"]["instrument"] == "tarka"]
+
+        assert len(quena_lessons) == 12
+        assert len(zampona_lessons) == 12
+        assert len(tarka_lessons) == 12
+
+        # Todas las notas deben ser monofónicas (sin acordes de piano)
+        for l_item in all_lessons:
+            assert len(l_item["notes"]) >= 4
+            for n in l_item["notes"]:
+                assert n["is_chord"] is False
+                assert n["chord_group"] is None
+                assert isinstance(n["note"], str)
+                assert n["duration"] > 0
+
+        # Temas requeridos en Quena
+        quena_titles = {l["lesson"]["title"] for l in quena_lessons}
+        assert "El Cóndor Pasa (Tema Principal)" in quena_titles
+        assert "Ojos Azules (Melodía Tradicional)" in quena_titles
+        assert "Valicha (Huayno Cusqueño)" in quena_titles
+        assert "Vírgenes del Sol (Fox Incaico)" in quena_titles
+        assert "Primeros Soplos en Quena (Sol4 y La4)" in quena_titles
+        assert "Claridad de Embocadura (Si4 y Do5)" in quena_titles
+
+        # Temas requeridos en Zampoña
+        zampona_titles = {l["lesson"]["title"] for l in zampona_lessons}
+        assert "Kantu de Charazani (Melodía Ancestral)" in zampona_titles
+        assert "Sikuriada de Italaque (Melodía de Siku)" in zampona_titles
+        assert "Poco a Poco (Huayno en Siku)" in zampona_titles
+        assert "Flor de Retama (Huayno en Zampoña)" in zampona_titles
+        assert "Alternancia Básica Ira (6) y Arca (7)" in zampona_titles
+
+        # Temas requeridos en Tarka
+        tarka_titles = {l["lesson"]["title"] for l in tarka_lessons}
+        assert "Emisión de la Tara (Timbre Rasposo)" in tarka_titles
+        assert "Escala de Carnaval de 6 Orificios en Tarka" in tarka_titles
+        assert "Carnaval de Anata (Melodía Central)" in tarka_titles
