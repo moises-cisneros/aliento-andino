@@ -5,13 +5,16 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 
-from sqlalchemy import and_, distinct, func, or_, select
+from fastapi import HTTPException, status
+from sqlalchemy import Integer, and_, case, cast, distinct, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.lesson import Lesson, PracticeSession
 from app.models.ranking import Achievement, UserAchievement, UserXP
 from app.models.social import Follow, Post
 from app.models.user import User
+from app.schemas.ranking import LeaderboardResponse, UserRankingResponse
+from app.schemas.user import VALID_ANDEAN_INSTRUMENTS
 
 # ===================== CÁLCULOS DE XP =====================
 
@@ -524,6 +527,218 @@ async def get_weekly_leaderboard(db: AsyncSession, user_id: uuid.UUID) -> dict:
         "my_weekly_xp": my_xp_data.weekly_xp,
         "days_remaining": days_remaining,
     }
+
+
+def assign_ranks(rows: list[dict], xp_key: str = "xp") -> list[dict]:
+    """Asignar puestos con formato de competencia estándar (empates comparten puesto).
+
+    Ejemplo:
+        Puntuaciones: [100, 100, 80, 70, 70, 50]
+        Puestos:      [  1,   1,  3,  4,  4,  6]
+    """
+    if not rows:
+        return []
+    ranked: list[dict] = []
+    current_rank = 1
+    for i, row in enumerate(rows):
+        if i > 0 and row[xp_key] < rows[i - 1][xp_key]:
+            current_rank = i + 1
+        row_copy = dict(row)
+        row_copy["rank"] = current_rank
+        ranked.append(row_copy)
+    return ranked
+
+
+async def get_leaderboard(
+    db: AsyncSession,
+    user_id: uuid.UUID | None = None,
+    instrument: str | None = None,
+    scope: str = "weekly",
+    limit: int = 50,
+) -> LeaderboardResponse:
+    """Consulta agregada de XP semanal o histórico discriminado por instrumento andino."""
+    if scope not in ("weekly", "all_time"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Scope válido: weekly, all_time",
+        )
+
+    clean_inst: str | None = None
+    if instrument is not None and instrument.strip() != "":
+        clean_inst = instrument.lower().strip()
+        if clean_inst not in VALID_ANDEAN_INSTRUMENTS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Instrumento '{instrument}' no válido. Solo se admiten: {', '.join(sorted(VALID_ANDEAN_INSTRUMENTS))}",
+            )
+
+    precision_bonus = case(
+        (PracticeSession.score >= 100, 50),
+        (PracticeSession.score >= 90, 30),
+        (PracticeSession.score >= 80, 20),
+        (PracticeSession.score >= 70, 10),
+        else_=0,
+    )
+    completion_bonus = case(
+        (PracticeSession.completed.is_(True), 15),
+        else_=0,
+    )
+    difficulty_multiplier = case(
+        (Lesson.difficulty == "avanzado", 2.0),
+        (Lesson.difficulty == "intermedio", 1.5),
+        else_=1.0,
+    )
+    session_xp_expr = cast(
+        func.floor((10 + precision_bonus + completion_bonus) * difficulty_multiplier),
+        Integer,
+    )
+
+    week_start: datetime | None = None
+    if scope == "weekly":
+        monday = get_current_week_monday()
+        week_start = datetime.combine(monday, datetime.min.time()).replace(tzinfo=UTC)
+
+    query = (
+        select(
+            PracticeSession.user_id,
+            User.username,
+            User.full_name,
+            User.avatar_url,
+            func.sum(session_xp_expr).label("xp"),
+            func.coalesce(UserXP.level, 1).label("level"),
+            func.coalesce(UserXP.total_xp, 0).label("total_xp"),
+            func.coalesce(UserXP.weekly_xp, 0).label("weekly_xp"),
+        )
+        .join(Lesson, Lesson.id == PracticeSession.lesson_id)
+        .join(User, User.id == PracticeSession.user_id)
+        .outerjoin(UserXP, UserXP.user_id == PracticeSession.user_id)
+        .where(User.is_active.is_(True))
+    )
+
+    if clean_inst:
+        query = query.where(Lesson.instrument == clean_inst)
+    else:
+        query = query.where(Lesson.instrument.in_(VALID_ANDEAN_INSTRUMENTS))
+
+    if week_start:
+        query = query.where(PracticeSession.created_at >= week_start)
+
+    query = (
+        query.group_by(
+            PracticeSession.user_id,
+            User.username,
+            User.full_name,
+            User.avatar_url,
+            UserXP.level,
+            UserXP.total_xp,
+            UserXP.weekly_xp,
+        )
+        .order_by(func.sum(session_xp_expr).desc(), User.username.asc())
+        .limit(limit)
+    )
+
+    result = await db.execute(query)
+    rows = result.all()
+
+    raw_items = []
+    for row in rows:
+        raw_items.append(
+            {
+                "user_id": row.user_id,
+                "username": row.username,
+                "full_name": row.full_name,
+                "avatar_url": row.avatar_url,
+                "xp": int(row.xp or 0),
+                "total_xp": int(row.total_xp or 0),
+                "weekly_xp": int(row.weekly_xp or 0),
+                "level": int(row.level or 1),
+                "instrument": clean_inst,
+            }
+        )
+
+    ranked_items = assign_ranks(raw_items, xp_key="xp")
+    items = [UserRankingResponse(**item) for item in ranked_items]
+
+    user_rank: int | None = None
+    if user_id is not None:
+        for item in ranked_items:
+            if item["user_id"] == user_id:
+                user_rank = item["rank"]
+                break
+
+        if user_rank is None:
+            my_xp_q = (
+                select(func.sum(session_xp_expr))
+                .select_from(PracticeSession)
+                .join(Lesson, Lesson.id == PracticeSession.lesson_id)
+                .where(PracticeSession.user_id == user_id)
+            )
+            if clean_inst:
+                my_xp_q = my_xp_q.where(Lesson.instrument == clean_inst)
+            else:
+                my_xp_q = my_xp_q.where(Lesson.instrument.in_(VALID_ANDEAN_INSTRUMENTS))
+
+            if week_start:
+                my_xp_q = my_xp_q.where(PracticeSession.created_at >= week_start)
+
+            my_xp_val = (await db.execute(my_xp_q)).scalar()
+            if my_xp_val is not None and my_xp_val > 0:
+                user_xp_subq = (
+                    select(
+                        PracticeSession.user_id.label("uid"),
+                        func.sum(session_xp_expr).label("total_inst_xp"),
+                    )
+                    .join(Lesson, Lesson.id == PracticeSession.lesson_id)
+                    .join(User, User.id == PracticeSession.user_id)
+                    .where(User.is_active.is_(True))
+                )
+                if clean_inst:
+                    user_xp_subq = user_xp_subq.where(Lesson.instrument == clean_inst)
+                else:
+                    user_xp_subq = user_xp_subq.where(
+                        Lesson.instrument.in_(VALID_ANDEAN_INSTRUMENTS)
+                    )
+
+                if week_start:
+                    user_xp_subq = user_xp_subq.where(PracticeSession.created_at >= week_start)
+
+                user_xp_subq = user_xp_subq.group_by(PracticeSession.user_id).subquery()
+
+                higher_q = (
+                    select(func.count())
+                    .select_from(user_xp_subq)
+                    .where(user_xp_subq.c.total_inst_xp > my_xp_val)
+                )
+                higher_count = (await db.execute(higher_q)).scalar() or 0
+                user_rank = higher_count + 1
+
+    return LeaderboardResponse(
+        items=items,
+        user_rank=user_rank,
+        instrument=clean_inst,
+        scope=scope,
+        leaderboard=items,
+    )
+
+
+class RankingService:
+    """Fachada de servicios de ranking y leaderboards."""
+
+    @staticmethod
+    async def get_leaderboard(
+        db: AsyncSession,
+        instrument: str | None = None,
+        scope: str = "weekly",
+        limit: int = 50,
+        user_id: uuid.UUID | None = None,
+    ) -> LeaderboardResponse:
+        return await get_leaderboard(
+            db=db,
+            user_id=user_id,
+            instrument=instrument,
+            scope=scope,
+            limit=limit,
+        )
 
 
 async def get_lesson_leaderboard(
