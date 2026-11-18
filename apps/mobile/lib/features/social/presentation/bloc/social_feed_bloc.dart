@@ -185,10 +185,32 @@ class SocialFeedBloc extends Bloc<FeedEvent, FeedState> {
     emit(currentState.copyWith(posts: updatedPosts));
 
     try {
-      await _socialRepository.toggleLike(event.postId);
-    } catch (_) {
-      // Revertir en caso de error
-      emit(currentState);
+      // Aplauso: POST /posts/{id}/react; el servidor es la fuente de verdad.
+      final result = await _socialRepository.reactToPost(event.postId);
+      final latest = state;
+      if (latest is FeedLoaded) {
+        emit(
+          latest.copyWith(
+            posts: latest.posts
+                .map(
+                  (p) => p.id == event.postId
+                      ? p.copyWith(
+                          isLikedByMe: result.liked,
+                          likesCount: result.likesCount,
+                        )
+                      : p,
+                )
+                .toList(),
+          ),
+        );
+      }
+    } catch (e) {
+      // Revertir y exponer la causa real (regla 8).
+      emit(
+        currentState.copyWith(
+          actionError: isConnectionError(e) ? offlineMessage : e.toString(),
+        ),
+      );
     }
   }
 

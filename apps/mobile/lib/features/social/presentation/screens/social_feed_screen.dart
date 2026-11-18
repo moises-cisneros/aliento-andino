@@ -14,6 +14,7 @@ import '../bloc/social_feed_event.dart';
 import '../bloc/social_feed_state.dart';
 import '../widgets/create_post_fab.dart';
 import '../widgets/edit_content_dialog.dart';
+import '../widgets/social_feed_list.dart';
 import '../widgets/social_post_card.dart';
 import '../widgets/suggested_users_row.dart';
 import '../widgets/report_dialog.dart';
@@ -85,7 +86,19 @@ class _FeedViewState extends State<_FeedView> with AutoRefreshOnResume {
         body: Column(
           children: [
             const OfflineBanner(),
-            Expanded(child: _buildFeedBody(context)),
+            Expanded(
+              child: BlocListener<SocialFeedBloc, FeedState>(
+                listenWhen: (prev, curr) =>
+                    curr is FeedLoaded && curr.actionError != null,
+                listener: (context, state) {
+                  final msg = (state as FeedLoaded).actionError!;
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(msg)));
+                },
+                child: _buildFeedBody(context),
+              ),
+            ),
           ],
         ),
         floatingActionButton: CreatePostFab(
@@ -203,68 +216,35 @@ class _FeedViewState extends State<_FeedView> with AutoRefreshOnResume {
             );
           }
 
-          return RefreshIndicator(
-            color: Theme.of(context).colorScheme.primary,
-            onRefresh: () async {
-              context.read<SocialFeedBloc>().add(const FeedRefresh());
+          return SocialFeedList(
+            itemBuilder: (context, post, index) {
+              final authState = context.read<AuthBloc>().state;
+              final currentUserId = authState is AuthAuthenticated
+                  ? authState.user.id
+                  : null;
+              final isOwn =
+                  currentUserId != null && post.user.id == currentUserId;
+              return SocialPostCard(
+                post: post,
+                onTap: () => context.push('/social/post/${post.id}'),
+                onLike: () =>
+                    context.read<SocialFeedBloc>().add(FeedToggleLike(post.id)),
+                onComment: () => context.push('/social/post/${post.id}'),
+                onUserTap: () => context.push('/social/user/${post.user.id}'),
+                onSave: () =>
+                    context.read<SocialFeedBloc>().add(FeedToggleSave(post.id)),
+                saveButtonKey: index == 0
+                    ? TutorTargets.keyFor('save_post_button')
+                    : null,
+                onEdit: isOwn ? () => _showEditPostDialog(context, post) : null,
+                onDelete: isOwn
+                    ? () => _confirmDeletePost(context, post.id)
+                    : null,
+                onReport: isOwn
+                    ? null
+                    : () => _showReportDialog(context, postId: post.id),
+              );
             },
-            child: NotificationListener<ScrollNotification>(
-              onNotification: (scroll) {
-                if (scroll.metrics.pixels >=
-                    scroll.metrics.maxScrollExtent - 200) {
-                  context.read<SocialFeedBloc>().add(const FeedLoadMore());
-                }
-                return false;
-              },
-              child: ListView.builder(
-                padding: const EdgeInsets.only(top: 8, bottom: 80),
-                itemCount: state.posts.length + (state.isLoadingMore ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index >= state.posts.length) {
-                    return Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: CircularProgressIndicator(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    );
-                  }
-                  final post = state.posts[index];
-                  final authState = context.read<AuthBloc>().state;
-                  final currentUserId = authState is AuthAuthenticated
-                      ? authState.user.id
-                      : null;
-                  final isOwn =
-                      currentUserId != null && post.user.id == currentUserId;
-                  return SocialPostCard(
-                    post: post,
-                    onTap: () => context.push('/social/post/${post.id}'),
-                    onLike: () => context.read<SocialFeedBloc>().add(
-                      FeedToggleLike(post.id),
-                    ),
-                    onComment: () => context.push('/social/post/${post.id}'),
-                    onUserTap: () =>
-                        context.push('/social/user/${post.user.id}'),
-                    onSave: () => context.read<SocialFeedBloc>().add(
-                      FeedToggleSave(post.id),
-                    ),
-                    saveButtonKey: index == 0
-                        ? TutorTargets.keyFor('save_post_button')
-                        : null,
-                    onEdit: isOwn
-                        ? () => _showEditPostDialog(context, post)
-                        : null,
-                    onDelete: isOwn
-                        ? () => _confirmDeletePost(context, post.id)
-                        : null,
-                    onReport: isOwn
-                        ? null
-                        : () => _showReportDialog(context, postId: post.id),
-                  );
-                },
-              ),
-            ),
           );
         }
         return const SizedBox.shrink();

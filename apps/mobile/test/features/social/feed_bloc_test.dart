@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:mobile/features/social/data/models/post_model.dart';
+import 'package:mobile/features/social/data/models/reaction_toggle_model.dart';
 import 'package:mobile/features/social/data/models/user_summary_model.dart';
 import 'package:mobile/features/social/data/repositories/social_repository.dart';
 import 'package:mobile/features/social/presentation/bloc/social_feed_bloc.dart';
@@ -95,6 +96,57 @@ void main() {
         ),
       ],
       verify: (_) => verify(() => repo.toggleSave('1')).called(1),
+    );
+
+    blocTest<SocialFeedBloc, FeedState>(
+      'FeedToggleLike consume /react y concilia el conteo con el servidor',
+      setUp: () {
+        when(() => repo.getFeed()).thenAnswer((_) async => _page([_post('1')]));
+        when(() => repo.reactToPost('1')).thenAnswer(
+          (_) async => const ReactionToggleModel(liked: true, likesCount: 7),
+        );
+      },
+      build: () => SocialFeedBloc(socialRepository: repo),
+      act: (bloc) async {
+        bloc.add(const FeedLoad());
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(const FeedToggleLike('1'));
+      },
+      skip: 2,
+      expect: () => [
+        isA<FeedLoaded>().having(
+          (s) => s.posts.first.likesCount,
+          'optimista',
+          1,
+        ),
+        isA<FeedLoaded>()
+            .having((s) => s.posts.first.likesCount, 'servidor', 7)
+            .having((s) => s.posts.first.isLikedByMe, 'liked', true),
+      ],
+      verify: (_) {
+        verify(() => repo.reactToPost('1')).called(1);
+        verifyNever(() => repo.toggleLike(any()));
+      },
+    );
+
+    blocTest<SocialFeedBloc, FeedState>(
+      'FeedToggleLike revierte y expone la causa real si /react falla',
+      setUp: () {
+        when(() => repo.getFeed()).thenAnswer((_) async => _page([_post('1')]));
+        when(() => repo.reactToPost('1')).thenThrow(Exception('boom 503'));
+      },
+      build: () => SocialFeedBloc(socialRepository: repo),
+      act: (bloc) async {
+        bloc.add(const FeedLoad());
+        await Future<void>.delayed(Duration.zero);
+        bloc.add(const FeedToggleLike('1'));
+      },
+      skip: 3,
+      expect: () => [
+        isA<FeedLoaded>()
+            .having((s) => s.posts.first.likesCount, 'revertido', 0)
+            .having((s) => s.actionError, 'causa', contains('boom 503')),
+      ],
     );
   });
 }

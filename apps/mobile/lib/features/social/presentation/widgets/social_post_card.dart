@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../data/models/post_model.dart';
-import 'like_button.dart';
+import 'applause_button.dart';
+import 'social_audio_preview.dart';
 import 'practice_result_card.dart';
 import 'rich_post_text.dart';
 import 'user_avatar.dart';
@@ -147,8 +148,14 @@ class SocialPostCard extends StatelessWidget {
                 const SizedBox(height: 10),
                 PracticeResultCard(session: post.practiceSession!),
               ],
+              // Audio preview (falla sin interrumpir la lectura)
+              if (SocialAudioPreview.isAudioUrl(post.mediaUrl)) ...[
+                const SizedBox(height: 10),
+                SocialAudioPreview(url: post.mediaUrl!),
+              ],
               // Imagen
-              if (post.mediaUrl != null) ...[
+              if (post.mediaUrl != null &&
+                  !SocialAudioPreview.isAudioUrl(post.mediaUrl)) ...[
                 const SizedBox(height: 10),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
@@ -165,8 +172,8 @@ class SocialPostCard extends StatelessWidget {
               // Acciones
               Row(
                 children: [
-                  LikeButton(
-                    isLiked: post.isLikedByMe,
+                  ApplauseButton(
+                    isApplauded: post.isLikedByMe,
                     count: post.likesCount,
                     onPressed: onLike,
                   ),
