@@ -66,4 +66,38 @@ void main() {
       expect(next, DateTime(2026, 2, 1, 23, 0));
     });
   });
+
+  group('PracticeReminderService.nextNightAlertInstance', () {
+    test('sin práctica y antes de las 21:00 → alerta hoy a las 21:00', () {
+      final next = PracticeReminderService.nextNightAlertInstance(
+        practicedToday: false,
+        now: DateTime(2026, 1, 15, 10, 0),
+      );
+      expect(next, DateTime(2026, 1, 15, 21, 0));
+    });
+
+    test('con práctica hoy → alerta mañana a las 21:00', () {
+      final next = PracticeReminderService.nextNightAlertInstance(
+        practicedToday: true,
+        now: DateTime(2026, 1, 15, 10, 0),
+      );
+      expect(next, DateTime(2026, 1, 16, 21, 0));
+    });
+
+    test('sin práctica pero ya pasaron las 21:00 → mañana', () {
+      final next = PracticeReminderService.nextNightAlertInstance(
+        practicedToday: false,
+        now: DateTime(2026, 1, 15, 21, 0),
+      );
+      expect(next, DateTime(2026, 1, 16, 21, 0));
+    });
+
+    test('cruce de fin de mes', () {
+      final next = PracticeReminderService.nextNightAlertInstance(
+        practicedToday: true,
+        now: DateTime(2026, 1, 31, 8, 0),
+      );
+      expect(next, DateTime(2026, 2, 1, 21, 0));
+    });
+  });
 }

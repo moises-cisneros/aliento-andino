@@ -12,7 +12,7 @@ import 'core/database/app_database.dart';
 import 'core/network/api_client.dart';
 import 'core/network/upload_service.dart';
 import 'core/notifications/notification_service.dart';
-import 'core/notifications/practice_reminder_service.dart';
+import 'core/notifications/local_notification_service.dart';
 import 'core/storage/secure_storage.dart';
 import 'core/sync/practice_sync_service.dart';
 import 'firebase_options.dart';
@@ -148,7 +148,11 @@ void main() async {
   final notificationService = NotificationService(apiClient: apiClient);
 
   // Reprogramar el recordatorio diario de práctica si el usuario lo activó.
-  unawaited(PracticeReminderService().rescheduleIfEnabled());
+  final localNotifications = LocalNotificationService();
+  unawaited(localNotifications.restore());
+  WidgetsBinding.instance.addObserver(
+    NightAlertLifecycleObserver(localNotifications),
+  );
 
   // Repositorio de notificaciones in-app
   final notificationRepository = NotificationRepository(apiClient: apiClient);

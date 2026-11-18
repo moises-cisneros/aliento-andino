@@ -12,6 +12,10 @@ class PracticeReminderService {
   static const _hourKey = 'practice_reminder_hour';
   static const _minuteKey = 'practice_reminder_minute';
   static const int _reminderId = 1001;
+  static const int _nightAlertId = 1002;
+
+  /// Hora de la alerta nocturna: 3 horas antes de medianoche (21:00).
+  static const int nightAlertHour = 21;
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
@@ -88,19 +92,8 @@ class PracticeReminderService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_enabledKey, false);
     await _plugin.cancel(_reminderId);
+    await _plugin.cancel(_nightAlertId);
   }
-
-  /// [SUB-20-A] Programa (o reprograma) el recordatorio diario a [time].
-  ///
-  /// Método del contrato de HU-20. Envoltura sobre [enable] con firma
-  /// `Future<void>`; si el permiso de notificaciones es rechazado no bloquea la
-  /// app (el llamador consulta [isEnabled] para reflejar el estado real).
-  Future<void> scheduleDailyReminder({required TimeOfDay time}) async {
-    await enable(time);
-  }
-
-  /// [SUB-20-A] Cancela el recordatorio diario. Método del contrato de HU-20.
-  Future<void> cancelDailyReminder() => disable();
 
   /// [SUB-20-A] Formatea la hora del recordatorio como `HH:mm` (24 h).
   ///
@@ -133,6 +126,67 @@ class PracticeReminderService {
     return scheduled;
   }
 
+  /// [SUB-20-B] Próximo instante de la alerta nocturna (3 h antes de
+  /// medianoche). Función pura: si ya practicó hoy, o las 21:00 de hoy ya
+  /// pasaron, devuelve las 21:00 de mañana; si no, las de hoy.
+  static DateTime nextNightAlertInstance({
+    required bool practicedToday,
+    DateTime? now,
+  }) {
+    final current = now ?? DateTime.now();
+    final today = DateTime(
+      current.year,
+      current.month,
+      current.day,
+      nightAlertHour,
+    );
+    if (!practicedToday && today.isAfter(current)) return today;
+    return DateTime(
+      current.year,
+      current.month,
+      current.day + 1,
+      nightAlertHour,
+    );
+  }
+
+  /// [SUB-20-B] Reprograma la alerta nocturna según la práctica de hoy
+  /// ([todayMinutes] > 0 = ya practicó). Solo existe mientras el recordatorio
+  /// diario esté activado. Es una notificación de una sola vez que se
+  /// reprograma en cada arranque/pausa de la app.
+  Future<void> syncNightAlert({required int todayMinutes}) async {
+    await _ensureReady();
+    await _plugin.cancel(_nightAlertId);
+    if (!await isEnabled()) return;
+    final next = nextNightAlertInstance(practicedToday: todayMinutes > 0);
+    final at = tz.TZDateTime(
+      tz.local,
+      next.year,
+      next.month,
+      next.day,
+      next.hour,
+      next.minute,
+    );
+    await _plugin.zonedSchedule(
+      _nightAlertId,
+      'Hoy todavía no practicaste 🪈',
+      'Faltan 3 horas para medianoche: unos minutos de quena, zampoña o '
+          'tarka salvan tu racha.',
+      at,
+      _details,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+  }
+
+  static const _details = NotificationDetails(
+    android: AndroidNotificationDetails(
+      'practice_reminders',
+      'Recordatorios de práctica',
+      channelDescription: 'Aviso diario para practicar quena, zampoña o tarka',
+      importance: Importance.high,
+      priority: Priority.high,
+    ),
+  );
+
   /// Reprograma en el arranque de la app si quedó activado (el SO puede limpiar
   /// las alarmas tras reinicios/updates). No vuelve a pedir permiso: el usuario
   /// ya lo concedió al activarlo.
@@ -144,22 +198,12 @@ class PracticeReminderService {
 
   Future<void> _schedule(TimeOfDay time) async {
     await _plugin.cancel(_reminderId);
-    const details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        'practice_reminders',
-        'Recordatorios de práctica',
-        channelDescription:
-            'Aviso diario para practicar quena, zampoña o tarka',
-        importance: Importance.high,
-        priority: Priority.high,
-      ),
-    );
     await _plugin.zonedSchedule(
       _reminderId,
       '¡Hora de practicar! 🪈',
       'Mantené tu racha: unos minutos al día hacen la diferencia.',
       _nextInstanceOf(time),
-      details,
+      _details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time, // se repite cada día
     );
