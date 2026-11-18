@@ -18,7 +18,7 @@ import { SidebarService } from '../../../core/services/sidebar.service';
           <svg lucideMenu [size]="20"></svg>
         </button>
         <a class="navbar-brand-link" routerLink="/admin/dashboard">
-          <img src="iconopiano.svg" alt="Aliento Andino" class="navbar-logo" />
+          <img src="logo.svg" alt="Aliento Andino" class="navbar-logo" />
           <span class="navbar-brand">Aliento Andino</span>
         </a>
       </div>

@@ -63,7 +63,7 @@ type NavItem = (NavLink & { type: 'link' }) | (NavGroup & { type: 'group' });
           routerLink="/admin/dashboard"
           (click)="sidebarService.close()"
         >
-          <img src="iconopiano.svg" alt="Aliento Andino" class="sidebar-logo" />
+          <img src="logo.svg" alt="Aliento Andino" class="sidebar-logo" />
           <span class="sidebar-brand-text">Aliento Andino</span>
         </a>
         <button class="close-btn" (click)="sidebarService.close()">

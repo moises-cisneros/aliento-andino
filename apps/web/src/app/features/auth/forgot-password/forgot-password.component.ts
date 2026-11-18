@@ -24,7 +24,7 @@ import { LoadingSpinnerComponent } from '../../../shared/components/loading-spin
       <div class="container">
         <!-- Brand -->
         <div class="brand">
-          <img src="iconopiano.svg" alt="Aliento Andino" class="brand-logo" />
+          <img src="logo.svg" alt="Aliento Andino" class="brand-logo" />
           <h1 class="brand-name">Aliento<span class="brand-ai">Andino</span></h1>
         </div>
 

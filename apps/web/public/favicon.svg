@@ -1,31 +1,36 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <style>
-    rect.bg { fill: #111827; }
-    rect.white-key { fill: #ffffff; }
-    rect.black-key { fill: #1a1a2e; }
-    rect.glow { fill: #06b6d4; opacity: 0.3; }
-    @media (prefers-color-scheme: light) {
-      rect.bg { fill: #e2e8f0; }
-      rect.black-key { fill: #0f172a; }
-      rect.glow { fill: #0891b2; opacity: 0.2; }
-    }
-  </style>
-  <!-- Background -->
-  <rect class="bg" width="32" height="32" rx="6"/>
-  <!-- Glow -->
-  <rect class="glow" x="3" y="6" width="26" height="20" rx="3"/>
-  <!-- White keys -->
-  <rect class="white-key" x="5" y="8" width="3" height="16" rx="0.5"/>
-  <rect class="white-key" x="8.5" y="8" width="3" height="16" rx="0.5"/>
-  <rect class="white-key" x="12" y="8" width="3" height="16" rx="0.5"/>
-  <rect class="white-key" x="15.5" y="8" width="3" height="16" rx="0.5"/>
-  <rect class="white-key" x="19" y="8" width="3" height="16" rx="0.5"/>
-  <rect class="white-key" x="22.5" y="8" width="3" height="16" rx="0.5"/>
-  <rect class="white-key" x="26" y="8" width="3" height="16" rx="0.5"/>
-  <!-- Black keys -->
-  <rect class="black-key" x="7" y="8" width="2.5" height="10" rx="0.5"/>
-  <rect class="black-key" x="10.5" y="8" width="2.5" height="10" rx="0.5"/>
-  <rect class="black-key" x="17.5" y="8" width="2.5" height="10" rx="0.5"/>
-  <rect class="black-key" x="21" y="8" width="2.5" height="10" rx="0.5"/>
-  <rect class="black-key" x="24.5" y="8" width="2.5" height="10" rx="0.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="favBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A0E17" />
+      <stop offset="100%" stop-color="#111827" />
+    </linearGradient>
+    <linearGradient id="favWind" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#8B5CF6" />
+    </linearGradient>
+    <linearGradient id="favBand" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F97316" />
+      <stop offset="100%" stop-color="#FBBF24" />
+    </linearGradient>
+  </defs>
+
+  <!-- Fondo -->
+  <rect width="32" height="32" rx="7" fill="url(#favBg)" stroke="#1E293B" stroke-width="1"/>
+
+  <!-- Tubos de Zampoña -->
+  <rect x="6" y="8" width="3.2" height="17" rx="1.6" fill="#334155"/>
+  <rect x="10.2" y="10" width="3.2" height="15" rx="1.6" fill="#334155"/>
+  <rect x="14.4" y="12" width="3.2" height="13" rx="1.6" fill="#0891B2"/>
+  <rect x="18.6" y="14" width="3.2" height="11" rx="1.6" fill="#334155"/>
+  <rect x="22.8" y="16" width="3.2" height="9" rx="1.6" fill="#334155"/>
+
+  <!-- Cinta Andina -->
+  <rect x="5.5" y="19" width="21" height="1.8" rx="0.9" fill="url(#favBand)"/>
+
+  <!-- Onda de Aliento -->
+  <path d="M 4 14 C 7 6, 13 8, 17 11 C 21 14, 25 8, 29 10 C 30 11, 29 12.5, 27 12 C 23 11, 19 16, 15 13 C 11 10, 7 12, 5 16 Z"
+        fill="url(#favWind)" opacity="0.95"/>
+
+  <!-- Resonancia -->
+  <circle cx="16" cy="13" r="1.1" fill="#FFFFFF"/>
 </svg>
