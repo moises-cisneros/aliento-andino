@@ -16,6 +16,10 @@ jobs:
   conventions:
     name: Commits & attribution
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
     env:
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -39,3 +43,9 @@ jobs:
         run: node scripts/ai-attribution.mjs --range "$BASE_SHA..$HEAD_SHA"
       - name: No AI attribution in the PR title or description
         run: node scripts/ai-attribution.mjs --env PR_TITLE PR_BODY
+      - name: PR closes its sub-issue and only issues of the areas it touches
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/pr-closes-guard.mjs
