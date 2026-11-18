@@ -290,7 +290,7 @@ def _smart_tutor_fallback(message: str, current_route: str | None, user: User) -
         for k in ["practic", "leccion", "lección", "cancion", "canción", "aprender", "tocar"]
     ):
         return {
-            "reply": "¡Es muy fácil! En la sección de Lecciones puedes elegir cualquier ejercicio de piano y presionar para comenzar tu práctica.",
+            "reply": "¡Es muy fácil! En la sección de Lecciones puedes elegir cualquier ejercicio de Quena, Zampoña o Tarka y presionar para comenzar tu práctica.",
             "actions": [
                 {"tool": "navigate_to", "args": {"route": "/lessons"}},
                 {
@@ -350,7 +350,7 @@ def _smart_tutor_fallback(message: str, current_route: str | None, user: User) -
     elif any(k in msg for k in ["hola", "buen", "saludo", "quien eres", "quién eres"]):
         name = getattr(user, "username", "estudiante")
         return {
-            "reply": f"¡Hola {name}! Soy Vivi, tu tutora de piano inteligente. ¿En qué parte de la app te gustaría ayuda hoy?",
+            "reply": f"¡Hola {name}! Soy Vivi, tu tutora inteligente de Quena, Zampoña y Tarka. ¿En qué parte de la app te gustaría ayuda hoy?",
             "actions": [],
         }
     else:

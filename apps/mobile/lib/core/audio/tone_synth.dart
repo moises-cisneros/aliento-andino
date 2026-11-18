@@ -15,7 +15,7 @@ class ToneSynth {
   /// segmentado por instrumento, así que no hay que limpiarlo).
   Instrument instrument;
 
-  ToneSynth({this.instrument = Instrument.piano});
+  ToneSynth({this.instrument = Instrument.quena});
 
   // Pool de reproductores para permitir notas/acordes superpuestos. El
   // constructor por defecto genera un playerId único por reproductor.

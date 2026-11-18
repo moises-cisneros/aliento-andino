@@ -36,6 +36,10 @@ class TestBuildPrompt:
         # Debe pedir explícitamente evitar regionalismos rioplatenses.
         assert "vos" in prompt
 
+    def test_prompt_names_the_andean_instruments(self):
+        prompt = _build_prompt(skill_level="beginner", errors_detail=None, **_BASE_KWARGS)
+        assert "Quena, Zampoña y Tarka" in prompt
+
     def test_maps_skill_level_to_spanish(self):
         prompt = _build_prompt(skill_level="advanced", errors_detail=None, **_BASE_KWARGS)
         assert "avanzado" in prompt

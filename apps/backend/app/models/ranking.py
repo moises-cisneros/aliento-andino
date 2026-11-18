@@ -33,7 +33,7 @@ class UserXP(Base):
         index=True,
         nullable=False,
     )
-    total_xp: Mapped[int] = mapped_column(Integer, default=0)
+    total_xp: Mapped[int] = mapped_column(Integer, default=0, index=True)
     weekly_xp: Mapped[int] = mapped_column(Integer, default=0, index=True)
     level: Mapped[int] = mapped_column(Integer, default=1)
     current_streak: Mapped[int] = mapped_column(Integer, default=0)
