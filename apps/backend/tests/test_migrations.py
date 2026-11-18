@@ -9,6 +9,7 @@ explícito. Se crea una base temporal (`CREATE DATABASE`) y se elimina al final.
 """
 
 import asyncio
+import contextlib
 import os
 import subprocess
 import sys
@@ -96,7 +97,11 @@ def test_upgrade_downgrade_upgrade_matches_models():
     db_name = f"migration_test_{uuid.uuid4().hex[:12]}"
     temp_url = make_url(server_url).set(database=db_name).render_as_string(hide_password=False)
 
-    asyncio.run(_admin(server_url, f'CREATE DATABASE "{db_name}"'))
+    try:
+        asyncio.run(_admin(server_url, f'CREATE DATABASE "{db_name}"'))
+    except (OSError, Exception) as e:
+        pytest.skip(f"PostgreSQL server no disponible: {e}")
+
     try:
         _alembic(temp_url, "upgrade", "head")
         _alembic(temp_url, "downgrade", "base")
@@ -107,4 +112,5 @@ def test_upgrade_downgrade_upgrade_matches_models():
         diff = asyncio.run(_schema_diff(temp_url))
         assert diff == [], f"El esquema migrado difiere de Base.metadata: {diff}"
     finally:
-        asyncio.run(_admin(server_url, f'DROP DATABASE IF EXISTS "{db_name}" WITH (FORCE)'))
+        with contextlib.suppress(Exception):
+            asyncio.run(_admin(server_url, f'DROP DATABASE IF EXISTS "{db_name}" WITH (FORCE)'))
