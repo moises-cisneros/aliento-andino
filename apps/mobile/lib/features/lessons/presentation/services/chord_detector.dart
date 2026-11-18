@@ -15,7 +15,7 @@ import 'dart:typed_data';
 /// - Falsos positivos con armónicos fuertes.
 ///
 /// Para producción real, conviene migrar a un modelo ML (CREPE / Basic Pitch
-/// de Spotify) compilado a TFLite. Esto es MVP "good enough" para piano simple.
+/// de Spotify) compilado a TFLite. Esto es MVP "good enough" para detección acústica.
 class ChordDetector {
   static const int sampleRate = 44100;
   // Cuanto más grande, mejor resolución en bajos pero más latencia.
@@ -37,7 +37,7 @@ class ChordDetector {
     'B',
   ];
 
-  /// Frecuencias mínima/máxima a considerar (piano: C2 a C6).
+  /// Frecuencias mínima/máxima a considerar (rango C2 a C6).
   static const double minFreq = 65.4; // C2
   static const double maxFreq = 1046.5; // C6
   static const double peakThreshold = 0.15; // umbral relativo al peak máximo
@@ -71,7 +71,7 @@ class ChordDetector {
       magnitude[i] = math.sqrt(real[i] * real[i] + imag[i] * imag[i]);
     }
 
-    // Picos en rango de piano
+    // Picos en rango acústico relevante
     final binWidth = sampleRate / fftSize;
     final minBin = (minFreq / binWidth).floor().clamp(1, binCount - 1);
     final maxBin = (maxFreq / binWidth).ceil().clamp(minBin + 1, binCount - 1);

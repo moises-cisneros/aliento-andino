@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:mobile/core/audio/instrument.dart';
 
 /// Eventos del BLoC de lecciones.
 abstract class LessonsEvent extends Equatable {
@@ -44,6 +45,15 @@ class LessonsFilterByGenre extends LessonsEvent {
 
   @override
   List<Object?> get props => [genre];
+}
+
+/// Filtrar por instrumento andino.
+class LessonsFilterByInstrument extends LessonsEvent {
+  final InstrumentType instrument;
+  const LessonsFilterByInstrument(this.instrument);
+
+  @override
+  List<Object?> get props => [instrument];
 }
 
 /// Buscar lecciones por texto.

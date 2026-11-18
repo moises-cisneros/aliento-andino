@@ -18,7 +18,7 @@ class SkillAssessmentScreen extends StatefulWidget {
 class _SkillAssessmentScreenState extends State<SkillAssessmentScreen> {
   static const _questions = <_Question>[
     _Question(
-      title: '¿Hace cuánto tocás piano?',
+      title: '¿Hace cuánto tocás instrumentos andinos?',
       options: [
         _Option(label: 'Nunca toqué', icon: Icons.star_border, points: 0),
         _Option(label: 'Menos de 6 meses', icon: Icons.timer, points: 1),
@@ -31,7 +31,7 @@ class _SkillAssessmentScreenState extends State<SkillAssessmentScreen> {
       ],
     ),
     _Question(
-      title: '¿Sabés leer partituras?',
+      title: '¿Sabés leer partituras o tablaturas?',
       options: [
         _Option(label: 'Para nada', icon: Icons.help_outline, points: 0),
         _Option(
@@ -44,35 +44,35 @@ class _SkillAssessmentScreenState extends State<SkillAssessmentScreen> {
       ],
     ),
     _Question(
-      title: '¿Conocés los acordes mayores y menores?',
+      title: '¿Conocés las escalas andinas y afinación?',
       options: [
         _Option(label: 'No sé qué son', icon: Icons.question_mark, points: 0),
         _Option(
-          label: 'Sé los más básicos',
+          label: 'Sé las más básicas',
           icon: Icons.thumb_up_outlined,
           points: 1,
         ),
-        _Option(label: 'Manejo varios', icon: Icons.queue_music, points: 2),
+        _Option(label: 'Manejo varias', icon: Icons.queue_music, points: 2),
         _Option(
-          label: 'Conozco escalas e inversiones',
+          label: 'Conozco escalas pentatónicas y diatónicas',
           icon: Icons.library_music,
           points: 3,
         ),
       ],
     ),
     _Question(
-      title: '¿Podés tocar con ambas manos a la vez?',
+      title: '¿Dominás la digitación y embocadura?',
       options: [
         _Option(label: 'Todavía no', icon: Icons.back_hand, points: 0),
-        _Option(label: 'Piezas muy simples', icon: Icons.front_hand, points: 1),
+        _Option(label: 'Notas básicas', icon: Icons.front_hand, points: 1),
         _Option(
-          label: 'Sí, con ejercicios',
-          icon: Icons.sign_language,
+          label: 'Cambios de octava y semitonos',
+          icon: Icons.air,
           points: 2,
         ),
         _Option(
-          label: 'Sin problema, piezas complejas',
-          icon: Icons.piano,
+          label: 'Repertorio completo y articulación',
+          icon: Icons.music_note,
           points: 3,
         ),
       ],

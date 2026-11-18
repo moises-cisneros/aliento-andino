@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-
+import 'package:mobile/core/audio/instrument.dart';
 import '../../../data/models/category_model.dart';
 import '../../../data/models/lesson_model.dart';
 
@@ -37,6 +37,7 @@ class LessonsLoaded extends LessonsState {
   final String? activeCategory;
   final String? activeDifficulty;
   final String? activeGenre;
+  final InstrumentType? activeInstrument;
   final String searchQuery;
 
   const LessonsLoaded({
@@ -48,6 +49,7 @@ class LessonsLoaded extends LessonsState {
     this.activeCategory,
     this.activeDifficulty,
     this.activeGenre,
+    this.activeInstrument,
     this.searchQuery = '',
   });
 
@@ -74,6 +76,7 @@ class LessonsLoaded extends LessonsState {
     activeCategory,
     activeDifficulty,
     activeGenre,
+    activeInstrument,
     searchQuery,
   ];
 }

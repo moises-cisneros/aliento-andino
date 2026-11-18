@@ -18,9 +18,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   static const _pages = <_PageData>[
     _PageData(
-      icon: Icons.piano,
+      icon: Icons.music_note,
       color: Color(0xFF06B6D4),
-      title: 'Aprendé piano desde cero',
+      title: 'Aprendé instrumentos andinos desde cero',
       description:
           'Lecciones interactivas para todos los niveles, desde tus primeras notas hasta piezas avanzadas.',
     ),

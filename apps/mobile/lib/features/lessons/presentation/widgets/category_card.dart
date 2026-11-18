@@ -20,7 +20,12 @@ class CategoryCard extends StatelessWidget {
       case 'music_note':
         return Icons.music_note;
       case 'piano':
-        return Icons.piano;
+        return Icons.music_note;
+      case 'quena':
+      case 'zampona':
+      case 'tarka':
+      case 'aerophone':
+        return Icons.air;
       case 'queue_music':
         return Icons.queue_music;
       case 'timer':

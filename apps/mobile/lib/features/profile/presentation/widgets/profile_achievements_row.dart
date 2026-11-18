@@ -118,7 +118,7 @@ class _AchievementMiniCard extends StatelessWidget {
     const map = <String, IconData>{
       'music_note': Icons.music_note,
       'school': Icons.school,
-      'piano': Icons.piano,
+      'piano': Icons.music_note,
       'emoji_events': Icons.emoji_events,
       'stars': Icons.stars,
       'local_fire_department': Icons.local_fire_department,

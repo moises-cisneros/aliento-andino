@@ -9,11 +9,12 @@ import '../../data/models/note_sequence_model.dart';
 import '../bloc/lesson_detail/lesson_detail_bloc.dart';
 import '../bloc/lesson_detail/lesson_detail_event.dart';
 import '../bloc/lesson_detail/lesson_detail_state.dart';
+import '../../../../core/audio/instrument.dart';
+import '../../../instrument_select/presentation/widgets/instrument_selector_appbar.dart';
 import '../widgets/audio_preview_button.dart';
 import '../widgets/difficulty_badge.dart';
 import '../widgets/lesson_download_button.dart';
 import '../widgets/note_sequence_viewer.dart';
-import '../widgets/piano_guide_widget.dart';
 import '../widgets/staff_view.dart';
 
 /// Pantalla de detalle de una lección.
@@ -84,7 +85,7 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
     final lesson = state.lesson;
     final notes = state.notes;
 
-    // Extraer notas únicas para el piano
+    // Extraer notas únicas para la digitación
     final uniqueNotes = notes
         .where((n) => !n.isRest)
         .map((n) => n.note)
@@ -262,10 +263,10 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   ),
                 ],
 
-                // Piano guía
+                // Guía de digitación andina
                 const SizedBox(height: 24),
                 Text(
-                  'Teclas Utilizadas',
+                  'Digitación del Instrumento',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 16,
@@ -273,12 +274,15 @@ class _LessonDetailScreenState extends State<LessonDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                PianoGuideWidget(
-                  highlightNotes: uniqueNotes,
-                  rangeNotes: uniqueNotes,
-                  minOctaves: lesson.difficulty.toLowerCase() == 'principiante'
-                      ? 2
-                      : 3,
+                ActiveInstrumentFingeringWidget(
+                  note: uniqueNotes.isNotEmpty ? uniqueNotes.first : null,
+                  overrideInstrument: InstrumentType.values
+                      .where(
+                        (i) =>
+                            i.name.toLowerCase() ==
+                            lesson.instrument.toLowerCase(),
+                      )
+                      .firstOrNull,
                 ),
 
                 // Botón iniciar práctica

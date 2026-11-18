@@ -913,7 +913,7 @@ class _InstrumentTileState extends State<_InstrumentTile> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
-              Icon(Icons.piano_outlined, color: cs.primary, size: 22),
+              Icon(Icons.music_note, color: cs.primary, size: 22),
               const SizedBox(width: 14),
               Expanded(
                 child: Text(

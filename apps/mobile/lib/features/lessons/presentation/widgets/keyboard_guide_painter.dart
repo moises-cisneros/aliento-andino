@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
-/// Guía de encuadre del teclado: dibuja esquinas tipo "visor" sobre la zona
-/// inferior-central del preview (donde deberían quedar el teclado y las manos)
-/// + un texto de ayuda. Es ESTÁTICO (no depende de los frames de la cámara ni
-/// de las manos), así que no agrega costo por frame.
+/// Guía de encuadre para práctica de aerófonos andinos: dibuja esquinas tipo "visor"
+/// sobre la zona del preview para encuadrar rostro (embocadura) y manos
+/// sosteniendo el instrumento andino + un texto de ayuda estático.
 class KeyboardGuidePainter extends CustomPainter {
   final Color color;
   const KeyboardGuidePainter({this.color = Colors.white});
@@ -12,13 +11,12 @@ class KeyboardGuidePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (size.width == 0 || size.height == 0) return;
 
-    // Zona sugerida: ancho casi completo, mitad inferior (el teclado va al
-    // frente y las manos encima).
+    // Zona sugerida: encuadre para embocadura, postura y digitación con ambas manos.
     final rect = Rect.fromLTRB(
-      size.width * 0.06,
-      size.height * 0.32,
-      size.width * 0.94,
-      size.height * 0.92,
+      size.width * 0.08,
+      size.height * 0.15,
+      size.width * 0.92,
+      size.height * 0.88,
     );
 
     final paint = Paint()
@@ -43,7 +41,7 @@ class KeyboardGuidePainter extends CustomPainter {
     // Etiqueta centrada arriba de la zona.
     final tp = TextPainter(
       text: TextSpan(
-        text: 'Encuadrá el teclado y tus manos aquí',
+        text: 'Encuadrá embocadura y manos aquí',
         style: TextStyle(
           color: color.withValues(alpha: 0.9),
           fontSize: 12,

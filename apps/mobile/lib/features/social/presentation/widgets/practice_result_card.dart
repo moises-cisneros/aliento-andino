@@ -28,7 +28,7 @@ class PracticeResultCard extends StatelessWidget {
           Row(
             children: [
               Icon(
-                Icons.piano,
+                Icons.music_note,
                 color: Theme.of(context).colorScheme.primary,
                 size: 18,
               ),

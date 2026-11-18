@@ -237,7 +237,7 @@ class PracticeBloc extends Bloc<PracticeEvent, PracticeState> {
 
     // NO se pausa: se queda en la MISMA nota y sigue escuchando. La UI muestra
     // un aviso transitorio del error (la tecla mal en rojo) que se desvanece
-    // solo, sin obligar al usuario a sacar la mano del piano para tocar un botón.
+    // solo, sin obligar al usuario a sacar las manos del instrumento para tocar un botón.
     if (_currentPos >= _notes.length) return;
     emit(
       PracticePlaying(

@@ -1,4 +1,4 @@
-/// Modelo de lección/ejercicio de piano.
+/// Modelo de lección/ejercicio de aerófonos andinos.
 class LessonModel {
   final String id;
   final String categoryId;

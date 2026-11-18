@@ -37,9 +37,9 @@ class TermsScreen extends StatelessWidget {
           _section(
             cs,
             '2. Descripción del Servicio',
-            'Aliento Andino es una plataforma educativa de piano que ofrece lecciones interactivas, '
+            'Aliento Andino es una plataforma educativa para instrumentos andinos (Quena, Zampoña y Tarka) que ofrece lecciones interactivas, '
                 'seguimiento de progreso, sistema de logros y funciones sociales. '
-                'La Aplicación está diseñada para ayudar a los usuarios a aprender y practicar piano '
+                'La Aplicación está diseñada para ayudar a los usuarios a aprender y practicar instrumentos de viento andinos '
                 'de manera autodidacta.',
           ),
           _section(

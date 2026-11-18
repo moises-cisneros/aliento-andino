@@ -182,6 +182,34 @@ void main() {
       expect(adapter.last.queryParameters.containsKey('search'), isFalse);
     });
 
+    test(
+      'sends instrument filter in queryParameters and filters cache when offline',
+      () async {
+        adapter.on('GET /lessons', {
+          'items': [
+            _lesson(id: 'l1', instrument: 'quena'),
+            _lesson(id: 'l2', instrument: 'zampona'),
+          ],
+          'total': 2,
+          'page': 1,
+          'pages': 1,
+        });
+
+        final result = await repo.getLessonsPaginated(instrument: 'quena');
+        expect(adapter.last.queryParameters['instrument'], 'quena');
+        expect((result['items'] as List).length, 2);
+
+        // Offline fallback
+        adapter.onError('GET /lessons', 503);
+        final offlineResult = await repo.getLessonsPaginated(
+          instrument: 'quena',
+        );
+        final offlineItems = offlineResult['items'] as List;
+        expect(offlineItems.length, 1);
+        expect(offlineItems.first.instrument, 'quena');
+      },
+    );
+
     test('offline returns the cache or rethrows when empty', () async {
       adapter.onError('GET /lessons', 503);
       await expectLater(

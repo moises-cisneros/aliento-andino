@@ -6,6 +6,7 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../data/models/lesson_model.dart';
 import '../../data/repositories/lesson_repository.dart';
+import '../../../instrument_select/bloc/active_instrument_bloc.dart';
 import '../../../instrument_select/presentation/widgets/instrument_selector_appbar.dart';
 import '../bloc/lessons/lessons_bloc.dart';
 import '../bloc/lessons/lessons_event.dart';
@@ -43,6 +44,18 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
   @override
   void initState() {
     super.initState();
+    final activeInstrument = (() {
+      try {
+        return context.read<ActiveInstrumentBloc>().state.activeInstrument;
+      } catch (_) {
+        return null;
+      }
+    })();
+    if (activeInstrument != null) {
+      context.read<LessonsBloc>().add(
+        LessonsFilterByInstrument(activeInstrument),
+      );
+    }
     context.read<LessonsBloc>().add(const LessonsLoadCategories());
     _recommendedFuture = context.read<LessonRepository>().getRecommended();
     _loadDownloadedIds();
@@ -93,68 +106,75 @@ class _LessonsHomeScreenState extends State<LessonsHomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: const Text('Lecciones'),
-        actions: [
-          const InstrumentSelectorAction(),
-          const PendingSyncBadge(),
-          IconButton(
-            icon: const Icon(Icons.offline_pin_outlined),
-            tooltip: 'Lecciones sin conexión',
-            onPressed: () async {
-              await context.push('/offline-lessons');
-              if (mounted) _loadDownloadedIds();
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.bar_chart_rounded),
-            tooltip: 'Mi progreso',
-            onPressed: () => context.push('/progress'),
-          ),
-        ],
-      ),
-      body: BlocBuilder<LessonsBloc, LessonsState>(
-        builder: (context, state) {
-          if (state is LessonsLoading) {
-            return Center(
-              child: CircularProgressIndicator(
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            );
-          }
+    return BlocListener<ActiveInstrumentBloc, ActiveInstrumentState>(
+      listener: (context, activeState) {
+        context.read<LessonsBloc>().add(
+          LessonsFilterByInstrument(activeState.activeInstrument),
+        );
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        appBar: AppBar(
+          title: const Text('Lecciones'),
+          actions: [
+            const InstrumentSelectorAction(),
+            const PendingSyncBadge(),
+            IconButton(
+              icon: const Icon(Icons.offline_pin_outlined),
+              tooltip: 'Lecciones sin conexión',
+              onPressed: () async {
+                await context.push('/offline-lessons');
+                if (mounted) _loadDownloadedIds();
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.bar_chart_rounded),
+              tooltip: 'Mi progreso',
+              onPressed: () => context.push('/progress'),
+            ),
+          ],
+        ),
+        body: BlocBuilder<LessonsBloc, LessonsState>(
+          builder: (context, state) {
+            if (state is LessonsLoading) {
+              return Center(
+                child: CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              );
+            }
 
-          if (state is LessonsError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    state.message,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
+            if (state is LessonsError) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      state.message,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context.read<LessonsBloc>().add(
-                      const LessonsLoadCategories(),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => context.read<LessonsBloc>().add(
+                        const LessonsLoadCategories(),
+                      ),
+                      child: const Text('Reintentar'),
                     ),
-                    child: const Text('Reintentar'),
-                  ),
-                ],
-              ),
-            );
-          }
+                  ],
+                ),
+              );
+            }
 
-          if (state is LessonsLoaded) {
-            return _buildContent(state);
-          }
+            if (state is LessonsLoaded) {
+              return _buildContent(state);
+            }
 
-          return const SizedBox.shrink();
-        },
+            return const SizedBox.shrink();
+          },
+        ),
       ),
     );
   }

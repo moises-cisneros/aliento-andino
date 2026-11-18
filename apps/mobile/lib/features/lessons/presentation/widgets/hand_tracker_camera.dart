@@ -11,7 +11,7 @@ import '../services/hand_tracker.dart';
 import 'hand_landmarks_painter.dart';
 import 'keyboard_guide_painter.dart';
 
-/// Widget que renderiza el preview de cámara para piano practice.
+/// Widget que renderiza el preview de cámara para práctica de aerófonos andinos.
 class HandTrackerCamera extends StatefulWidget {
   /// Si true, llena la pantalla con BoxFit.cover.
   final bool fullScreen;
@@ -250,7 +250,7 @@ class _HandTrackerCameraState extends State<HandTrackerCamera>
       fit: StackFit.expand,
       children: [
         preview,
-        // Guía de encuadre del teclado (estática: no repinta por frame).
+        // Guía de encuadre para embocadura y manos (estática: no repinta por frame).
         const Positioned.fill(
           child: IgnorePointer(
             child: CustomPaint(painter: KeyboardGuidePainter()),
