@@ -3,7 +3,6 @@
 import argparse
 import asyncio
 import os
-import sys
 import uuid
 
 from sqlalchemy import select
@@ -59,7 +58,7 @@ async def create_or_promote_admin(
             print(f"✅ Nuevo Administrador creado: {email}")
 
         await db.commit()
-        print(f"🔑 Credenciales listas:")
+        print("🔑 Credenciales listas:")
         print(f"   Email:    {email}")
         print(f"   Password: {password}")
 
