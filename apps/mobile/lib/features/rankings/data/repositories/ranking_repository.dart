@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/database/app_database.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/achievement_model.dart';
+import '../models/leaderboard_model.dart';
 import '../models/lesson_ranking_model.dart';
 import '../models/ranking_entry_model.dart';
 import '../models/user_xp_model.dart';
@@ -113,6 +114,33 @@ class RankingRepository {
     'my_streak': data['my_streak'] as int,
     'my_longest': data['my_longest'] as int,
   };
+
+  /// Leaderboard por instrumento andino (`quena` | `zampona` | `tarka`) y
+  /// alcance (`weekly` | `all_time`). Cacheado por instrumento+alcance: sin
+  /// conexión se muestra el último snapshot de ese mismo instrumento.
+  Future<LeaderboardModel> getInstrumentLeaderboard(
+    String instrument, {
+    String scope = 'weekly',
+  }) async {
+    final cacheKey = 'rank_lb_${instrument}_$scope';
+    try {
+      final response = await _apiClient.dio.get(
+        '/v1/rankings/leaderboard',
+        queryParameters: {'instrument': instrument, 'scope': scope},
+      );
+      final data = response.data as Map<String, dynamic>;
+      await _db?.putSnapshot(cacheKey, jsonEncode(data));
+      return LeaderboardModel.fromJson(data);
+    } on DioException {
+      final cached = await _db?.getSnapshot(cacheKey);
+      if (cached != null) {
+        return LeaderboardModel.fromJson(
+          jsonDecode(cached) as Map<String, dynamic>,
+        );
+      }
+      rethrow;
+    }
+  }
 
   /// Obtener ranking por lección (top 20). Online-only.
   Future<Map<String, dynamic>> getLessonLeaderboard(String lessonId) async {
