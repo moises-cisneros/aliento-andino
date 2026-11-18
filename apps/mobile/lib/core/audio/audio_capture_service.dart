@@ -24,6 +24,32 @@ class AudioHardwareException implements Exception {
   String toString() => 'AudioHardwareException: $message';
 }
 
+/// Estado del reintento de arranque de captura.
+enum CaptureRetryStatus { idle, retrying, exhausted }
+
+/// Estado inmutable emitido por [AudioCaptureService.retryStateStream].
+class CaptureRetryState {
+  final CaptureRetryStatus status;
+
+  /// Número de reintento en curso (1-based); 0 si no hay reintentos.
+  final int attempt;
+
+  /// Espera previa al próximo intento mientras `status == retrying`.
+  final Duration? nextDelay;
+
+  /// Última causa real del fallo de hardware.
+  final Object? lastError;
+
+  const CaptureRetryState(
+    this.status, {
+    this.attempt = 0,
+    this.nextDelay,
+    this.lastError,
+  });
+
+  static const idle = CaptureRetryState(CaptureRetryStatus.idle);
+}
+
 /// Buffer circular determinista en memoria para acumulación continua de muestras PCM Float32.
 ///
 /// Previene la pérdida de muestras y suministra ventanas fijas (ej. 1024 a 2048 muestras)
@@ -83,11 +109,39 @@ class AudioCaptureService {
   StreamSubscription<Uint8List>? _rawAudioSubscription;
   bool _isCapturing = false;
 
+  final int maxRetries;
+  final Duration baseRetryDelay;
+  final Duration maxRetryDelay;
+  final Future<void> Function(Duration) _retryDelay;
+  final StreamController<CaptureRetryState> _retryController =
+      StreamController<CaptureRetryState>.broadcast();
+  CaptureRetryState _retryState = CaptureRetryState.idle;
+  int _startGeneration = 0;
+
+  /// [maxRetries] reintentos tras el primer fallo, con espera
+  /// `baseRetryDelay * 2^n` acotada por [maxRetryDelay]. [retryDelay] es
+  /// inyectable para tests (reloj simulado).
   AudioCaptureService({
     AudioRecorder? recorder,
     int circularBufferCapacity = 4096,
+    this.maxRetries = 3,
+    this.baseRetryDelay = const Duration(milliseconds: 200),
+    this.maxRetryDelay = const Duration(seconds: 2),
+    Future<void> Function(Duration)? retryDelay,
   }) : _customRecorder = recorder,
+       _retryDelay = retryDelay ?? Future<void>.delayed,
        _circularBuffer = CircularAudioBuffer(capacity: circularBufferCapacity);
+
+  /// Estado actual del reintento (idle / retrying / exhausted).
+  CaptureRetryState get retryState => _retryState;
+
+  /// Stream de cambios de estado del reintento.
+  Stream<CaptureRetryState> get retryStateStream => _retryController.stream;
+
+  void _emitRetry(CaptureRetryState state) {
+    _retryState = state;
+    if (!_retryController.isClosed) _retryController.add(state);
+  }
 
   AudioRecorder get _recorder =>
       _customRecorder ?? (_internalRecorder ??= AudioRecorder());
@@ -104,13 +158,81 @@ class AudioCaptureService {
   /// Inicia la captura de audio continua a través del micrófono.
   ///
   /// Lanza [PermissionDeniedException] si no se cuenta con permiso de grabación.
-  /// Lanza [AudioHardwareException] si la configuración del micrófono falla.
+  /// Ante [AudioHardwareException] reintenta con backoff exponencial acotado;
+  /// al agotarse emite `exhausted` y lanza la última causa real. Si
+  /// [stopCapture] se invoca durante la espera, el arranque se cancela.
   Future<void> startCapture({
     int sampleRate = 44100,
     int bufferSize = 1024,
   }) async {
     if (_isCapturing) return;
 
+    final generation = ++_startGeneration;
+    var attempt = 0;
+    while (true) {
+      try {
+        await _startOnce(sampleRate: sampleRate, bufferSize: bufferSize);
+        if (generation != _startGeneration) {
+          // stopCapture() llegó mientras arrancaba: liberar el hardware.
+          await _releaseRecorder();
+          return;
+        }
+        _emitRetry(CaptureRetryState.idle);
+        return;
+      } on PermissionDeniedException {
+        _emitRetry(CaptureRetryState.idle);
+        rethrow;
+      } on AudioHardwareException catch (e) {
+        if (generation != _startGeneration) return;
+        if (attempt >= maxRetries) {
+          _emitRetry(
+            CaptureRetryState(
+              CaptureRetryStatus.exhausted,
+              attempt: attempt,
+              lastError: e,
+            ),
+          );
+          throw AudioHardwareException(
+            '${e.message} (tras ${attempt + 1} intentos)',
+          );
+        }
+        final delay = _backoff(attempt);
+        attempt++;
+        _emitRetry(
+          CaptureRetryState(
+            CaptureRetryStatus.retrying,
+            attempt: attempt,
+            nextDelay: delay,
+            lastError: e,
+          ),
+        );
+        await _retryDelay(delay);
+        if (generation != _startGeneration) return;
+      }
+    }
+  }
+
+  Duration _backoff(int attempt) {
+    final micros = baseRetryDelay.inMicroseconds * (1 << attempt);
+    final capped = micros > maxRetryDelay.inMicroseconds
+        ? maxRetryDelay.inMicroseconds
+        : micros;
+    return Duration(microseconds: capped);
+  }
+
+  Future<void> _releaseRecorder() async {
+    await _rawAudioSubscription?.cancel();
+    _rawAudioSubscription = null;
+    _isCapturing = false;
+    try {
+      await _recorder.stop();
+    } catch (_) {}
+  }
+
+  Future<void> _startOnce({
+    required int sampleRate,
+    required int bufferSize,
+  }) async {
     try {
       final hasPermission = await _recorder.hasPermission();
       if (!hasPermission) {
@@ -164,6 +286,10 @@ class AudioCaptureService {
 
   /// Detiene la captura y libera el hardware de audio.
   Future<void> stopCapture() async {
+    _startGeneration++; // cancela reintentos pendientes
+    if (_retryState.status != CaptureRetryStatus.idle) {
+      _emitRetry(CaptureRetryState.idle);
+    }
     if (!_isCapturing) return;
     _isCapturing = false;
 
@@ -182,6 +308,7 @@ class AudioCaptureService {
     await stopCapture();
     await _streamController?.close();
     _streamController = null;
+    await _retryController.close();
     try {
       _internalRecorder?.dispose();
     } catch (_) {}
