@@ -21,7 +21,7 @@ conexión** (Gemini/Vertex para lo avanzado).
    └──────────┘                                                                       │
                                                                                       │
    🎵  Capa 1 (transversal, ya existente): IA on-device de MÚSICA                     │
-       (detección de notas/acordes — ver `ml/chord_detector/`) — también offline ←────┘
+       (detección de notas monofónicas YIN/SPICE en el cliente móvil) — también offline ←────┘
 ```
 
 ## ¿Por qué así? (la decisión)

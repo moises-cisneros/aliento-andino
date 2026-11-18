@@ -15,9 +15,10 @@ S6: "Cobertura mínima obligatoria: Backend ≥ 80%, Web ≥ 75%, Mobile ≥ 75%
 ## Tasks
 
 - [x] T1 (S1-S4) [inline]: Nginx perimetral — HTTPS, redirect 80→443, zona `auth` 10r/s, 429, cabeceras, gzip, healthchecks en compose, test `infra/nginx/tests/run.sh`, job CI, docs (#53 SUB-16-A) — Branch `feat/53-nginx-perimeter-ssl`
-- [ ] T2 (S5, S6) [inline]: Suite E2E de humo backend (auth → lecciones → práctica → feed → ranking) (#54 SUB-16-B) — bloqueada por #43 (SUB-12-A, abierta) y por el merge de T1
+- [x] T2 (S5, S6) [inline]: E2E de humo backend (auth → lecciones → práctica → feed → ranking), fix `PracticeSession.lesson` eager, CI web sin `|| true` (#54 SUB-16-B) — Branch `test/54-e2e-smoke-suite` (apilada sobre T1). Pendiente: `widget_test.dart` móvil sigue placeholder; #43 abierta pero `/api/rankings/weekly` ya existe
 
 ## Log
 
 L1: "Implementa las subissues de la issue #52 (HU-16), realizalo con ODD, en un propio git worktree."
 L2: T1 verification: `bash infra/nginx/tests/run.sh` → all checks pass (nginx -t, 301 redirect, /health 200, auth burst 200s then 429s, X-Frame-Options, nosniff, HSTS, CSP, /health median TTFB ~10ms, gzip; HTTP/2 skipped locally because curl lacks it). `docker compose config -q` valid. `wrk`/`ab` replaced by curl-based parallel burst (no extra tool install, runs in CI).
+L3: T2 RED: E2E raised MissingGreenlet creating a post with practice_session_id (lazy-loaded PracticeSession.lesson). GREEN after `lazy="selectin"`. `pytest tests/` 241 passed, `ruff check`/`format --check` clean. Web `pnpm test --watch=false` 57 passed (main checkout). Risk: item 3 (loading strategy of a shared model; behavior unchanged, extra SELECT).
