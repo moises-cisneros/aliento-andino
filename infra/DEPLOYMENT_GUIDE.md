@@ -99,12 +99,41 @@ docker compose -f infra/docker-compose.yml exec backend python seed_all.py
 
 ### 4. Certificado SSL con Certbot
 
+Nginx termina TLS en el puerto 443 y **no arranca sin el certificado**. Emitirlo la primera vez con el modo `standalone` (puerto 80 libre) y luego levantar el stack:
+
 ```bash
-docker compose -f infra/docker-compose.yml run --rm certbot certonly \
-  --webroot -w /var/www/certbot \
-  -d alientoandino.org -d www.alientoandino.org \
-  --email admin@alientoandino.org --agree-tos --no-eff-email
+docker compose -f infra/docker-compose.yml run --rm -p 80:80 certbot certonly   --standalone   -d alientoandino.org -d www.alientoandino.org   --email admin@alientoandino.org --agree-tos --no-eff-email
+
+docker compose -f infra/docker-compose.yml up -d
 ```
+
+Las renovaciones usan el webroot `/var/www/certbot` que Nginx ya expone en `/.well-known/acme-challenge/`:
+
+```bash
+docker compose -f infra/docker-compose.yml run --rm certbot renew --webroot -w /var/www/certbot
+docker compose -f infra/docker-compose.yml exec nginx nginx -s reload
+```
+
+### 5. Perímetro Nginx (SSL, rate limiting y cabeceras)
+
+Configuración en [`infra/nginx/nginx.conf`](nginx/nginx.conf):
+
+| Control                | Detalle                                                                                                   |
+| :--------------------- | :-------------------------------------------------------------------------------------------------------- |
+| Terminación TLS        | Solo TLS 1.2/1.3 con suites AEAD, HTTP/2, `ssl_session_tickets off`. El puerto 80 redirige (301) a HTTPS. |
+| Cabeceras de seguridad | `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, HSTS (2 años), CSP y `Referrer-Policy`.       |
+| Rate limiting          | `/api/auth/`: 10 req/s por IP (burst 5). Resto de `/api/`: 20 req/s; web: 30 req/s; ML: 15 req/s.         |
+| Tráfico excedente      | Nginx responde `429 Too Many Requests` sin llegar al backend (`limit_req_status 429`).                    |
+| Compresión             | `gzip` para texto, JSON, JavaScript, CSS, SVG y manifests (>1 KB).                                        |
+| Health check           | `GET /health` (HTTP y HTTPS) proxied al backend; objetivo < 20 ms. Compose lo usa como `healthcheck`.     |
+
+Verificación local (requiere Docker; genera un certificado autofirmado y un upstream de prueba):
+
+```bash
+bash infra/nginx/tests/run.sh
+```
+
+Cubre `nginx -t` (unitaria), redirección HTTP→HTTPS y ráfaga contra `/api/auth/` con respuestas `429` (integración) y cabeceras, gzip y latencia de `/health` sobre HTTPS (E2E). Se ejecuta en CI cuando cambia `infra/nginx/` o `infra/docker-compose.yml`. La calificación **A en SSL Labs** se comprueba manualmente tras el despliegue en <https://www.ssllabs.com/ssltest/>.
 
 ---
 
