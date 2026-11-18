@@ -4,8 +4,3 @@
 # Cachés de Python
 __pycache__/
 *.pyc
-
-# Modelo entrenado: 17 MB, se regenera en segundos con `python train.py`.
-# (El dataset, las métricas y la matriz de confusión SÍ se versionan para
-#  poder mostrarlos sin reentrenar.)
-chord_detector/artifacts/chord_model.joblib
