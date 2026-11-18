@@ -10,7 +10,7 @@ import '../bloc/post_detail/post_detail_event.dart';
 import '../bloc/post_detail/post_detail_state.dart';
 import '../widgets/comment_tile.dart';
 import '../widgets/edit_content_dialog.dart';
-import '../widgets/post_card.dart';
+import '../widgets/social_post_card.dart';
 import '../widgets/report_dialog.dart';
 
 /// Pantalla de detalle de un post con comentarios.
@@ -144,7 +144,7 @@ class _PostDetailViewState extends State<_PostDetailView> {
                             final isOwnPost =
                                 currentUserId != null &&
                                 state.post.user.id == currentUserId;
-                            return PostCard(
+                            return SocialPostCard(
                               post: state.post,
                               contentMaxLines: null,
                               onTap: () {},

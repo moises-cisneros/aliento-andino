@@ -177,7 +177,7 @@ jobs:
       - name: ESLint Web
         run: pnpm --filter web run lint
       - name: Test Web
-        run: pnpm --filter web run test -- --watch=false || pnpm --filter web run test --run || true
+        run: pnpm --filter web run test --watch=false
 
   mobile-quality:
     name: Mobile Analyze & Format

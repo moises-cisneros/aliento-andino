@@ -8,7 +8,7 @@ import '../../data/models/post_model.dart';
 import '../../data/models/user_summary_model.dart';
 import '../../data/repositories/social_repository.dart';
 import '../../data/repositories/user_repository.dart';
-import '../widgets/post_card.dart';
+import '../widgets/social_post_card.dart';
 import '../widgets/user_avatar.dart';
 
 /// Pantalla de búsqueda con tabs: Usuarios | Posts (por contenido o #hashtag).
@@ -170,7 +170,7 @@ class _UserSearchScreenState extends State<UserSearchScreen>
       itemCount: _postResults.length,
       itemBuilder: (context, i) {
         final post = _postResults[i];
-        return PostCard(
+        return SocialPostCard(
           post: post,
           onTap: () => context.push('/social/post/${post.id}'),
           onUserTap: () => context.push('/social/user/${post.user.id}'),

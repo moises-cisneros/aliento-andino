@@ -148,14 +148,15 @@ class PracticeReminderService {
       android: AndroidNotificationDetails(
         'practice_reminders',
         'Recordatorios de práctica',
-        channelDescription: 'Aviso diario para practicar piano',
+        channelDescription:
+            'Aviso diario para practicar quena, zampoña o tarka',
         importance: Importance.high,
         priority: Priority.high,
       ),
     );
     await _plugin.zonedSchedule(
       _reminderId,
-      '¡Hora de practicar! 🎹',
+      '¡Hora de practicar! 🪈',
       'Mantené tu racha: unos minutos al día hacen la diferencia.',
       _nextInstanceOf(time),
       details,

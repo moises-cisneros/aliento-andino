@@ -21,6 +21,30 @@ void main() {
 
   tearDown(() async => db.close());
 
+  group('reacciones (#41)', () {
+    test(
+      'reactToPost hace POST /posts/{id}/react y parsea la respuesta',
+      () async {
+        adapter.on('POST /posts/p1/react', {'liked': true, 'likes_count': 3});
+
+        final result = await repo.reactToPost('p1');
+
+        expect(adapter.last.method, 'POST');
+        expect(adapter.last.path, '/posts/p1/react');
+        expect(result.liked, isTrue);
+        expect(result.likesCount, 3);
+      },
+    );
+
+    test('reactToPost propaga el error real del servidor', () async {
+      adapter.onError('POST /posts/p1/react', 404, {
+        'detail': 'Post no encontrado',
+      });
+
+      expect(() => repo.reactToPost('p1'), throwsA(isA<DioException>()));
+    });
+  });
+
   group('feeds', () {
     test('getFeed parses items and caches the first page', () async {
       adapter.on('GET /feed', pageJson([postJson()]));

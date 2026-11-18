@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/network/network_error.dart';
 import '../../data/models/post_model.dart';
 import '../../data/repositories/social_repository.dart';
-import '../widgets/post_card.dart';
+import '../widgets/social_post_card.dart';
 
 /// Lista de publicaciones guardadas (bookmark) del usuario.
 class SavedPostsScreen extends StatefulWidget {
@@ -122,7 +122,7 @@ class _SavedPostsScreenState extends State<SavedPostsScreen> {
                 itemCount: _posts.length,
                 itemBuilder: (context, index) {
                   final post = _posts[index];
-                  return PostCard(
+                  return SocialPostCard(
                     post: post,
                     onTap: () => context.push('/social/post/${post.id}'),
                     onLike: () => _toggleLike(index),

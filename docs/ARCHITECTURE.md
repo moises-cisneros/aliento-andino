@@ -204,3 +204,10 @@ pnpm docker:docs
 | **FastAPI + SQLAlchemy 2 vs Django**          | Rendimiento asíncrono superior para telemetría concurrente y serialización nativa con Pydantic v2.                                | Django REST Framework (mayor sobrecarga síncrona).                                                               |
 | **Flutter BLoC vs Riverpod**                  | Predictibilidad y trazabilidad formal de eventos y estados, indispensable para auditoría pedagógica.                              | Manejo de estado ad-hoc en StatefulWidgets.                                                                      |
 | **Angular Signals vs Observables RxJS puros** | Menor complejidad sintáctica, reactividad fina y mejor rendimiento en Angular 21.                                                 | Arquitectura basada exclusivamente en pipes RxJS.                                                                |
+
+### Detector de acordes en `apps/ml` (retirado)
+
+- **Decisión**: se retiró `apps/ml/chord_detector/` (script de dataset sintético, entrenamiento, artefactos y dependencias scikit-learn/pandas/joblib asociadas).
+- **Por qué**: Quena, Zampoña y Tarka son instrumentos de viento de emisión esencialmente monofónica (una nota a la vez); el reconocimiento de acordes, el dataset y sus clases estaban pensados para contenido no andino y no aplican al dominio (regla dura 1). Refactorizarlo a contenido andino no tendría datos ni caso de uso reales.
+- **Alternativa**: la retroalimentación acústica sigue siendo detección de frecuencia fundamental (YIN / SPICE) en el cliente móvil, sin acordes.
+- **Pendiente fuera de este cambio**: `apps/ml/server.py` (descripción) y la entrada `deteccion_acordes` del FAQ móvil aún mencionan acordes.

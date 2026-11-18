@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/models/post_model.dart';
 import '../../data/repositories/social_repository.dart';
-import '../widgets/post_card.dart';
+import '../widgets/social_post_card.dart';
 
 /// Feed de posts que contienen un hashtag.
 class HashtagFeedScreen extends StatefulWidget {
@@ -103,7 +103,7 @@ class _HashtagFeedScreenState extends State<HashtagFeedScreen> {
                 itemCount: _posts.length,
                 itemBuilder: (context, index) {
                   final post = _posts[index];
-                  return PostCard(
+                  return SocialPostCard(
                     post: post,
                     onTap: () => context.push('/social/post/${post.id}'),
                     onLike: () => _toggleLike(index),

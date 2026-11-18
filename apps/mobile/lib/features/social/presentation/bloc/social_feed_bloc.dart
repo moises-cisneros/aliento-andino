@@ -1,11 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../../core/network/network_error.dart';
-import '../../../data/models/post_model.dart';
-import '../../../data/repositories/social_repository.dart';
-import 'feed_event.dart';
-import 'feed_state.dart';
+import '../../../../core/network/network_error.dart';
+import '../../data/models/post_model.dart';
+import '../../data/repositories/social_repository.dart';
+import 'social_feed_event.dart';
+import 'social_feed_state.dart';
 
-class FeedBloc extends Bloc<FeedEvent, FeedState> {
+class SocialFeedBloc extends Bloc<FeedEvent, FeedState> {
   final SocialRepository _socialRepository;
 
   FeedMode _mode = FeedMode.following;
@@ -13,7 +13,7 @@ class FeedBloc extends Bloc<FeedEvent, FeedState> {
   int _explorePage = 1;
   int _explorePages = 1;
 
-  FeedBloc({required SocialRepository socialRepository})
+  SocialFeedBloc({required SocialRepository socialRepository})
     : _socialRepository = socialRepository,
       super(const FeedInitial()) {
     on<FeedLoad>(_onLoad);
@@ -185,10 +185,32 @@ class FeedBloc extends Bloc<FeedEvent, FeedState> {
     emit(currentState.copyWith(posts: updatedPosts));
 
     try {
-      await _socialRepository.toggleLike(event.postId);
-    } catch (_) {
-      // Revertir en caso de error
-      emit(currentState);
+      // Aplauso: POST /posts/{id}/react; el servidor es la fuente de verdad.
+      final result = await _socialRepository.reactToPost(event.postId);
+      final latest = state;
+      if (latest is FeedLoaded) {
+        emit(
+          latest.copyWith(
+            posts: latest.posts
+                .map(
+                  (p) => p.id == event.postId
+                      ? p.copyWith(
+                          isLikedByMe: result.liked,
+                          likesCount: result.likesCount,
+                        )
+                      : p,
+                )
+                .toList(),
+          ),
+        );
+      }
+    } catch (e) {
+      // Revertir y exponer la causa real (regla 8).
+      emit(
+        currentState.copyWith(
+          actionError: isConnectionError(e) ? offlineMessage : e.toString(),
+        ),
+      );
     }
   }
 

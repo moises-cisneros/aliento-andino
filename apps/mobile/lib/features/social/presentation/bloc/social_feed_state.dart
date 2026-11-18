@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import '../../../data/models/post_model.dart';
-import 'feed_event.dart';
+import '../../data/models/post_model.dart';
+import 'social_feed_event.dart';
 
 abstract class FeedState extends Equatable {
   const FeedState();
@@ -29,12 +29,16 @@ class FeedLoaded extends FeedState {
   final bool isLoadingMore;
   final FeedMode mode;
 
+  /// Causa real del último fallo de una acción (p. ej. aplauso); transitoria.
+  final String? actionError;
+
   const FeedLoaded({
     required this.posts,
     this.nextCursor,
     required this.hasMore,
     this.isLoadingMore = false,
     this.mode = FeedMode.following,
+    this.actionError,
   });
 
   FeedLoaded copyWith({
@@ -43,6 +47,7 @@ class FeedLoaded extends FeedState {
     bool? hasMore,
     bool? isLoadingMore,
     FeedMode? mode,
+    String? actionError,
   }) {
     return FeedLoaded(
       posts: posts ?? this.posts,
@@ -50,11 +55,19 @@ class FeedLoaded extends FeedState {
       hasMore: hasMore ?? this.hasMore,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       mode: mode ?? this.mode,
+      actionError: actionError,
     );
   }
 
   @override
-  List<Object?> get props => [posts, nextCursor, hasMore, isLoadingMore, mode];
+  List<Object?> get props => [
+    posts,
+    nextCursor,
+    hasMore,
+    isLoadingMore,
+    mode,
+    actionError,
+  ];
 }
 
 class FeedError extends FeedState {

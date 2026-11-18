@@ -6,6 +6,7 @@ import '../../../../core/database/app_database.dart';
 import '../../../../core/network/api_client.dart';
 import '../models/comment_model.dart';
 import '../models/post_model.dart';
+import '../models/reaction_toggle_model.dart';
 
 /// Repositorio de red social: posts, likes, comentarios, reportes.
 class SocialRepository {
@@ -173,6 +174,12 @@ class SocialRepository {
   /// Eliminar un post.
   Future<void> deletePost(String postId) async {
     await _apiClient.dio.delete('/posts/$postId');
+  }
+
+  /// Alterna el aplauso (reacción) vía `POST /posts/{id}/react` (contrato #41).
+  Future<ReactionToggleModel> reactToPost(String postId) async {
+    final response = await _apiClient.dio.post('/posts/$postId/react');
+    return ReactionToggleModel.fromJson(response.data as Map<String, dynamic>);
   }
 
   /// Toggle like en un post.

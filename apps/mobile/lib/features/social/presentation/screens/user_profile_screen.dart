@@ -7,7 +7,7 @@ import '../bloc/user_profile/user_profile_bloc.dart';
 import '../bloc/user_profile/user_profile_event.dart';
 import '../bloc/user_profile/user_profile_state.dart';
 import '../widgets/follow_button.dart';
-import '../widgets/post_card.dart';
+import '../widgets/social_post_card.dart';
 import '../widgets/user_avatar.dart';
 
 /// Pantalla de perfil de usuario con pestañas Publicaciones / Media.
@@ -311,7 +311,7 @@ class _UserProfileViewState extends State<_UserProfileView> {
             );
           }
           final post = state.posts[index];
-          return PostCard(
+          return SocialPostCard(
             post: post,
             onTap: () => context.push('/social/post/${post.id}'),
             onLike: () {},
