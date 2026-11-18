@@ -69,3 +69,8 @@ class TestTutorServerTools:
         assert "/lessons" in prompt
         assert "first_lesson_card" in prompt
         assert "save_post_button" in prompt
+
+    def test_fallback_greeting_names_the_andean_instruments(self):
+        user = User(username="ana")
+        greeting = tutor_service._smart_tutor_fallback("hola", None, user)["reply"]
+        assert "Quena, Zampoña y Tarka" in greeting

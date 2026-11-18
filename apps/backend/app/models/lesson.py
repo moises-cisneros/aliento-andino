@@ -47,7 +47,7 @@ class Category(Base):
 
 
 class Lesson(Base):
-    """Lección/ejercicio de piano con metadatos y configuración musical."""
+    """Lección/ejercicio de instrumento andino con metadatos y configuración musical."""
 
     __tablename__ = "lessons"
 
