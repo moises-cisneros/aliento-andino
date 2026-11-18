@@ -2,7 +2,7 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -11,6 +11,7 @@ from app.models.user import User
 from app.schemas.ranking import (
     AchievementsListResponse,
     GlobalLeaderboardResponse,
+    LeaderboardResponse,
     LessonLeaderboardResponse,
     MyXPResponse,
     StreakLeaderboardResponse,
@@ -20,6 +21,26 @@ from app.schemas.ranking import (
 from app.services import ranking_service
 
 router = APIRouter(tags=["Rankings y Logros"])
+
+# Contrato versionado de HU-12: GET /api/v1/rankings/leaderboard
+v1_router = APIRouter(prefix="/api/v1/rankings", tags=["Rankings y Logros"])
+
+
+@v1_router.get("/leaderboard", response_model=LeaderboardResponse)
+async def get_instrument_leaderboard(
+    instrument: str = Query("quena", description="quena | zampona | tarka"),
+    scope: str = Query("weekly", description="weekly | all_time"),
+    limit: int = Query(50, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Leaderboard por instrumento andino, semanal o histórico."""
+    try:
+        return await ranking_service.get_leaderboard(
+            db, instrument.lower(), scope, limit, user_id=current_user.id
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 # ===================== LEADERBOARDS =====================

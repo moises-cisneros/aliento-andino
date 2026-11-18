@@ -526,6 +526,85 @@ async def get_weekly_leaderboard(db: AsyncSession, user_id: uuid.UUID) -> dict:
     }
 
 
+# ===================== LEADERBOARD POR INSTRUMENTO (HU-12) =====================
+
+LEADERBOARD_INSTRUMENTS = ("quena", "zampona", "tarka")
+LEADERBOARD_SCOPES = ("weekly", "all_time")
+
+
+def get_week_start_utc() -> datetime:
+    """Lunes 00:00 UTC de la semana en curso."""
+    monday = get_current_week_monday()
+    return datetime(monday.year, monday.month, monday.day, tzinfo=UTC)
+
+
+async def get_leaderboard(
+    db: AsyncSession,
+    instrument: str,
+    scope: str,
+    limit: int = 50,
+    user_id: uuid.UUID | None = None,
+) -> dict:
+    """Ranking por XP de un instrumento andino.
+
+    El XP se deriva de las sesiones de práctica de lecciones de ese instrumento:
+    `weekly` suma desde el lunes 00:00 UTC; `all_time` conserva el histórico (el
+    reseteo semanal nunca lo toca). Empates comparten posición (1, 1, 3).
+    Lanza ValueError con el mensaje a mostrar si el scope o el instrumento no son válidos.
+    """
+    if scope not in LEADERBOARD_SCOPES:
+        raise ValueError("Scope válido: weekly, all_time")
+    if instrument not in LEADERBOARD_INSTRUMENTS:
+        raise ValueError("Instrumento válido: quena, zampona, tarka")
+
+    query = (
+        select(
+            PracticeSession.user_id,
+            PracticeSession.score,
+            PracticeSession.completed,
+            Lesson.difficulty,
+        )
+        .join(Lesson, Lesson.id == PracticeSession.lesson_id)
+        .join(User, User.id == PracticeSession.user_id)
+        .where(Lesson.instrument == instrument, User.is_active.is_(True))
+    )
+    if scope == "weekly":
+        query = query.where(PracticeSession.created_at >= get_week_start_utc())
+
+    xp_by_user: dict[uuid.UUID, int] = {}
+    for uid, score, completed, difficulty in (await db.execute(query)).all():
+        xp_by_user[uid] = xp_by_user.get(uid, 0) + calculate_session_xp(
+            score, difficulty, bool(completed)
+        )
+
+    ordered = sorted(xp_by_user.items(), key=lambda kv: (-kv[1], str(kv[0])))
+    ranks: dict[uuid.UUID, int] = {}
+    previous_xp, previous_rank = None, 0
+    for position, (uid, xp) in enumerate(ordered, start=1):
+        previous_rank = previous_rank if xp == previous_xp else position
+        previous_xp = xp
+        ranks[uid] = previous_rank
+
+    top = ordered[: max(limit, 0)]
+    users = {}
+    if top:
+        rows = await db.execute(select(User).where(User.id.in_([uid for uid, _ in top])))
+        users = {u.id: u for u in rows.scalars().all()}
+
+    items = [
+        {
+            "rank": ranks[uid],
+            "user_id": uid,
+            "username": users[uid].username,
+            "full_name": users[uid].full_name,
+            "avatar_url": users[uid].avatar_url,
+            "xp": xp,
+        }
+        for uid, xp in top
+    ]
+    return {"items": items, "user_rank": ranks.get(user_id) if user_id else None}
+
+
 async def get_lesson_leaderboard(
     db: AsyncSession, user_id: uuid.UUID, lesson_id: uuid.UUID
 ) -> dict:

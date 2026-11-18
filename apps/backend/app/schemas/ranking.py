@@ -50,6 +50,24 @@ class LessonRankingEntry(BaseModel):
 # ===================== LEADERBOARD RESPONSES =====================
 
 
+class UserRankingResponse(BaseModel):
+    """Posición de un usuario en el leaderboard por instrumento (HU-12)."""
+
+    rank: int
+    user_id: uuid.UUID
+    username: str
+    full_name: str
+    avatar_url: str | None = None
+    xp: int = 0
+
+
+class LeaderboardResponse(BaseModel):
+    """Leaderboard filtrado por instrumento y alcance (weekly | all_time)."""
+
+    items: list[UserRankingResponse]
+    user_rank: int | None = None
+
+
 class GlobalLeaderboardResponse(BaseModel):
     """Respuesta del leaderboard global."""
 
