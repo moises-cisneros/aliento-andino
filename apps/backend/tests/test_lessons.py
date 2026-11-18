@@ -482,6 +482,115 @@ class TestLessonsV1AdminCrud:
         )
         assert response.status_code == 404
 
+    async def test_admin_list_lessons_filter_by_instrument(
+        self,
+        client: AsyncClient,
+        admin_headers: dict,
+        sample_catalog: dict[str, Lesson],
+    ):
+        # Filtrar lecciones admin por zampona
+        res_zampona = await client.get(
+            "/api/admin/lessons",
+            params={"instrument": "zampona"},
+            headers=admin_headers,
+        )
+        assert res_zampona.status_code == 200
+        data_zampona = res_zampona.json()
+        assert data_zampona["total"] >= 1
+        assert all(item["instrument"] == "zampona" for item in data_zampona["items"])
+
+        # Filtrar lecciones admin por tarka
+        res_tarka = await client.get(
+            "/api/admin/lessons",
+            params={"instrument": "tarka"},
+            headers=admin_headers,
+        )
+        assert res_tarka.status_code == 200
+        data_tarka = res_tarka.json()
+        assert data_tarka["total"] >= 1
+        assert all(item["instrument"] == "tarka" for item in data_tarka["items"])
+
+    async def test_get_lesson_detail_returns_actual_instrument_for_all_aerophones(
+        self,
+        client: AsyncClient,
+        auth_headers: dict,
+        sample_catalog: dict[str, Lesson],
+    ):
+        zampona_id = str(sample_catalog["zampona_inter"].id)
+        tarka_id = str(sample_catalog["tarka_adv"].id)
+        quena_id = str(sample_catalog["quena_basic"].id)
+
+        # GET /api/lessons/{id}
+        res_z = await client.get(f"/api/lessons/{zampona_id}", headers=auth_headers)
+        assert res_z.status_code == 200
+        assert res_z.json()["instrument"] == "zampona"
+
+        res_t = await client.get(f"/api/lessons/{tarka_id}", headers=auth_headers)
+        assert res_t.status_code == 200
+        assert res_t.json()["instrument"] == "tarka"
+
+        res_q = await client.get(f"/api/lessons/{quena_id}", headers=auth_headers)
+        assert res_q.status_code == 200
+        assert res_q.json()["instrument"] == "quena"
+
+        # GET /api/v1/lessons/{id}
+        res_v1_z = await client.get(f"/api/v1/lessons/{zampona_id}", headers=auth_headers)
+        assert res_v1_z.status_code == 200
+        assert res_v1_z.json()["instrument"] == "zampona"
+
+    async def test_create_and_read_v1_lesson_with_breath_mark_and_fingering(
+        self,
+        client: AsyncClient,
+        admin_headers: dict,
+        auth_headers: dict,
+        sample_category: Category,
+    ):
+        payload = {
+            "title": "Fraseo Andino con Respiración y Digitaciones",
+            "description": "Estudio de cortes de respiración y digitación en Tarka",
+            "instrument": "tarka",
+            "category_id": str(sample_category.id),
+            "difficulty": "principiante",
+            "tempo_bpm": 80,
+            "time_signature": "4/4",
+            "key_signature": "C",
+            "notes": [
+                {
+                    "position": 1,
+                    "note": "C5",
+                    "duration": 1.0,
+                    "is_rest": False,
+                    "breath_mark": False,
+                    "fingering_data": {"holes": [True] * 6},
+                },
+                {
+                    "position": 2,
+                    "note": "D5",
+                    "duration": 1.0,
+                    "is_rest": False,
+                    "breath_mark": True,
+                    "fingering_data": {"holes": [True, True, True, True, True, False]},
+                },
+            ],
+        }
+        res = await client.post("/api/v1/lessons", json=payload, headers=admin_headers)
+        assert res.status_code == 201
+        created = res.json()
+        assert created["instrument"] == "tarka"
+        assert len(created["notes"]) == 2
+        assert created["notes"][1]["breath_mark"] is True
+        assert created["notes"][1]["fingering_data"] == {
+            "holes": [True, True, True, True, True, False]
+        }
+
+        # Comprobar recuperación en detalle
+        lesson_id = created["id"]
+        res_detail = await client.get(f"/api/v1/lessons/{lesson_id}", headers=auth_headers)
+        assert res_detail.status_code == 200
+        detail = res_detail.json()
+        assert detail["instrument"] == "tarka"
+        assert detail["notes"][1]["breath_mark"] is True
+
 
 class TestAndeanCurricularCatalog:
     """Verificación del catálogo curricular pedagógico andino (HU #142)."""
@@ -524,12 +633,15 @@ class TestAndeanCurricularCatalog:
         assert len(zampona_lessons) == 12
         assert len(tarka_lessons) == 12
 
-        # Todas las notas deben ser monofónicas (sin acordes de piano)
+        # Todas las notas deben ser monofónicas para aerófonos andinos (sin campos polifónicos)
         for l_item in all_lessons:
             assert len(l_item["notes"]) >= 4
             for n in l_item["notes"]:
-                assert n["is_chord"] is False
-                assert n["chord_group"] is None
+                assert "is_chord" not in n
+                assert "chord_group" not in n
+                assert "finger" not in n
+                assert "hand" not in n
+                assert isinstance(n["breath_mark"], bool)
                 assert isinstance(n["note"], str)
                 assert n["duration"] > 0
 

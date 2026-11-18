@@ -299,6 +299,7 @@ async def get_recommended_lessons(
                 "category_id": lesson.category_id,
                 "title": lesson.title,
                 "description": lesson.description,
+                "instrument": lesson.instrument,
                 "difficulty": lesson.difficulty,
                 "tempo_bpm": lesson.tempo_bpm,
                 "time_signature": lesson.time_signature,
@@ -354,10 +355,13 @@ async def get_lesson_detail(
         "category_id": lesson.category_id,
         "title": lesson.title,
         "description": lesson.description,
+        "instrument": lesson.instrument,
         "difficulty": lesson.difficulty,
         "tempo_bpm": lesson.tempo_bpm,
         "time_signature": lesson.time_signature,
         "key_signature": lesson.key_signature,
+        "genre": lesson.genre,
+        "artist": lesson.artist,
         "thumbnail_url": lesson.thumbnail_url,
         "audio_preview_url": lesson.audio_preview_url,
         "duration_seconds": lesson.duration_seconds,
@@ -498,6 +502,7 @@ async def get_admin_lessons_paginated(
     limit: int = 20,
     category_id: uuid.UUID | None = None,
     difficulty: str | None = None,
+    instrument: str | None = None,
     search: str | None = None,
 ) -> dict:
     """Obtener todas las lecciones para admin (incluyendo inactivas)."""
@@ -510,6 +515,8 @@ async def get_admin_lessons_paginated(
         query = query.where(Lesson.category_id == category_id)
     if difficulty:
         query = query.where(Lesson.difficulty == difficulty)
+    if instrument:
+        query = query.where(Lesson.instrument == instrument.lower())
     if search:
         search_term = f"%{search}%"
         query = query.where(
@@ -720,11 +727,10 @@ class LessonService:
                 note=n.note,
                 duration=n.duration,
                 is_rest=n.is_rest,
-                finger=n.finger,
-                hand=n.hand,
+                breath_mark=getattr(n, "breath_mark", False),
                 velocity=n.velocity,
-                is_chord=n.is_chord,
-                chord_group=n.chord_group,
+                fingering_id=getattr(n, "fingering_id", None),
+                fingering_data=getattr(n, "fingering_data", None),
             )
             for n in (lesson.notes or [])
         ]

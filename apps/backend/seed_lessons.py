@@ -12,7 +12,7 @@ Idempotente y consistente:
       * 12 lecciones de Quena (embocadura Sol4-Do5, pentatónica menor, El Cóndor Pasa, Ojos Azules, Valicha, Vírgenes del Sol).
       * 12 lecciones de Zampoña / Siku (soplo individual, alternancia Ira y Arca, Kantu de Charazani, Sikuriada de Italaque, Poco a poco, Flor de Retama).
       * 12 lecciones de Tarka (emisión de la tara, escala de 6 orificios de carnaval/anata, temas tradicionales de tarkada).
-  - Todas las notas son monofónicas (is_chord=False, chord_group=None).
+  - Todas las notas son monofónicas para aerófonos andinos (con soporte de breath_mark y fingering).
 """
 
 import asyncio
@@ -41,17 +41,16 @@ async def get_admin_user(db: AsyncSession) -> User | None:
 
 
 def note(position: int, n: str, duration: float = 1.0, **kwargs) -> dict:
-    """Helper para crear datos de una nota monofónica para instrumento andino."""
+    """Helper para crear datos de una nota monofónica para aerófono andino."""
     return {
         "position": position,
         "note": n,
         "duration": duration,
         "is_rest": kwargs.get("is_rest", False),
-        "finger": kwargs.get("finger"),
-        "hand": kwargs.get("hand", "right"),
+        "breath_mark": kwargs.get("breath_mark", False),
         "velocity": kwargs.get("velocity", 80),
-        "is_chord": False,
-        "chord_group": None,
+        "fingering_id": kwargs.get("fingering_id"),
+        "fingering_data": kwargs.get("fingering_data"),
     }
 
 

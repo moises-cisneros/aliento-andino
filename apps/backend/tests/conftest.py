@@ -35,7 +35,12 @@ async_session_test = async_sessionmaker(engine_test, class_=AsyncSession, expire
 
 async def override_get_db():
     async with async_session_test() as session:
-        yield session
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
 
 
 app.dependency_overrides[get_db] = override_get_db

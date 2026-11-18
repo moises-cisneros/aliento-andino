@@ -84,7 +84,7 @@ HASHTAGS = [
     "tarka",
     "practica",
     "escalas",
-    "acordes",
+    "digitacion",
     "sikuris",
     "andino",
     "folklore",
@@ -101,9 +101,9 @@ HASHTAGS = [
 AI_FEEDBACK_SAMPLES = [
     "¡Buen trabajo! Tu precisión mejoró respecto a intentos previos. Enfocate en mantener el tempo estable en los compases finales.",
     "Vas muy bien con las notas, pero el tempo se aceleró en la segunda mitad. Probá practicar con metrónomo a una velocidad menor.",
-    "Excelente precisión. El siguiente paso es trabajar la fluidez entre acordes para que la transición suene más natural.",
+    "Excelente precisión. El siguiente paso es trabajar la fluidez entre cambios de digitación y respiración para que la transición suene más natural.",
     "Cometiste algunos errores en las notas agudas. Repetí esa sección lentamente antes de subir el tempo.",
-    "Gran progreso en la mano izquierda. Seguí reforzando la coordinación entre ambas manos.",
+    "Gran progreso en la digitación. Seguí reforzando la columna de aire y el sellado de los orificios.",
     "Tu timing fue muy bueno. Para la próxima, prestá atención a la dinámica: variá la intensidad para darle expresión.",
 ]
 

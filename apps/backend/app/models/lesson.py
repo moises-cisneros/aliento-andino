@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean,
@@ -19,6 +20,9 @@ from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.fingering import Fingering
 
 
 class Category(Base):
@@ -111,10 +115,13 @@ class Lesson(Base):
 
 
 class NoteSequence(Base):
-    """Secuencia de notas de un ejercicio (cada fila es una nota o silencio)."""
+    """Secuencia de notas de un ejercicio (cada fila es una nota o silencio para aerófonos andinos)."""
 
     __tablename__ = "note_sequences"
-    __table_args__ = (Index("ix_note_sequences_lesson_position", "lesson_id", "position"),)
+    __table_args__ = (
+        Index("ix_note_sequences_lesson_position", "lesson_id", "position"),
+        Index("ix_note_sequences_fingering_id", "fingering_id"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     lesson_id: Mapped[uuid.UUID] = mapped_column(
@@ -128,14 +135,18 @@ class NoteSequence(Base):
         Float, nullable=False
     )  # beats: 1.0=negra, 0.5=corchea, 2.0=blanca
     is_rest: Mapped[bool] = mapped_column(Boolean, default=False)
-    finger: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    hand: Mapped[str | None] = mapped_column(String(10), nullable=True)  # "left", "right", "both"
+    breath_mark: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     velocity: Mapped[int] = mapped_column(Integer, default=80)
-    is_chord: Mapped[bool] = mapped_column(Boolean, default=False)
-    chord_group: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    fingering_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("fingerings.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    fingering_data: Mapped[dict | list | None] = mapped_column(JSON, nullable=True)
 
-    # Relación
+    # Relaciones
     lesson: Mapped["Lesson"] = relationship("Lesson", back_populates="notes")
+    fingering: Mapped["Fingering | None"] = relationship("Fingering")
 
     def __repr__(self) -> str:
         return f"<NoteSequence pos={self.position} note={self.note}>"

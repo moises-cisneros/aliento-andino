@@ -82,6 +82,7 @@ async def list_admin_lessons(
     limit: int = Query(20, ge=1, le=100),
     category_id: uuid.UUID | None = Query(None),
     difficulty: str | None = Query(None),
+    instrument: str | None = Query(None),
     search: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
     _admin: User = Depends(get_current_admin),
@@ -93,6 +94,7 @@ async def list_admin_lessons(
         limit=limit,
         category_id=category_id,
         difficulty=difficulty,
+        instrument=instrument,
         search=search,
     )
 

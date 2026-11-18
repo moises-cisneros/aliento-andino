@@ -3,6 +3,7 @@
 import re
 import uuid
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -65,17 +66,16 @@ class CategoryWithCount(BaseModel):
 
 
 class NoteSequenceCreate(BaseModel):
-    """Schema para crear una nota en la secuencia."""
+    """Schema para crear una nota en la secuencia de un aerófono andino."""
 
-    position: int = Field(ge=1)
+    position: int = Field(ge=0)
     note: str = Field(max_length=10)
     duration: float = Field(gt=0)
     is_rest: bool = False
-    finger: int | None = Field(None, ge=1, le=5)
-    hand: str | None = None
+    breath_mark: bool = False
     velocity: int = Field(default=80, ge=0, le=127)
-    is_chord: bool = False
-    chord_group: int | None = None
+    fingering_id: uuid.UUID | None = None
+    fingering_data: Any | None = None
 
     @field_validator("note")
     @classmethod
@@ -89,27 +89,19 @@ class NoteSequenceCreate(BaseModel):
             )
         return v
 
-    @field_validator("hand")
-    @classmethod
-    def validate_hand(cls, v: str | None) -> str | None:
-        if v is not None and v not in ("left", "right", "both"):
-            raise ValueError("hand debe ser 'left', 'right' o 'both'")
-        return v
-
 
 class NoteSequenceResponse(BaseModel):
-    """Schema de respuesta de una nota."""
+    """Schema de respuesta de una nota de aerófono andino."""
 
     id: uuid.UUID
     position: int
     note: str
     duration: float
     is_rest: bool
-    finger: int | None = None
-    hand: str | None = None
-    velocity: int
-    is_chord: bool
-    chord_group: int | None = None
+    breath_mark: bool = False
+    velocity: int = 80
+    fingering_id: uuid.UUID | None = None
+    fingering_data: Any | None = None
 
     model_config = {"from_attributes": True}
 

@@ -227,3 +227,83 @@ class TestFingeringApiIntegration:
         # Borrar ID inexistente retorna 404
         del_again = await client.delete(f"/api/v1/fingerings/{uuid.uuid4()}", headers=admin_headers)
         assert del_again.status_code == 404
+
+
+class TestFingeringSeederAndRelationships:
+    """Pruebas para el semillero oficial de digitaciones andinas y relaciones."""
+
+    async def test_seed_fingerings_is_idempotent_and_covers_all_instruments(self, db_session):
+        from sqlalchemy import select
+
+        from app.models.fingering import Fingering
+        from seed_fingerings import seed_fingerings
+
+        # 1. Primera ejecución: insertar
+        inserted, _ = await seed_fingerings(db_session)
+        assert inserted >= 30
+
+        # Verificar presencia de los 3 instrumentos andinos
+        res = await db_session.execute(select(Fingering))
+        all_fingerings = res.scalars().all()
+        instruments = {f.instrument for f in all_fingerings}
+        assert instruments == {"quena", "zampona", "tarka"}
+
+        # 2. Segunda ejecución: idempotencia
+        inserted_again, skipped = await seed_fingerings(db_session)
+        assert inserted_again == 0
+        assert skipped == len(all_fingerings)
+
+    async def test_note_sequence_fingering_relationship_and_breath_mark(self, db_session):
+        from app.models.fingering import Fingering
+        from app.models.lesson import Category, Lesson, NoteSequence
+
+        category = Category(name="Prueba Vientos", description="Categoría temporal", order=1)
+        db_session.add(category)
+        await db_session.flush()
+
+        fingering = Fingering(
+            instrument="quena",
+            note="G",
+            octave=4,
+            holes_covered=[True, True, True, True, True, True, True],
+            description="Sol4 fundamental",
+        )
+        db_session.add(fingering)
+        await db_session.flush()
+
+        lesson = Lesson(
+            category_id=category.id,
+            title="Prueba de Digitaciones y Respiración",
+            description="Lección de prueba",
+            instrument="quena",
+            difficulty="principiante",
+            tempo_bpm=80,
+            time_signature="4/4",
+            key_signature="G",
+            order=1,
+            is_active=True,
+        )
+        db_session.add(lesson)
+        await db_session.flush()
+
+        note_seq = NoteSequence(
+            lesson_id=lesson.id,
+            position=1,
+            note="G4",
+            duration=1.0,
+            is_rest=False,
+            breath_mark=True,
+            velocity=85,
+            fingering_id=fingering.id,
+            fingering_data={"holes": [True] * 7},
+        )
+        db_session.add(note_seq)
+        await db_session.commit()
+
+        # Verificar persistencia y relaciones
+        await db_session.refresh(note_seq)
+        assert note_seq.breath_mark is True
+        assert note_seq.fingering_id == fingering.id
+        assert note_seq.fingering is not None
+        assert note_seq.fingering.note == "G"
+        assert note_seq.fingering_data == {"holes": [True] * 7}

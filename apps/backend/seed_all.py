@@ -15,6 +15,7 @@ from datetime import UTC, date, datetime, timedelta
 from sqlalchemy import func, select
 
 from app.database import async_session
+from app.models.fingering import Fingering
 from app.models.lesson import Lesson, PracticeSession
 from app.models.ranking import Achievement, UserAchievement, UserXP
 from app.models.social import Comment, Follow, Like, Post, Report
@@ -851,11 +852,16 @@ async def main():
     print("🌱 SEED COMPLETO — Aliento Andino")
     print("=" * 60)
 
-    # 0. Asegurar catálogo andino y logros del sistema
+    # 0. Asegurar catálogo andino, digitaciones y logros del sistema
     print("🎋 Sembrando catálogo pedagógico andino...")
     from seed_lessons import seed_lessons
 
     await seed_lessons()
+
+    print("🎶 Sembrando catálogo oficial de digitaciones andinas...")
+    from seed_fingerings import seed_fingerings
+
+    await seed_fingerings()
 
     print("🏆 Sembrando catálogo de logros...")
     from seed_achievements import seed_achievements
@@ -894,6 +900,7 @@ async def main():
             # Resumen final
             for label, model in [
                 ("Usuarios", User),
+                ("Digitaciones", Fingering),
                 ("Sesiones", PracticeSession),
                 ("Posts", Post),
                 ("Comentarios", Comment),
