@@ -85,6 +85,34 @@ class StreakLeaderboardResponse(BaseModel):
     my_longest: int
 
 
+# ===================== INSTRUMENT LEADERBOARD (SUB-12-A / HU-12) =====================
+
+
+class UserRankingResponse(BaseModel):
+    """Entrada individual de ranking de usuario para leaderboards."""
+
+    rank: int
+    user_id: uuid.UUID
+    username: str
+    full_name: str
+    avatar_url: str | None = None
+    xp: int
+    total_xp: int = 0
+    weekly_xp: int = 0
+    level: int = 1
+    instrument: str | None = None
+
+
+class LeaderboardResponse(BaseModel):
+    """Respuesta estructurada del leaderboard filtrado por instrumento y scope."""
+
+    items: list[UserRankingResponse]
+    user_rank: int | None = None
+    instrument: str | None = None
+    scope: str = "weekly"
+    leaderboard: list[UserRankingResponse] | None = None
+
+
 # ===================== USER XP =====================
 
 

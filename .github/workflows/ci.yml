@@ -24,6 +24,7 @@ jobs:
       mobile: ${{ steps.diff.outputs.mobile }}
       docs: ${{ steps.diff.outputs.docs }}
       scripts: ${{ steps.diff.outputs.scripts }}
+      infra: ${{ steps.diff.outputs.infra }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,6 +39,7 @@ jobs:
             echo "mobile=true" >> "$GITHUB_OUTPUT"
             echo "docs=true" >> "$GITHUB_OUTPUT"
             echo "scripts=true" >> "$GITHUB_OUTPUT"
+            echo "infra=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -69,12 +71,14 @@ jobs:
           is_mobile=$(has "^apps/mobile/|$ci_workflow" && echo true || echo false)
           is_docs=$(has "^apps/docs/|$node_shared|$ci_workflow" && echo true || echo false)
           is_scripts=$(has "^scripts/|$node_shared|$ci_workflow" && echo true || echo false)
+          is_infra=$(has "^infra/(nginx|docker-compose\.yml)|$ci_workflow" && echo true || echo false)
 
           echo "backend=$is_backend" >> "$GITHUB_OUTPUT"
           echo "web=$is_web" >> "$GITHUB_OUTPUT"
           echo "mobile=$is_mobile" >> "$GITHUB_OUTPUT"
           echo "docs=$is_docs" >> "$GITHUB_OUTPUT"
           echo "scripts=$is_scripts" >> "$GITHUB_OUTPUT"
+          echo "infra=$is_infra" >> "$GITHUB_OUTPUT"
 
   format-check:
     name: Format check (Prettier)
@@ -103,6 +107,15 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile || pnpm install
       - run: pnpm test:scripts
+
+  nginx-perimeter-tests:
+    name: Nginx perimeter (nginx -t, rate limit, headers)
+    needs: changes
+    if: needs.changes.outputs.infra == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash infra/nginx/tests/run.sh
 
   docs-build:
     name: Build User Manual (Docusaurus)
