@@ -16,6 +16,7 @@ class RankingsBloc extends Bloc<RankingsEvent, RankingsState> {
     on<RankingsLoadWeekly>(_onLoadWeekly);
     on<RankingsLoadStreaks>(_onLoadStreaks);
     on<RankingsLoadMyXP>(_onLoadMyXP);
+    on<RankingsLoadInstrumentLeaderboard>(_onLoadInstrumentLeaderboard);
     on<RankingsLoadLessonRanking>(_onLoadLessonRanking);
   }
 
@@ -144,6 +145,35 @@ class RankingsBloc extends Bloc<RankingsEvent, RankingsState> {
           message: isConnectionError(e)
               ? offlineMessage
               : 'Error al cargar datos de XP',
+        ),
+      );
+    }
+  }
+
+  Future<void> _onLoadInstrumentLeaderboard(
+    RankingsLoadInstrumentLeaderboard event,
+    Emitter<RankingsState> emit,
+  ) async {
+    emit(RankingsLoading());
+    try {
+      final leaderboard = await rankingRepository.getInstrumentLeaderboard(
+        instrument: event.instrument,
+        scope: event.scope,
+      );
+      emit(
+        InstrumentLeaderboardLoaded(
+          items: leaderboard.items,
+          userRank: leaderboard.userRank,
+          selectedInstrument: event.instrument,
+          scope: event.scope,
+        ),
+      );
+    } catch (e) {
+      emit(
+        RankingsError(
+          message: isConnectionError(e)
+              ? offlineMessage
+              : 'Error al cargar leaderboard por instrumento',
         ),
       );
     }

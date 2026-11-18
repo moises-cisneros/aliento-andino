@@ -89,6 +89,36 @@ class RankingRepository {
     'days_remaining': data['days_remaining'] as int,
   };
 
+  /// Obtener leaderboard filtrable por instrumento y temporalidad (HU-12 / SUB-12-B).
+  Future<LeaderboardModel> getInstrumentLeaderboard({
+    String? instrument,
+    String scope = 'weekly',
+  }) async {
+    final queryParams = <String, dynamic>{
+      'scope': scope,
+      if (instrument != null && instrument.isNotEmpty) 'instrument': instrument,
+    };
+    try {
+      final response = await _apiClient.dio.get(
+        '/v1/rankings/leaderboard',
+        queryParameters: queryParams,
+      );
+      final data = response.data as Map<String, dynamic>;
+      final cacheKey = 'rank_leaderboard_${instrument ?? "all"}_$scope';
+      await _db?.putSnapshot(cacheKey, jsonEncode(data));
+      return LeaderboardModel.fromJson(data);
+    } on DioException {
+      final cacheKey = 'rank_leaderboard_${instrument ?? "all"}_$scope';
+      final cached = await _db?.getSnapshot(cacheKey);
+      if (cached != null) {
+        return LeaderboardModel.fromJson(
+          jsonDecode(cached) as Map<String, dynamic>,
+        );
+      }
+      rethrow;
+    }
+  }
+
   /// Obtener ranking de rachas (top 30).
   Future<Map<String, dynamic>> getStreaksLeaderboard() async {
     try {

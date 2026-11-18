@@ -40,6 +40,7 @@ import '../../features/profile/presentation/screens/terms_screen.dart';
 import '../../features/profile/presentation/screens/achievements_screen.dart'
     as profile_achievements;
 import '../../features/rankings/presentation/screens/achievements_screen.dart';
+import '../../features/rankings/presentation/screens/leaderboard_screen.dart';
 import '../../features/rankings/presentation/screens/lesson_ranking_screen.dart';
 import '../../features/rankings/presentation/screens/my_xp_screen.dart';
 import '../../features/rankings/presentation/screens/rankings_screen.dart';
@@ -244,6 +245,13 @@ class AppRouter {
         builder: (context, state) => const PrivacyPolicyScreen(),
       ),
       // Rutas de rankings fuera del shell (sin bottomNav)
+      GoRoute(
+        path: '/leaderboard',
+        builder: (context, state) {
+          final instrument = state.uri.queryParameters['instrument'] ?? 'quena';
+          return LeaderboardScreen(initialInstrument: instrument);
+        },
+      ),
       GoRoute(path: '/my-xp', builder: (context, state) => const MyXPScreen()),
       GoRoute(
         path: '/profile/achievements',

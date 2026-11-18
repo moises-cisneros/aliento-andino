@@ -32,6 +32,20 @@ class MyXPLoaded extends RankingsState {
   MyXPLoaded({required this.xpData});
 }
 
+class InstrumentLeaderboardLoaded extends RankingsState {
+  final List<RankingEntryModel> items;
+  final int? userRank;
+  final String? selectedInstrument;
+  final String scope;
+
+  InstrumentLeaderboardLoaded({
+    required this.items,
+    this.userRank,
+    this.selectedInstrument = 'quena',
+    this.scope = 'weekly',
+  });
+}
+
 class LessonRankingLoaded extends RankingsState {
   final List<LessonRankingModel> leaderboard;
   final double myBestScore;

@@ -89,6 +89,14 @@ class _RankingsScreenState extends State<RankingsScreen>
           actions: [
             IconButton(
               icon: Icon(
+                Icons.leaderboard,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              onPressed: () => context.push('/leaderboard'),
+              tooltip: 'Leaderboard por Instrumento',
+            ),
+            IconButton(
+              icon: Icon(
                 Icons.person,
                 color: Theme.of(context).colorScheme.primary,
               ),
