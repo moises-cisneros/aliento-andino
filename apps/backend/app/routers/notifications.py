@@ -124,7 +124,7 @@ async def send_test_notification(
     success_count, invalid = await fcm_service.send_to_tokens(
         tokens=tokens,
         title="Aliento Andino",
-        body="¡Notificaciones funcionando! 🎹",
+        body="¡Notificaciones funcionando! 🎶",
         data={"type": "test"},
     )
 
