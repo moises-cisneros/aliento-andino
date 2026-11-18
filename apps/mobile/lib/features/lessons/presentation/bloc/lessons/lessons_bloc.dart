@@ -46,9 +46,7 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
     }
     try {
       _categories = await _lessonRepository.getCategories();
-      final result = await _lessonRepository.getLessonsPaginated(
-        instrument: _instrument?.name,
-      );
+      final result = await _lessonRepository.getLessonsPaginated(limit: 100);
       _all = result['items'] as List<LessonModel>;
       _recomputePath();
       _emit(emit); // mantiene _category/_difficulty/_query
@@ -66,6 +64,7 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
       _categories = await _lessonRepository.getCategories();
       final result = await _lessonRepository.getLessonsPaginated(
         instrument: _instrument?.name,
+        limit: 100,
       );
       _all = result['items'] as List<LessonModel>;
       _recomputePath();
@@ -123,12 +122,32 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
     _emit(emit);
   }
 
-  void _onFilterByInstrument(
+  Future<void> _onFilterByInstrument(
     LessonsFilterByInstrument event,
     Emitter<LessonsState> emit,
-  ) {
+  ) async {
     _instrument = event.instrument;
     if (state is LessonsLoaded) {
+      final hasInstrumentLessons = _all.any(
+        (l) =>
+            l.instrument.trim().toLowerCase() ==
+            event.instrument.name.toLowerCase(),
+      );
+      if (!hasInstrumentLessons) {
+        try {
+          final result = await _lessonRepository.getLessonsPaginated(
+            instrument: event.instrument.name,
+            limit: 100,
+          );
+          final items = result['items'] as List<LessonModel>;
+          if (items.isNotEmpty) {
+            final existingIds = _all.map((l) => l.id).toSet();
+            _all.addAll(items.where((l) => !existingIds.contains(l.id)));
+          }
+        } catch (_) {
+          // Si no hay red, conserva _all en memoria
+        }
+      }
       _recomputePath();
       _emit(emit);
     }

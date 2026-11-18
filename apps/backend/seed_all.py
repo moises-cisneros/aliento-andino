@@ -851,6 +851,17 @@ async def main():
     print("🌱 SEED COMPLETO — Aliento Andino")
     print("=" * 60)
 
+    # 0. Asegurar catálogo andino y logros del sistema
+    print("🎋 Sembrando catálogo pedagógico andino...")
+    from seed_lessons import seed_lessons
+
+    await seed_lessons()
+
+    print("🏆 Sembrando catálogo de logros...")
+    from seed_achievements import seed_achievements
+
+    await seed_achievements()
+
     async with async_session() as db:
         try:
             # 1. Usuarios
