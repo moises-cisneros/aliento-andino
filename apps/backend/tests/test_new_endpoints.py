@@ -542,3 +542,118 @@ class TestUploads:
             )
             assert response.status_code == 200
             assert response.json()["url"] == "https://example.com/test.png"
+
+
+# ============== E2E DE HUMO (HU-16 / SUB-16-B) ==============
+
+
+class TestPlatformSmokeE2E:
+    """Flujo completo: auth -> lecciones -> práctica -> guardado -> feed -> ranking."""
+
+    async def _seed_lesson(self, db_session: AsyncSession) -> Lesson:
+        cat = Category(id=uuid.uuid4(), name="Quena E2E", order=1)
+        db_session.add(cat)
+        await db_session.flush()
+        lesson = Lesson(
+            id=uuid.uuid4(),
+            category_id=cat.id,
+            title="Lección E2E",
+            description="Flujo de humo",
+            difficulty="principiante",
+            tempo_bpm=80,
+            order=0,
+            is_active=True,
+        )
+        db_session.add(lesson)
+        await db_session.commit()
+        return lesson
+
+    async def test_full_student_journey(
+        self, client: AsyncClient, db_session: AsyncSession, test_user: User, auth_headers: dict
+    ):
+        lesson = await self._seed_lesson(db_session)
+
+        # 1. Autenticación: el registro entrega tokens y el login (fixture) autentica al alumno
+        register = await client.post(
+            "/api/auth/register",
+            json={
+                "email": "e2e@example.com",
+                "username": "e2euser",
+                "full_name": "E2E User",
+                "password": "SecurePass123",
+                "password_confirm": "SecurePass123",
+            },
+        )
+        assert register.status_code == 201
+        assert register.json()["access_token"]
+        headers = auth_headers
+        me = await client.get("/api/auth/me", headers=headers)
+        assert me.status_code == 200
+        assert me.json()["email"] == "test@example.com"
+
+        # 2. Listado de lecciones
+        lessons = await client.get("/api/v1/lessons", headers=headers)
+        assert lessons.status_code == 200
+        assert str(lesson.id) in [item["id"] for item in lessons.json()]
+
+        # 3. Práctica + guardado (POST idempotente con client_id)
+        session_payload = {
+            "lesson_id": str(lesson.id),
+            "client_id": str(uuid.uuid4()),
+            "score": 90,
+            "correct_notes": 9,
+            "total_notes": 10,
+            "wrong_notes": 1,
+            "missed_notes": 0,
+            "average_tempo": 80,
+            "total_time_seconds": 30,
+            "errors_detail": [],
+            "completed": True,
+        }
+        practice = await client.post(
+            "/api/v1/practice/session", json=session_payload, headers=headers
+        )
+        assert practice.status_code in (200, 201)
+        result = practice.json()
+        assert result["xp_earned"] > 0
+
+        history = await client.get("/api/v1/practice/history", headers=headers)
+        assert history.status_code == 200
+        assert str(result["id"]) in str(history.json())
+
+        # 4. Feed social: publicar compartiendo la sesión y leerlo en el feed
+        post = await client.post(
+            "/api/posts",
+            json={
+                "content": "Terminé mi primera lección de quena",
+                "post_type": "practice_result",
+                "practice_session_id": result["id"],
+            },
+            headers=headers,
+        )
+        assert post.status_code == 201
+        feed = await client.get("/api/feed", headers=headers)
+        assert feed.status_code == 200
+        assert post.json()["id"] in str(feed.json())
+
+        # 5. Ranking: el XP ganado aparece en el global y en el semanal
+        global_rank = await client.get("/api/rankings/global", headers=headers)
+        assert global_rank.status_code == 200
+        body = global_rank.json()
+        assert body["my_xp"] == result["xp_earned"]
+        assert body["my_rank"] == 1
+        assert "testuser" in [entry["username"] for entry in body["leaderboard"]]
+
+        weekly = await client.get("/api/rankings/weekly", headers=headers)
+        assert weekly.status_code == 200
+        assert weekly.json()["my_weekly_xp"] == result["xp_earned"]
+
+    async def test_journey_requires_authentication(self, client: AsyncClient):
+        for method, url in (
+            ("get", "/api/v1/lessons"),
+            ("post", "/api/v1/practice/session"),
+            ("get", "/api/feed"),
+            ("get", "/api/rankings/global"),
+        ):
+            response = await getattr(client, method)(url)
+            assert response.status_code in (401, 403), f"{method.upper()} {url}"
