@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/audio/instrument.dart';
 import '../../../../core/audio/instrument_service.dart';
 import '../../../../core/notifications/notification_service.dart';
-import '../../../../core/notifications/practice_reminder_service.dart';
 import '../../../../core/practice/daily_goal_service.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../auth/data/repositories/auth_repository.dart';
@@ -14,6 +13,8 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../auth/domain/entities/user_entity.dart';
+import '../widgets/clean_switch.dart';
+import '../widgets/notification_settings_tile.dart';
 import '../widgets/skill_level_badge.dart';
 
 /// Pantalla de configuración de la app.
@@ -119,7 +120,7 @@ class SettingsScreen extends StatelessWidget {
               // === PRÁCTICA ===
               _SectionTitle(title: 'Práctica'),
               const SizedBox(height: 8),
-              const _PracticeReminderTile(),
+              const NotificationSettingsTile(),
               const SizedBox(height: 8),
               const _DailyGoalTile(),
               const SizedBox(height: 8),
@@ -414,65 +415,8 @@ class _SettingsSwitch extends StatelessWidget {
                   style: TextStyle(color: cs.onSurface, fontSize: 15),
                 ),
               ),
-              _CleanSwitch(value: value, onChanged: onChanged),
+              CleanSwitch(value: value, onChanged: onChanged),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Switch custom estilo iOS — track con color primario cuando está ON,
-/// thumb blanco con sombra siempre visible.
-class _CleanSwitch extends StatelessWidget {
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  const _CleanSwitch({required this.value, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    const double width = 48;
-    const double height = 28;
-    const double thumbSize = 22;
-    const double padding = 3;
-
-    return GestureDetector(
-      onTap: () => onChanged(!value),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          color: value
-              ? cs.primary
-              : cs.onSurfaceVariant.withValues(alpha: 0.25),
-          borderRadius: BorderRadius.circular(height / 2),
-        ),
-        child: AnimatedAlign(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeInOut,
-          alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: padding),
-            child: Container(
-              width: thumbSize,
-              height: thumbSize,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.18),
-                    blurRadius: 3,
-                    offset: const Offset(0, 1),
-                  ),
-                ],
-              ),
-            ),
           ),
         ),
       ),
@@ -802,137 +746,6 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
               : const Text('Eliminar'),
         ),
       ],
-    );
-  }
-}
-
-/// Recordatorio diario de práctica: switch + hora.
-class _PracticeReminderTile extends StatefulWidget {
-  const _PracticeReminderTile();
-
-  @override
-  State<_PracticeReminderTile> createState() => _PracticeReminderTileState();
-}
-
-class _PracticeReminderTileState extends State<_PracticeReminderTile> {
-  final _service = PracticeReminderService();
-  bool _enabled = false;
-  TimeOfDay _time = const TimeOfDay(hour: 19, minute: 0);
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final enabled = await _service.isEnabled();
-    final time = await _service.getTime();
-    if (mounted) {
-      setState(() {
-        _enabled = enabled;
-        _time = time;
-      });
-    }
-  }
-
-  Future<void> _toggle(bool val) async {
-    if (val) {
-      final ok = await _service.enable(_time);
-      if (!mounted) return;
-      if (!ok) {
-        // Permiso de notificaciones rechazado: dejar el switch en off.
-        setState(() => _enabled = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Activá las notificaciones para recibir el recordatorio.',
-            ),
-          ),
-        );
-        return;
-      }
-      setState(() => _enabled = true);
-    } else {
-      setState(() => _enabled = false);
-      await _service.disable();
-    }
-  }
-
-  Future<void> _pickTime() async {
-    final picked = await showTimePicker(context: context, initialTime: _time);
-    if (picked != null) {
-      setState(() => _time = picked);
-      if (_enabled) await _service.enable(picked);
-    }
-  }
-
-  String get _timeLabel =>
-      '${_time.hour.toString().padLeft(2, '0')}:${_time.minute.toString().padLeft(2, '0')}';
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Material(
-      color: cs.surface,
-      borderRadius: BorderRadius.circular(10),
-      child: Column(
-        children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(10),
-            onTap: () => _toggle(!_enabled),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              child: Row(
-                children: [
-                  Icon(Icons.alarm, color: cs.primary, size: 22),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(
-                      'Recordatorio de práctica',
-                      style: TextStyle(color: cs.onSurface, fontSize: 15),
-                    ),
-                  ),
-                  _CleanSwitch(value: _enabled, onChanged: _toggle),
-                ],
-              ),
-            ),
-          ),
-          if (_enabled)
-            InkWell(
-              onTap: _pickTime,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(52, 0, 16, 14),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Hora del recordatorio',
-                        style: TextStyle(
-                          color: cs.onSurfaceVariant,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      _timeLabel,
-                      style: TextStyle(
-                        color: cs.primary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Icon(
-                      Icons.chevron_right,
-                      color: cs.onSurfaceVariant,
-                      size: 18,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
     );
   }
 }
