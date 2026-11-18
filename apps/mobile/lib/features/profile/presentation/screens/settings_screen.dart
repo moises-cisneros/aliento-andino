@@ -1032,8 +1032,7 @@ class _DailyGoalTileState extends State<_DailyGoalTile> {
   }
 }
 
-/// Selector de instrumento/sonido del sintetizador (piano, e-piano, órgano,
-/// sintetizador). Aplica la próxima vez que se abre una pantalla con sonido.
+/// Selector de instrumento/sonido del sintetizador (quena, zampoña, tarka). Aplica la próxima vez que se abre una pantalla con sonido.
 class _InstrumentTile extends StatefulWidget {
   const _InstrumentTile();
 

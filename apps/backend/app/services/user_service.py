@@ -173,7 +173,7 @@ async def toggle_follow(
         await notification_dispatcher.notify_user(
             db,
             user_id=following_id,
-            title="Nuevo seguidor 🎹",
+            title="Nuevo seguidor 🎶",
             body=f"@{follower_username} empezó a seguirte",
             data={"type": "follow", "user_id": str(follower_id)},
         )

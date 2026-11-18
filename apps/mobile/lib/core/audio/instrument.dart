@@ -28,9 +28,8 @@ extension InstrumentTypeExtension on InstrumentType {
 
 /// Instrumentos/timbres disponibles para el sintetizador ([ToneSynth]).
 ///
-/// Quena, Zampoña y Tarka son los instrumentos andinos canónicos principales.
-/// Se mantienen los restantes por compatibilidad con generadores de tono.
-enum Instrument { quena, zampona, tarka, piano, electricPiano, organ, synth }
+/// Solo los instrumentos andinos canónicos: Quena, Zampoña y Tarka.
+enum Instrument { quena, zampona, tarka }
 
 /// Perfil sonoro de un instrumento.
 class InstrumentVoice {
@@ -52,18 +51,6 @@ class InstrumentVoice {
     Instrument.zampona: InstrumentVoice([1.0, 0.1, 0.5, 0.05, 0.25], 1.2, 0.65),
     // Tarka: aerófono de madera con sonido rasposo y ricos armónicos superiores.
     Instrument.tarka: InstrumentVoice([1.0, 0.8, 0.7, 0.5, 0.3], 1.0, 0.7),
-    // Piano
-    Instrument.piano: InstrumentVoice([1.0, 0.5, 0.25], 3.2, 0.6),
-    // Piano eléctrico
-    Instrument.electricPiano: InstrumentVoice(
-      [1.0, 0.0, 0.15, 0.0, 0.08],
-      2.4,
-      0.6,
-    ),
-    // Órgano
-    Instrument.organ: InstrumentVoice([1.0, 1.0, 0.6, 0.4], 0.05, 0.45),
-    // Sintetizador
-    Instrument.synth: InstrumentVoice([1.0, 0.5, 0.33, 0.25, 0.2], 1.4, 0.5),
   };
 
   static InstrumentVoice of(Instrument i) => _map[i] ?? _map[Instrument.quena]!;
@@ -74,8 +61,4 @@ const Map<Instrument, String> instrumentLabels = {
   Instrument.quena: 'Quena',
   Instrument.zampona: 'Zampoña',
   Instrument.tarka: 'Tarka',
-  Instrument.piano: 'Piano',
-  Instrument.electricPiano: 'Piano eléctrico',
-  Instrument.organ: 'Órgano',
-  Instrument.synth: 'Sintetizador',
 };
