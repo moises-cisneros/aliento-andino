@@ -47,7 +47,7 @@ import '../../features/rankings/presentation/screens/my_xp_screen.dart';
 import '../../features/rankings/presentation/screens/rankings_screen.dart';
 import '../../features/social/presentation/screens/create_post_screen.dart';
 import '../../features/social/presentation/screens/explore_screen.dart';
-import '../../features/social/presentation/screens/feed_screen.dart';
+import '../../features/social/presentation/screens/social_feed_screen.dart';
 import '../../features/social/presentation/screens/followers_screen.dart';
 import '../../features/social/presentation/screens/hashtag_feed_screen.dart';
 import '../../features/social/presentation/screens/mention_resolver_screen.dart';
@@ -201,7 +201,7 @@ class AppRouter {
           ),
           GoRoute(
             path: '/social',
-            builder: (context, state) => const FeedScreen(),
+            builder: (context, state) => const SocialFeedScreen(),
           ),
           GoRoute(
             path: '/lessons',

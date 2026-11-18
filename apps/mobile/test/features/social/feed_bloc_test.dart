@@ -5,9 +5,9 @@ import 'package:mocktail/mocktail.dart';
 import 'package:mobile/features/social/data/models/post_model.dart';
 import 'package:mobile/features/social/data/models/user_summary_model.dart';
 import 'package:mobile/features/social/data/repositories/social_repository.dart';
-import 'package:mobile/features/social/presentation/bloc/feed/feed_bloc.dart';
-import 'package:mobile/features/social/presentation/bloc/feed/feed_event.dart';
-import 'package:mobile/features/social/presentation/bloc/feed/feed_state.dart';
+import 'package:mobile/features/social/presentation/bloc/social_feed_bloc.dart';
+import 'package:mobile/features/social/presentation/bloc/social_feed_event.dart';
+import 'package:mobile/features/social/presentation/bloc/social_feed_state.dart';
 
 class MockSocialRepository extends Mock implements SocialRepository {}
 
@@ -33,13 +33,13 @@ void main() {
 
   setUp(() => repo = MockSocialRepository());
 
-  group('FeedBloc', () {
-    blocTest<FeedBloc, FeedState>(
+  group('SocialFeedBloc', () {
+    blocTest<SocialFeedBloc, FeedState>(
       'FeedLoad carga el feed de seguidos (modo following)',
       setUp: () {
         when(() => repo.getFeed()).thenAnswer((_) async => _page([_post('1')]));
       },
-      build: () => FeedBloc(socialRepository: repo),
+      build: () => SocialFeedBloc(socialRepository: repo),
       act: (bloc) => bloc.add(const FeedLoad()),
       expect: () => [
         isA<FeedLoading>(),
@@ -50,7 +50,7 @@ void main() {
       verify: (_) => verify(() => repo.getFeed()).called(1),
     );
 
-    blocTest<FeedBloc, FeedState>(
+    blocTest<SocialFeedBloc, FeedState>(
       'FeedSwitchMode(recent) usa getRecentFeed (Fase 4)',
       setUp: () {
         when(() => repo.getFeed()).thenAnswer((_) async => _page([_post('1')]));
@@ -58,7 +58,7 @@ void main() {
           () => repo.getRecentFeed(),
         ).thenAnswer((_) async => _page([_post('9'), _post('10')]));
       },
-      build: () => FeedBloc(socialRepository: repo),
+      build: () => SocialFeedBloc(socialRepository: repo),
       act: (bloc) async {
         bloc.add(const FeedLoad());
         await Future<void>.delayed(Duration.zero);
@@ -74,13 +74,13 @@ void main() {
       verify: (_) => verify(() => repo.getRecentFeed()).called(1),
     );
 
-    blocTest<FeedBloc, FeedState>(
+    blocTest<SocialFeedBloc, FeedState>(
       'FeedToggleSave invierte isSavedByMe de forma optimista',
       setUp: () {
         when(() => repo.getFeed()).thenAnswer((_) async => _page([_post('1')]));
         when(() => repo.toggleSave('1')).thenAnswer((_) async => true);
       },
-      build: () => FeedBloc(socialRepository: repo),
+      build: () => SocialFeedBloc(socialRepository: repo),
       act: (bloc) async {
         bloc.add(const FeedLoad());
         await Future<void>.delayed(Duration.zero);

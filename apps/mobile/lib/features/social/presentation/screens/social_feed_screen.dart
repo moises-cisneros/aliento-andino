@@ -9,12 +9,12 @@ import '../../../instrument_select/presentation/widgets/instrument_selector_appb
 import '../../../notifications/presentation/widgets/notification_bell.dart';
 import '../../data/models/post_model.dart';
 import '../../data/repositories/social_repository.dart';
-import '../bloc/feed/feed_bloc.dart';
-import '../bloc/feed/feed_event.dart';
-import '../bloc/feed/feed_state.dart';
+import '../bloc/social_feed_bloc.dart';
+import '../bloc/social_feed_event.dart';
+import '../bloc/social_feed_state.dart';
 import '../widgets/create_post_fab.dart';
 import '../widgets/edit_content_dialog.dart';
-import '../widgets/post_card.dart';
+import '../widgets/social_post_card.dart';
 import '../widgets/suggested_users_row.dart';
 import '../widgets/report_dialog.dart';
 import '../../../tutor/presentation/tutor_targets.dart';
@@ -22,14 +22,14 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/auto_refresh_mixin.dart';
 
 /// Pantalla de feed principal con posts de seguidores.
-class FeedScreen extends StatelessWidget {
-  const FeedScreen({super.key});
+class SocialFeedScreen extends StatelessWidget {
+  const SocialFeedScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (ctx) =>
-          FeedBloc(socialRepository: ctx.read<SocialRepository>())
+          SocialFeedBloc(socialRepository: ctx.read<SocialRepository>())
             ..add(const FeedLoad()),
       child: const _FeedView(),
     );
@@ -45,7 +45,8 @@ class _FeedView extends StatefulWidget {
 
 class _FeedViewState extends State<_FeedView> with AutoRefreshOnResume {
   @override
-  void onAutoRefresh() => context.read<FeedBloc>().add(const FeedRefresh());
+  void onAutoRefresh() =>
+      context.read<SocialFeedBloc>().add(const FeedRefresh());
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +69,7 @@ class _FeedViewState extends State<_FeedView> with AutoRefreshOnResume {
           bottom: TabBar(
             key: TutorTargets.keyFor('feed_tabs'),
             // El orden de las tabs coincide con FeedMode.values.
-            onTap: (index) => context.read<FeedBloc>().add(
+            onTap: (index) => context.read<SocialFeedBloc>().add(
               FeedSwitchMode(FeedMode.values[index]),
             ),
             labelColor: cs.primary,
@@ -95,7 +96,7 @@ class _FeedViewState extends State<_FeedView> with AutoRefreshOnResume {
   }
 
   Widget _buildFeedBody(BuildContext context) {
-    return BlocBuilder<FeedBloc, FeedState>(
+    return BlocBuilder<SocialFeedBloc, FeedState>(
       builder: (context, state) {
         if (state is FeedLoading) {
           return Center(
@@ -127,7 +128,7 @@ class _FeedViewState extends State<_FeedView> with AutoRefreshOnResume {
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () =>
-                      context.read<FeedBloc>().add(const FeedLoad()),
+                      context.read<SocialFeedBloc>().add(const FeedLoad()),
                   child: const Text('Reintentar'),
                 ),
               ],
@@ -205,13 +206,13 @@ class _FeedViewState extends State<_FeedView> with AutoRefreshOnResume {
           return RefreshIndicator(
             color: Theme.of(context).colorScheme.primary,
             onRefresh: () async {
-              context.read<FeedBloc>().add(const FeedRefresh());
+              context.read<SocialFeedBloc>().add(const FeedRefresh());
             },
             child: NotificationListener<ScrollNotification>(
               onNotification: (scroll) {
                 if (scroll.metrics.pixels >=
                     scroll.metrics.maxScrollExtent - 200) {
-                  context.read<FeedBloc>().add(const FeedLoadMore());
+                  context.read<SocialFeedBloc>().add(const FeedLoadMore());
                 }
                 return false;
               },
@@ -236,16 +237,18 @@ class _FeedViewState extends State<_FeedView> with AutoRefreshOnResume {
                       : null;
                   final isOwn =
                       currentUserId != null && post.user.id == currentUserId;
-                  return PostCard(
+                  return SocialPostCard(
                     post: post,
                     onTap: () => context.push('/social/post/${post.id}'),
-                    onLike: () =>
-                        context.read<FeedBloc>().add(FeedToggleLike(post.id)),
+                    onLike: () => context.read<SocialFeedBloc>().add(
+                      FeedToggleLike(post.id),
+                    ),
                     onComment: () => context.push('/social/post/${post.id}'),
                     onUserTap: () =>
                         context.push('/social/user/${post.user.id}'),
-                    onSave: () =>
-                        context.read<FeedBloc>().add(FeedToggleSave(post.id)),
+                    onSave: () => context.read<SocialFeedBloc>().add(
+                      FeedToggleSave(post.id),
+                    ),
                     saveButtonKey: index == 0
                         ? TutorTargets.keyFor('save_post_button')
                         : null,
@@ -270,7 +273,7 @@ class _FeedViewState extends State<_FeedView> with AutoRefreshOnResume {
   }
 
   Future<void> _showEditPostDialog(BuildContext context, PostModel post) async {
-    final feedBloc = context.read<FeedBloc>();
+    final feedBloc = context.read<SocialFeedBloc>();
     final repo = context.read<SocialRepository>();
     final messenger = ScaffoldMessenger.of(context);
 
@@ -355,7 +358,7 @@ class _FeedViewState extends State<_FeedView> with AutoRefreshOnResume {
           ElevatedButton(
             onPressed: () {
               Navigator.of(ctx).pop();
-              context.read<FeedBloc>().add(FeedDeletePost(postId));
+              context.read<SocialFeedBloc>().add(FeedDeletePost(postId));
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,

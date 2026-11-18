@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
-import '../../../data/models/post_model.dart';
-import 'feed_event.dart';
+import '../../data/models/post_model.dart';
+import 'social_feed_event.dart';
 
 abstract class FeedState extends Equatable {
   const FeedState();

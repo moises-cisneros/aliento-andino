@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../data/models/post_model.dart';
 import '../../data/repositories/social_repository.dart';
-import '../widgets/post_card.dart';
+import '../widgets/social_post_card.dart';
 
 /// Pantalla Explore: posts populares de las últimas 48h.
 class ExploreScreen extends StatefulWidget {
@@ -102,7 +102,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 itemCount: _posts.length,
                 itemBuilder: (context, index) {
                   final post = _posts[index];
-                  return PostCard(
+                  return SocialPostCard(
                     post: post,
                     onTap: () => context.push('/social/post/${post.id}'),
                     onLike: () => _toggleLike(index),

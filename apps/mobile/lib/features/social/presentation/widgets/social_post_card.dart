@@ -7,7 +7,7 @@ import 'rich_post_text.dart';
 import 'user_avatar.dart';
 
 /// Tarjeta de publicación para el feed.
-class PostCard extends StatelessWidget {
+class SocialPostCard extends StatelessWidget {
   final PostModel post;
   final VoidCallback onTap;
   final VoidCallback onLike;
@@ -24,7 +24,7 @@ class PostCard extends StatelessWidget {
   /// Key opcional sobre el botón de guardar, para que el tutor IA lo resalte.
   final Key? saveButtonKey;
 
-  const PostCard({
+  const SocialPostCard({
     super.key,
     required this.post,
     required this.onTap,

@@ -1,11 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../../../core/network/network_error.dart';
-import '../../../data/models/post_model.dart';
-import '../../../data/repositories/social_repository.dart';
-import 'feed_event.dart';
-import 'feed_state.dart';
+import '../../../../core/network/network_error.dart';
+import '../../data/models/post_model.dart';
+import '../../data/repositories/social_repository.dart';
+import 'social_feed_event.dart';
+import 'social_feed_state.dart';
 
-class FeedBloc extends Bloc<FeedEvent, FeedState> {
+class SocialFeedBloc extends Bloc<FeedEvent, FeedState> {
   final SocialRepository _socialRepository;
 
   FeedMode _mode = FeedMode.following;
@@ -13,7 +13,7 @@ class FeedBloc extends Bloc<FeedEvent, FeedState> {
   int _explorePage = 1;
   int _explorePages = 1;
 
-  FeedBloc({required SocialRepository socialRepository})
+  SocialFeedBloc({required SocialRepository socialRepository})
     : _socialRepository = socialRepository,
       super(const FeedInitial()) {
     on<FeedLoad>(_onLoad);
