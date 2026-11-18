@@ -3,14 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../data/models/note_sequence_model.dart';
-import 'piano_guide_widget.dart' show computeWhiteKeyRange;
 
-/// Vista "falling notes" / cascada (estilo Synthesia/Yousician): las notas caen
-/// desde arriba hacia un teclado en la base. Como el motor de práctica es por
-/// turnos (espera la nota correcta), la cascada se mueve según el PROGRESO
-/// (currentPosition), no por reloj: la nota actual queda sobre la línea de
-/// impacto y las siguientes se apilan encima. Incluye su propio teclado para
-/// que las notas queden perfectamente alineadas con las teclas.
+/// Vista "falling notes" / cascada para aerófonos andinos (Quena, Zampoña, Tarka).
+///
+/// Las notas caen desde arriba hacia una línea de impacto / target bar en la base.
+/// Como el motor de práctica es por turnos (espera la nota correcta), la cascada
+/// se mueve según el progreso musical ([currentPosition]), no por reloj.
+/// La nota actual se alinea sobre la línea de impacto con indicación de cents y frecuencia.
 class FallingNotesView extends StatelessWidget {
   final List<NoteSequenceModel> notes;
   final int currentPosition;
@@ -26,10 +25,17 @@ class FallingNotesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final whiteKeys = computeWhiteKeyRange(
-      notes.where((n) => !n.isRest).map((n) => n.note),
-      2,
-    );
+
+    // Calcular rango MIDI de las notas de la lección
+    final midis = notes
+        .where((n) => !n.isRest)
+        .map((n) => _midi(n.note))
+        .whereType<int>()
+        .toList();
+
+    final int minMidi = midis.isNotEmpty ? midis.reduce(math.min) : 67; // Sol4
+    final int maxMidi = midis.isNotEmpty ? midis.reduce(math.max) : 79; // Sol5
+
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(end: currentPosition.toDouble()),
       duration: const Duration(milliseconds: 220),
@@ -41,12 +47,13 @@ class FallingNotesView extends StatelessWidget {
             animPos: animPos,
             currentPosition: currentPosition,
             currentExpectedNote: currentExpectedNote,
-            whiteKeys: whiteKeys,
+            minMidi: minMidi,
+            maxMidi: maxMidi,
             primary: cs.primary,
             secondary: cs.secondary,
-            keyWhite: Colors.white,
-            keyBlack: const Color(0xFF1A1A22),
-            border: cs.surfaceContainerHighest,
+            surface: cs.surfaceContainerHighest,
+            border: cs.outlineVariant,
+            textColor: cs.onSurface,
           ),
           child: const SizedBox.expand(),
         );
@@ -57,153 +64,258 @@ class FallingNotesView extends StatelessWidget {
 
 const Map<String, int> _semi = {
   'C': 0,
+  'DO': 0,
   'D': 2,
+  'RE': 2,
   'E': 4,
+  'MI': 4,
   'F': 5,
+  'FA': 5,
   'G': 7,
+  'SOL': 7,
   'A': 9,
+  'LA': 9,
   'B': 11,
+  'SI': 11,
 };
-final RegExp _noteRe = RegExp(r'^([A-G])([#b]?)(-?\d+)');
+
+final RegExp _noteRe = RegExp(r'^([A-Za-z]+)([#b]?)(-?\d+)');
 
 int? _midi(String note) {
-  final m = _noteRe.firstMatch(note);
+  final m = _noteRe.firstMatch(note.trim());
   if (m == null) return null;
-  var s = _semi[m.group(1)!]!;
-  if (m.group(2) == '#') s++;
-  if (m.group(2) == 'b') s--;
-  return (int.parse(m.group(3)!) + 1) * 12 + s;
+  final root = m.group(1)!.toUpperCase();
+  final s = _semi[root];
+  if (s == null) return null;
+  var semitone = s;
+  if (m.group(2) == '#') semitone++;
+  if (m.group(2) == 'b') semitone--;
+  final octave = int.tryParse(m.group(3)!);
+  if (octave == null) return null;
+  return (octave + 1) * 12 + semitone;
 }
 
-bool _isWhite(int m) => const [0, 2, 4, 5, 7, 9, 11].contains(m % 12);
+double? _midiToFreq(int? midi) {
+  if (midi == null) return null;
+  return 440.0 * math.pow(2.0, (midi - 69) / 12.0);
+}
 
 class _FallingPainter extends CustomPainter {
   final List<NoteSequenceModel> notes;
   final double animPos;
   final int currentPosition;
   final String? currentExpectedNote;
-  final List<String> whiteKeys;
-  final Color primary, secondary, keyWhite, keyBlack, border;
+  final int minMidi;
+  final int maxMidi;
+  final Color primary;
+  final Color secondary;
+  final Color surface;
+  final Color border;
+  final Color textColor;
 
   _FallingPainter({
     required this.notes,
     required this.animPos,
     required this.currentPosition,
     required this.currentExpectedNote,
-    required this.whiteKeys,
+    required this.minMidi,
+    required this.maxMidi,
     required this.primary,
     required this.secondary,
-    required this.keyWhite,
-    required this.keyBlack,
+    required this.surface,
     required this.border,
+    required this.textColor,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (whiteKeys.isEmpty) return;
     final w = size.width;
     final h = size.height;
-    final keyboardH = math.min(96.0, h * 0.32);
-    final hitY = h - keyboardH;
-    final whiteW = w / whiteKeys.length;
+    if (w <= 0 || h <= 0) return;
+
+    // Altura de la barra de impacto en la base
+    final targetBarH = math.min(64.0, h * 0.22);
+    final hitY = h - targetBarH;
     const spacing = 64.0;
 
-    final firstWhiteMidi = _midi(whiteKeys.first);
-    final lastWhiteMidi = _midi(whiteKeys.last);
-    if (firstWhiteMidi == null || lastWhiteMidi == null) return;
+    // Rango extendido para dar márgenes a los lados
+    final rangeMin = minMidi - 1;
+    final rangeMax = math.max(minMidi + 5, maxMidi + 1);
+    final totalSpan = math.max(1, rangeMax - rangeMin);
 
-    // Índice de tecla blanca para un midi blanco (cuántas blancas hay antes).
-    int whiteIndexOf(int m) {
-      var idx = 0;
-      for (var k = firstWhiteMidi; k < m; k++) {
-        if (_isWhite(k)) idx++;
-      }
-      return idx;
+    const padding = 20.0;
+    final usableW = w - (padding * 2);
+
+    double xForMidi(int m) {
+      final t = ((m - rangeMin) / totalSpan).clamp(0.0, 1.0);
+      return padding + (t * usableW);
     }
 
-    // Centro x + ancho de la nota (blancas centradas; negras en el borde).
-    (double, double, bool) keyGeom(int m) {
-      if (_isWhite(m)) {
-        return ((whiteIndexOf(m) + 0.5) * whiteW, whiteW * 0.78, false);
-      }
-      // Negra: se apoya en el borde derecho de la blanca m-1.
-      return ((whiteIndexOf(m - 1) + 1) * whiteW, whiteW * 0.58, true);
+    final noteWidth = (usableW / (totalSpan + 1)).clamp(28.0, 56.0);
+
+    // 1) Guías de pistas verticales tenues
+    final lanePaint = Paint()
+      ..color = border.withValues(alpha: 0.15)
+      ..strokeWidth = 1.0;
+    for (var m = rangeMin; m <= rangeMax; m++) {
+      final lx = xForMidi(m);
+      canvas.drawLine(Offset(lx, 0), Offset(lx, hitY), lanePaint);
     }
 
-    // 1) Notas que caen.
+    // 2) Notas que caen
     final lookAhead = (hitY / spacing).ceil() + 2;
     final startI = math.max(0, animPos.floor() - 1);
     final endI = math.min(notes.length - 1, animPos.floor() + lookAhead);
+
     for (var i = startI; i <= endI; i++) {
       final n = notes[i];
       if (n.isRest) continue;
       final m = _midi(n.note);
-      if (m == null || m < firstWhiteMidi || m > lastWhiteMidi) continue;
-      final (cx, kw, isBlack) = keyGeom(m);
-      final noteH = (n.duration * spacing).clamp(16.0, spacing * 3);
+      if (m == null) continue;
+
+      final cx = xForMidi(m);
+      final noteH = (n.duration * spacing).clamp(24.0, spacing * 3);
       final bottom = hitY - (i - animPos) * spacing;
       final top = bottom - noteH;
       if (bottom < 0 || top > hitY) continue;
+
       final isCurrent = i == currentPosition;
       final rect = RRect.fromRectAndRadius(
-        Rect.fromLTRB(cx - kw / 2, top, cx + kw / 2, bottom - 2),
-        const Radius.circular(6),
+        Rect.fromLTRB(cx - noteWidth / 2, top, cx + noteWidth / 2, bottom - 2),
+        const Radius.circular(8),
       );
-      canvas.drawRRect(
-        rect,
-        Paint()
-          ..color = isCurrent
-              ? primary
-              : (isBlack ? secondary : primary).withValues(alpha: 0.5),
-      );
+
+      // Sombra para la nota actual
       if (isCurrent) {
         canvas.drawRRect(
           rect,
           Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 2
-            ..color = Colors.white.withValues(alpha: 0.85),
+            ..color = primary.withValues(alpha: 0.35)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+        );
+      }
+
+      // Cuerpo de la nota
+      canvas.drawRRect(
+        rect,
+        Paint()
+          ..color = isCurrent ? primary : secondary.withValues(alpha: 0.65),
+      );
+
+      // Borde de la nota
+      canvas.drawRRect(
+        rect,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = isCurrent ? 2.0 : 1.0
+          ..color = isCurrent
+              ? Colors.white.withValues(alpha: 0.9)
+              : border.withValues(alpha: 0.4),
+      );
+
+      // Texto con el nombre de la nota adentro del bloque
+      if (noteH >= 20) {
+        final textPainter = TextPainter(
+          text: TextSpan(
+            text: n.note,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: (noteWidth * 0.38).clamp(10.0, 14.0),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout(maxWidth: noteWidth);
+
+        textPainter.paint(
+          canvas,
+          Offset(
+            cx - (textPainter.width / 2),
+            (top + bottom - textPainter.height) / 2,
+          ),
         );
       }
     }
 
-    // Línea de impacto.
+    // 3) Barra de impacto limpia para aerófonos andinos (sin teclado de piano)
+    final barRect = RRect.fromRectAndCorners(
+      Rect.fromLTWH(0, hitY, w, targetBarH),
+      topLeft: const Radius.circular(12),
+      topRight: const Radius.circular(12),
+    );
+
+    // Fondo de la target bar
+    canvas.drawRRect(barRect, Paint()..color = surface.withValues(alpha: 0.95));
+
+    // Borde de la target bar
+    canvas.drawRRect(
+      barRect,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0
+        ..color = border.withValues(alpha: 0.3),
+    );
+
+    // Línea de impacto luminosa en hitY
     canvas.drawLine(
       Offset(0, hitY),
       Offset(w, hitY),
       Paint()
-        ..color = primary.withValues(alpha: 0.6)
-        ..strokeWidth = 2,
+        ..color = primary
+        ..strokeWidth = 3.0,
     );
 
-    // 2) Teclado en la base.
-    final highlightMidi = currentExpectedNote == null
-        ? null
-        : _midi(currentExpectedNote!);
-    for (var wi = 0; wi < whiteKeys.length; wi++) {
-      final x = wi * whiteW;
-      final isHi =
-          highlightMidi != null && _midi(whiteKeys[wi]) == highlightMidi;
-      final r = Rect.fromLTWH(x + 0.5, hitY, whiteW - 1, keyboardH);
-      canvas.drawRect(r, Paint()..color = isHi ? primary : keyWhite);
-      canvas.drawRect(
-        r,
+    // Indicador / retícula de la nota esperada
+    final expectedMidi = currentExpectedNote != null
+        ? _midi(currentExpectedNote!)
+        : null;
+
+    if (expectedMidi != null) {
+      final targetX = xForMidi(expectedMidi);
+
+      // Resplandor en el punto de impacto
+      canvas.drawCircle(
+        Offset(targetX, hitY),
+        10.0,
         Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..color = border,
+          ..color = primary.withValues(alpha: 0.4)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+      );
+
+      canvas.drawCircle(
+        Offset(targetX, hitY),
+        4.0,
+        Paint()..color = Colors.white,
       );
     }
-    for (var k = firstWhiteMidi; k <= lastWhiteMidi; k++) {
-      if (_isWhite(k)) continue;
-      final (cx, _, _) = keyGeom(k);
-      final bw = whiteW * 0.58;
-      final r = Rect.fromLTWH(cx - bw / 2, hitY, bw, keyboardH * 0.62);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(r, const Radius.circular(3)),
-        Paint()..color = highlightMidi == k ? primary : keyBlack,
-      );
-    }
+
+    // 4) Texto de afinación y nota esperada en la target bar
+    final freq = _midiToFreq(expectedMidi);
+    final freqStr = freq != null ? '${freq.toStringAsFixed(1)} Hz' : '';
+    final label = currentExpectedNote != null
+        ? 'Nota: $currentExpectedNote  ·  $freqStr  ·  ±15 cents'
+        : 'Esperando nota…';
+
+    final barTextPainter = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.4,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: w - 16);
+
+    barTextPainter.paint(
+      canvas,
+      Offset(
+        (w - barTextPainter.width) / 2,
+        hitY + (targetBarH - barTextPainter.height) / 2,
+      ),
+    );
   }
 
   @override
@@ -211,6 +323,7 @@ class _FallingPainter extends CustomPainter {
       old.animPos != animPos ||
       old.currentExpectedNote != currentExpectedNote ||
       old.currentPosition != currentPosition ||
-      !identical(old.notes, notes) ||
-      !identical(old.whiteKeys, whiteKeys);
+      old.minMidi != minMidi ||
+      old.maxMidi != maxMidi ||
+      !identical(old.notes, notes);
 }

@@ -38,7 +38,7 @@ class ChordDetectionResult {
 ///   mic stream (PCM 16) → buffer 4096 samples → YIN pitch detection
 ///   → freq → nota musical (con threshold de confianza)
 ///
-/// Para piano (rango útil ~27Hz a ~4200Hz) y voz/silbidos, YIN es suficiente.
+/// Para aerófonos andinos (quena, zampoña, tarka ~200Hz a ~2500Hz), YIN es suficiente.
 /// Latencia esperada: 80-150ms.
 class NoteDetector {
   final AudioRecorder _recorder = AudioRecorder();
@@ -55,7 +55,7 @@ class NoteDetector {
   // YIN devuelve valores cerca de 1.0 para tonos puros y < 0.9 para ruido.
   static const double _minConfidence = 0.92;
   // Frecuencia mínima aceptada: C3 (~130.81 Hz). Por debajo es típicamente
-  // rumble/vibración/voces graves, no piano.
+  // rumble/vibración/voces graves, no instrumento.
   static const double _minFreq = 130.0;
   static const double _maxFreq = 4200.0;
 

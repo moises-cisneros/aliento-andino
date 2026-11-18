@@ -16,11 +16,11 @@ void _log(String msg) {
 /// progress UI específico en cada paso.
 enum CameraStage { idle, permission, enumerating, initializing, ready, failed }
 
-/// Wrapper sobre `camera` plugin con UX optimizada para piano practice.
+/// Wrapper sobre `camera` plugin con UX optimizada para práctica de instrumentos andinos.
 ///
 /// **Responsabilidades únicas**:
 /// 1. Pedir permission de cámara
-/// 2. Enumerar y elegir cámara trasera (frontal NUNCA — no sirve para piano)
+/// 2. Enumerar y elegir cámara para enfocar rostro (embocadura) y manos
 /// 3. Inicializar el `CameraController` con resolución óptima
 /// 4. Exponer el controller para que el widget renderee el preview
 /// 5. Auto-fallback de HD a resolución media si el dispositivo falla
@@ -163,15 +163,16 @@ class HandTracker {
       return 'Este dispositivo no tiene cámara disponible';
     }
 
-    // Solo trasera — la frontal apunta al usuario, no al teclado.
-    final backCam = cameras
-        .where((c) => c.lensDirection == CameraLensDirection.back)
-        .firstOrNull;
-    if (backCam == null) {
-      _setStage(CameraStage.failed);
-      return 'No se encontró cámara trasera. Aliento Andino necesita la trasera '
-          'para enfocar el teclado.';
-    }
+    // Cámara para enfocar rostro (embocadura) y manos sosteniendo el instrumento andino.
+    // Preferir frontal para verse en espejo o trasera si el dispositivo se coloca al frente.
+    final selectedCam =
+        cameras
+            .where((c) => c.lensDirection == CameraLensDirection.front)
+            .firstOrNull ??
+        cameras
+            .where((c) => c.lensDirection == CameraLensDirection.back)
+            .firstOrNull ??
+        cameras.first;
 
     _setStage(CameraStage.initializing);
     // Resolución más baja = mucho menos costo por frame (la conversión YUV para
@@ -187,8 +188,12 @@ class HandTracker {
     String? lastError;
     for (final preset in presetsToTry) {
       if (_isStale(generation)) return null;
-      _log('intentando ${backCam.name} con $preset...');
-      final controller = CameraController(backCam, preset, enableAudio: false);
+      _log('intentando ${selectedCam.name} con $preset...');
+      final controller = CameraController(
+        selectedCam,
+        preset,
+        enableAudio: false,
+      );
       _controller = controller;
       final initialization = controller.initialize();
       try {

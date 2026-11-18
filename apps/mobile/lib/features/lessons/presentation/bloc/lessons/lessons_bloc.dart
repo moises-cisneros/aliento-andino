@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:mobile/core/audio/instrument.dart';
 import '../../../data/models/category_model.dart';
 import '../../../data/models/lesson_model.dart';
 import '../../../data/repositories/lesson_repository.dart';
@@ -17,6 +17,7 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
   List<LessonModel> _all = const [];
   Set<String> _lockedIds = const {};
   LessonModel? _next;
+  InstrumentType? _instrument;
   String? _category;
   String? _difficulty;
   String? _genre;
@@ -30,6 +31,7 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
     on<LessonsLoadByCategory>(_onLoadByCategory);
     on<LessonsFilterByDifficulty>(_onFilterByDifficulty);
     on<LessonsFilterByGenre>(_onFilterByGenre);
+    on<LessonsFilterByInstrument>(_onFilterByInstrument);
     on<LessonsSearch>(_onSearch);
   }
 
@@ -44,11 +46,11 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
     }
     try {
       _categories = await _lessonRepository.getCategories();
-      final result = await _lessonRepository.getLessonsPaginated();
+      final result = await _lessonRepository.getLessonsPaginated(
+        instrument: _instrument?.name,
+      );
       _all = result['items'] as List<LessonModel>;
-      final path = LearningPath.compute(_all);
-      _lockedIds = path.lockedIds;
-      _next = path.next;
+      _recomputePath();
       _emit(emit); // mantiene _category/_difficulty/_query
     } catch (_) {
       // Refresco silencioso: si falla, dejamos los datos actuales.
@@ -62,11 +64,11 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
     emit(const LessonsLoading());
     try {
       _categories = await _lessonRepository.getCategories();
-      final result = await _lessonRepository.getLessonsPaginated();
+      final result = await _lessonRepository.getLessonsPaginated(
+        instrument: _instrument?.name,
+      );
       _all = result['items'] as List<LessonModel>;
-      final path = LearningPath.compute(_all);
-      _lockedIds = path.lockedIds;
-      _next = path.next;
+      _recomputePath();
       _category = null;
       _difficulty = null;
       _query = '';
@@ -74,6 +76,23 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
     } catch (e) {
       emit(LessonsError(e.toString()));
     }
+  }
+
+  void _recomputePath() {
+    final instrumentLessons = _instrument == null
+        ? _all
+        : _all
+              .where(
+                (l) =>
+                    l.instrument.trim().toLowerCase() ==
+                    _instrument!.name.toLowerCase(),
+              )
+              .toList();
+    final path = LearningPath.compute(
+      instrumentLessons.isNotEmpty ? instrumentLessons : _all,
+    );
+    _lockedIds = path.lockedIds;
+    _next = path.next;
   }
 
   void _onLoadByCategory(
@@ -104,6 +123,17 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
     _emit(emit);
   }
 
+  void _onFilterByInstrument(
+    LessonsFilterByInstrument event,
+    Emitter<LessonsState> emit,
+  ) {
+    _instrument = event.instrument;
+    if (state is LessonsLoaded) {
+      _recomputePath();
+      _emit(emit);
+    }
+  }
+
   void _onSearch(LessonsSearch event, Emitter<LessonsState> emit) {
     if (state is! LessonsLoaded) return;
     _query = event.query.trim().toLowerCase();
@@ -113,6 +143,11 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
   void _emit(Emitter<LessonsState> emit) {
     final filtered =
         _all.where((l) {
+            if (_instrument != null &&
+                l.instrument.trim().toLowerCase() !=
+                    _instrument!.name.toLowerCase()) {
+              return false;
+            }
             if (_category != null && l.categoryId != _category) return false;
             if (_difficulty != null && l.difficulty != _difficulty) {
               return false;
@@ -143,6 +178,7 @@ class LessonsBloc extends Bloc<LessonsEvent, LessonsState> {
         activeCategory: _category,
         activeDifficulty: _difficulty,
         activeGenre: _genre,
+        activeInstrument: _instrument,
         searchQuery: _query,
       ),
     );

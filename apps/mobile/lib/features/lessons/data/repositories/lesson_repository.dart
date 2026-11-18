@@ -106,7 +106,9 @@ class LessonRepository {
   Future<Map<String, dynamic>> getLessonsPaginated({
     String? categoryId,
     String? difficulty,
+    String? genre,
     String? search,
+    String? instrument,
     int page = 1,
     int limit = 100,
   }) async {
@@ -114,7 +116,11 @@ class LessonRepository {
       final queryParams = <String, dynamic>{'page': page, 'limit': limit};
       if (categoryId != null) queryParams['category_id'] = categoryId;
       if (difficulty != null) queryParams['difficulty'] = difficulty;
+      if (genre != null && genre.isNotEmpty) queryParams['genre'] = genre;
       if (search != null && search.isNotEmpty) queryParams['search'] = search;
+      if (instrument != null && instrument.isNotEmpty) {
+        queryParams['instrument'] = instrument;
+      }
 
       final response = await _apiClient.dio.get(
         '/lessons',
@@ -140,7 +146,20 @@ class LessonRepository {
         difficulty: difficulty,
       );
       if (cached != null && cached.isNotEmpty) {
-        return {'items': cached, 'total': cached.length, 'page': 1, 'pages': 1};
+        var filtered = cached;
+        if (instrument != null && instrument.isNotEmpty) {
+          filtered = filtered
+              .where(
+                (l) => l.instrument.toLowerCase() == instrument.toLowerCase(),
+              )
+              .toList();
+        }
+        return {
+          'items': filtered,
+          'total': filtered.length,
+          'page': 1,
+          'pages': 1,
+        };
       }
       rethrow;
     }

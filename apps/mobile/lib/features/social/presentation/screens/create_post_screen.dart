@@ -212,7 +212,7 @@ class _CreatePostViewState extends State<_CreatePostView> {
                     const SizedBox(width: 8),
                     _typeChip('achievement', 'Logro', Icons.emoji_events),
                     const SizedBox(width: 8),
-                    _typeChip('practice_result', 'Práctica', Icons.piano),
+                    _typeChip('practice_result', 'Práctica', Icons.music_note),
                   ],
                 ),
               if (_pickedImage == null) const SizedBox(height: 16),

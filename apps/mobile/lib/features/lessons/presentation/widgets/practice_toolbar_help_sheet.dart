@@ -58,7 +58,7 @@ class PracticeToolbarHelpSheet extends StatelessWidget {
     _HelpEntry(
       Icons.fiber_manual_record,
       'Grabar mi audio',
-      'Graba tu piano por el micrófono para reescucharte en los resultados. '
+      'Graba tu interpretación por el micrófono para reescucharte en los resultados. '
           'Funciona también con el micrófono encendido: tocás en vivo y se '
           'graba a la vez.',
     ),
@@ -70,17 +70,17 @@ class PracticeToolbarHelpSheet extends StatelessWidget {
     _HelpEntry(
       Icons.mic,
       'Micrófono',
-      'La app escucha tu piano y detecta sola si acertás cada nota.',
+      'La app escucha tu instrumento andino y detecta sola si acertás cada nota.',
     ),
     _HelpEntry(
-      Icons.piano,
-      'Teclado MIDI',
-      'Conectá tu piano digital (USB o Bluetooth) para la máxima precisión.',
+      Icons.cable,
+      'Entrada MIDI',
+      'Conectá tu instrumento digital (USB o Bluetooth) para la máxima precisión.',
     ),
     _HelpEntry(
       Icons.videocam,
       'Cámara (coach)',
-      'Analiza tus manos: postura y digitación mientras tocás.',
+      'Analiza tu embocadura y manos: postura y digitación mientras tocás.',
       premium: true,
     ),
     _HelpEntry(

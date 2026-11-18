@@ -29,7 +29,7 @@ import '../widgets/hand_tracker_camera.dart';
 import '../widgets/midi_listener_widget.dart';
 import '../widgets/note_listener_widget.dart';
 import '../widgets/note_sequence_viewer.dart';
-import '../widgets/piano_guide_widget.dart';
+import '../../../instrument_select/presentation/widgets/instrument_selector_appbar.dart';
 import '../widgets/practice_progress_bar.dart';
 import '../widgets/practice_toolbar_help_sheet.dart';
 import '../widgets/staff_view.dart';
@@ -40,7 +40,7 @@ enum _PlayView { sequence, cascade, staff }
 
 /// Modo de evaluación de la práctica, derivado de qué entrada está activa:
 /// manual (ninguna), micrófono, cámara, combinado (mic + cámara), o MIDI
-/// (teclado digital conectado, máxima precisión).
+/// (dispositivo/interfaz digital conectada, máxima precisión).
 enum _InputMode { manual, mic, camera, combined, midi }
 
 /// Pantalla de práctica a pantalla completa.
@@ -710,7 +710,7 @@ class _PracticeContentState extends State<_PracticeContent> {
   }
 
   /// Layout del estado PracticePlaying. Tiene dos modos:
-  /// - Camera OFF: layout vertical con secuencia + nota grande + piano + botones
+  /// - Camera OFF: layout vertical con secuencia + nota grande + digitación andina + botones
   /// - Camera ON: cámara full-width arriba + info compacta abajo
   Widget _buildPlaying(BuildContext context, PracticePlaying state) {
     final totalPlayable = state.notes.where((n) => !n.isRest).length;
@@ -972,10 +972,10 @@ class _PracticeContentState extends State<_PracticeContent> {
                   ),
                   IconButton(
                     tooltip: _midiEnabled
-                        ? 'Desconectar teclado MIDI'
-                        : 'Conectar teclado MIDI (máxima precisión)',
+                        ? 'Desconectar entrada MIDI'
+                        : 'Conectar dispositivo MIDI (máxima precisión)',
                     icon: Icon(
-                      Icons.piano,
+                      Icons.cable,
                       color: _midiEnabled
                           ? Theme.of(context).colorScheme.primary
                           : Theme.of(context).colorScheme.onSurfaceVariant,
@@ -1013,8 +1013,8 @@ class _PracticeContentState extends State<_PracticeContent> {
     );
   }
 
-  /// Layout sin cámara: como era antes — nota grande, secuencia, piano, botones.
-  /// Vista cascada (falling notes): las notas caen hacia un teclado.
+  /// Layout sin cámara: nota grande, secuencia, digitación andina, botones.
+  /// Vista cascada (falling notes): las notas caen hacia la target bar.
   Widget _buildPlayingCascade(
     BuildContext context,
     PracticePlaying state,
@@ -1141,14 +1141,12 @@ class _PracticeContentState extends State<_PracticeContent> {
 
         const Spacer(),
 
-        // Piano guía
+        // Guía de digitación andina
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: PianoGuideWidget(
-            highlightNotes: {state.currentExpectedNote},
-            activeNote: state.currentExpectedNote,
-            rangeNotes: state.notes.where((n) => !n.isRest).map((n) => n.note),
-            minOctaves: state.octaveStrict ? 3 : 2,
+          child: _buildAndeanFingeringWidget(
+            context,
+            state.currentExpectedNote,
           ),
         ),
 
@@ -1239,14 +1237,12 @@ class _PracticeContentState extends State<_PracticeContent> {
 
         const SizedBox(height: 8),
 
-        // Piano guía compacto
+        // Guía de digitación andina compacta
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: PianoGuideWidget(
-            highlightNotes: {state.currentExpectedNote},
-            activeNote: state.currentExpectedNote,
-            rangeNotes: state.notes.where((n) => !n.isRest).map((n) => n.note),
-            minOctaves: state.octaveStrict ? 3 : 2,
+          child: _buildAndeanFingeringWidget(
+            context,
+            state.currentExpectedNote,
           ),
         ),
 
@@ -1302,7 +1298,7 @@ class _PracticeContentState extends State<_PracticeContent> {
       _InputMode.mic => (Icons.mic, 'Modo micrófono'),
       _InputMode.camera => (Icons.videocam, 'Modo cámara'),
       _InputMode.combined => (Icons.auto_awesome, 'Modo combinado'),
-      _InputMode.midi => (Icons.piano, 'Modo MIDI · máxima precisión'),
+      _InputMode.midi => (Icons.cable, 'Modo MIDI · máxima precisión'),
     };
     return Center(
       child: Container(
@@ -1411,7 +1407,7 @@ class _PracticeContentState extends State<_PracticeContent> {
             child: Row(
               children: [
                 Icon(
-                  connected ? Icons.piano : Icons.bluetooth_searching,
+                  connected ? Icons.cable : Icons.bluetooth_searching,
                   color: cs.primary,
                   size: 20,
                 ),
@@ -1419,10 +1415,10 @@ class _PracticeContentState extends State<_PracticeContent> {
                 Expanded(
                   child: Text(
                     connected
-                        ? 'MIDI conectado: ${device.name}. Tocá la tecla: avanza '
-                              'al acertar; si fallás, se queda en la misma.'
-                        : 'Buscando teclado MIDI (USB o Bluetooth)… Conectá tu '
-                              'piano digital para máxima precisión.',
+                        ? 'MIDI conectado: ${device.name}. Tocá la nota en el '
+                              'instrumento: avanza al acertar; si fallás, se queda en la misma.'
+                        : 'Buscando dispositivo MIDI (USB o Bluetooth)… Conectá tu '
+                              'instrumento digital para máxima precisión.',
                     style: TextStyle(color: cs.onSurface, fontSize: 13),
                   ),
                 ),
@@ -1489,14 +1485,14 @@ class _PracticeContentState extends State<_PracticeContent> {
 
   Widget _buildPaused(BuildContext context, PracticePaused state) {
     // El estado PracticePaused cubre dos casos: un ERROR de nota (mostrar la
-    // guía del piano para reintentar) y una PAUSA real del usuario.
+    // guía de digitación para reintentar) y una PAUSA real del usuario.
     if (state.errorMessage != null) {
       return _buildNoteError(context, state);
     }
     return _buildPauseCard(context, state);
   }
 
-  /// Vista de error de nota: guía del piano + reintentar la misma nota.
+  /// Vista de error de nota: guía de digitación andina + reintentar la misma nota.
   Widget _buildNoteError(BuildContext context, PracticePaused state) {
     final cs = Theme.of(context).colorScheme;
     return Center(
@@ -1512,13 +1508,9 @@ class _PracticeContentState extends State<_PracticeContent> {
           ),
           const SizedBox(height: 8),
           if (state.expectedNote != null)
-            PianoGuideWidget(
-              highlightNotes: {state.expectedNote!},
-              activeNote: state.expectedNote,
-              wrongNote: state.playedNote,
-              rangeNotes: state.notes
-                  .where((n) => !n.isRest)
-                  .map((n) => n.note),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: _buildAndeanFingeringWidget(context, state.expectedNote),
             ),
           const SizedBox(height: 12),
           Text(
@@ -1840,5 +1832,11 @@ class _PracticeContentState extends State<_PracticeContent> {
         ],
       ),
     );
+  }
+
+  /// Widget de digitación para aerófonos andinos (Quena, Zampoña, Tarka)
+  /// adaptado a la nota esperada y al instrumento activo.
+  Widget _buildAndeanFingeringWidget(BuildContext context, String? note) {
+    return ActiveInstrumentFingeringWidget(note: note);
   }
 }

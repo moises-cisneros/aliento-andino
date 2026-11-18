@@ -6,9 +6,9 @@ void main() {
     test('mapea números MIDI de referencia a nombre con octava', () {
       expect(midiNumberToName(60), 'C4'); // Do central
       expect(midiNumberToName(69), 'A4'); // La 440 Hz
-      expect(midiNumberToName(21), 'A0'); // primera tecla del piano
-      expect(midiNumberToName(108), 'C8'); // última tecla del piano
-      expect(midiNumberToName(61), 'C#4'); // tecla negra
+      expect(midiNumberToName(21), 'A0'); // límite inferior estándar MIDI
+      expect(midiNumberToName(108), 'C8'); // límite superior estándar MIDI
+      expect(midiNumberToName(61), 'C#4'); // alteración C#
     });
   });
 
