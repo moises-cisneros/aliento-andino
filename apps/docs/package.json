@@ -5,9 +5,9 @@
   "description": "Documentación oficial y manual de usuario de Aliento Andino",
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "docusaurus start --port 3001 --host 0.0.0.0",
+    "start": "docusaurus start --port 3050 --host 0.0.0.0",
     "build": "docusaurus build",
-    "serve": "docusaurus serve --port 3001",
+    "serve": "docusaurus serve --port 3050",
     "clear": "docusaurus clear"
   },
   "dependencies": {

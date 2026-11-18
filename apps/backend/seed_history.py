@@ -79,20 +79,22 @@ WEEK_START = TODAY - timedelta(days=TODAY.weekday())  # lunes de esta semana
 PLAN_DAYS = {"monthly": 30, "annual": 365}
 
 HASHTAGS = [
-    "piano",
+    "quena",
+    "zampona",
+    "tarka",
     "practica",
     "escalas",
     "acordes",
-    "jazz",
-    "clasica",
-    "chopin",
+    "sikuris",
+    "andino",
+    "folklore",
     "principiante",
     "ritmo",
     "melodia",
     "progreso",
     "motivacion",
-    "teoria",
-    "improvisacion",
+    "embocadura",
+    "soplo",
     "tecnica",
 ]
 

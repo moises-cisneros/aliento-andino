@@ -18,9 +18,11 @@ S10: "Pruebas Obligatorias: Unitaria: Prueba de esquema Pydantic validando array
 
 ## Tasks
 
-- [ ] T1 (S1-S5) [inline]: Web — `LessonAdminService` (createLesson, updateLesson), `lesson-form-dialog.component.ts` (reactive form, note sequence editor with breath marks, validation, error handling), `lesson-list.component.ts` integration, and unit/integration/e2e tests (#23 SUB-05-A) — Branch `feat/23-angular-score-sequence-form`
-- [ ] T2 (S6-S10) [inline]: Backend & Web — Backend model, schema, service, router `POST/GET /api/v1/fingerings` with 409 conflict on duplicate primary fingering, and Web `FingeringAdminService`, `FingeringCatalogComponent` (graphical Andean fingering editor for Quena/Tarka/Zampoña), routing and tests (#55 SUB-05-B) — Branch `feat/55-fingering-catalog-editor`
+- [x] T1 (S1-S5) [inline]: Web — `LessonAdminService` (createLesson, updateLesson), `lesson-form-dialog.component.ts` (reactive form, note sequence editor with breath marks, validation, error handling), `lesson-list.component.ts` integration, and unit/integration/e2e tests (#23 SUB-05-A) — Branch `feat/23-angular-score-sequence-form` — PR #89 (Merged)
+- [x] T2 (S6-S10) [inline]: Backend & Web — Backend model, schema, service, router `POST/GET /api/v1/fingerings` with 409 conflict on duplicate primary fingering, and Web `FingeringAdminService`, `FingeringCatalogComponent` (graphical Andean fingering editor for Quena/Tarka/Zampoña), routing and tests (#55 SUB-05-B) — Branch `feat/55-fingering-catalog-editor` — PR #90 (Merged)
 
 ## Log
 
 L1: "Implementa las subissues de la issue #22 (HU-05), realizalo con ODD, en un propio git worktree."
+L2: "SUB-05-A completada y mergeada en PR #89 (cerró #23)."
+L3: "SUB-05-B completada y mergeada en PR #90 (cerró #55 y cerró historia madre HU-05 #22)."

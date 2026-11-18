@@ -1,0 +1,43 @@
+# === Secretos ===
+.env
+.env.*
+!.env.example
+
+# === Git ===
+.git/
+.gitignore
+.github/
+
+# === Entorno virtual y dependencias ===
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# === Tests ===
+tests/
+
+# === IDE ===
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# === Docker ===
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# === Logs ===
+*.log
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini

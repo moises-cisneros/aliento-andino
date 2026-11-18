@@ -84,12 +84,46 @@ pnpm docker:db        # Solo PostgreSQL
 ### 3. Ejecución en Host Local (Sin Docker)
 
 ```bash
-pnpm dev:backend:host # Backend FastAPI en http://localhost:8000
-pnpm dev:web:host     # Panel Web Angular en http://localhost:4200
-pnpm dev:docs:host    # Manual Docusaurus en http://localhost:3001
-pnpm dev:ml:host      # Microservicio ML en http://localhost:8001
+pnpm dev:backend:host # Backend FastAPI en http://localhost:8050
+pnpm dev:web:host     # Panel Web Angular en http://localhost:4250
+pnpm dev:docs:host    # Manual Docusaurus en http://localhost:3050
+pnpm dev:ml:host      # Microservicio ML en http://localhost:8051
 pnpm dev:mobile:host  # App Flutter en emulador o dispositivo
 ```
+
+> Para gestionar emuladores, dispositivos físicos por USB o depuración por Wi-Fi, consultar [`apps/mobile/README.md`](apps/mobile/README.md#ejecutar-en-desarrollo).
+
+---
+
+### 4. Datos de Prueba y Cuentas de Acceso (Seeders)
+
+Para poblar la base de datos con lecciones andinas, logros, sesiones y comunidad de prueba:
+
+```bash
+docker compose exec backend python seed_lessons.py
+docker compose exec backend python seed_achievements.py
+docker compose exec backend python seed_all.py
+```
+
+Credenciales para ingresar tanto al panel Web (`:4250`) como a la app Móvil:
+
+- **Administrador:** `admin@alientoandino.org` / `Admin1234!` (definido en `.env`)
+- **Estudiantes (50 cuentas):** Contraseña universal `Andino123!` para todos los alumnos generados (ej: `alejandrogar@example.com`, `diegogom@example.com`, `monicasil@example.com`).
+
+### 4. Datos de Prueba y Cuentas de Acceso (Seeders)
+
+Para poblar la base de datos con lecciones andinas, logros, sesiones y comunidad de prueba:
+
+```bash
+docker compose exec backend python seed_lessons.py
+docker compose exec backend python seed_achievements.py
+docker compose exec backend python seed_all.py
+```
+
+Credenciales para ingresar tanto al panel Web (`:4250`) como a la app Móvil:
+
+- **Administrador:** `admin@alientoandino.org` / `Admin1234!` (definido en `.env`)
+- **Estudiantes (50 cuentas):** Contraseña universal `Andino123!` para todos los alumnos generados (ej: `alejandrogar@example.com`, `diegogom@example.com`, `monicasil@example.com`).
 
 ---
 

@@ -65,10 +65,10 @@ pnpm docker:web           # Levantar solo web admin
 pnpm docker:docs          # Levantar solo manual de usuario
 
 # --- Desarrollo en Host (Sin Docker) ---
-pnpm dev:backend:host     # Backend FastAPI en http://localhost:8000
-pnpm dev:web:host         # Panel Web Angular en http://localhost:4200
-pnpm dev:docs:host        # Manual Docusaurus en http://localhost:3001
-pnpm dev:ml:host          # Microservicio ML en http://localhost:8001
+pnpm dev:backend:host     # Backend FastAPI en http://localhost:8050
+pnpm dev:web:host         # Panel Web Angular en http://localhost:4250
+pnpm dev:docs:host        # Manual Docusaurus en http://localhost:3050
+pnpm dev:ml:host          # Microservicio ML en http://localhost:8051
 pnpm dev:mobile:host      # Flutter móvil en emulador o dispositivo
 
 # --- Calidad y Verificación ---

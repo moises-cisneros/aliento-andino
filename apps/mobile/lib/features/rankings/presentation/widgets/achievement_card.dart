@@ -145,7 +145,9 @@ class AchievementCard extends StatelessWidget {
     const iconMap = {
       'music_note': Icons.music_note,
       'school': Icons.school,
-      'piano': Icons.music_note,
+      'quena': Icons.music_note,
+      'zampona': Icons.graphic_eq,
+      'tarka': Icons.audiotrack,
       'emoji_events': Icons.emoji_events,
       'stars': Icons.stars,
       'local_fire_department': Icons.local_fire_department,

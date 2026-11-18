@@ -161,12 +161,15 @@ pnpm docker:web           # Levanta únicamente el panel web
 #### En Host Local (Sin Docker)
 
 ```bash
-pnpm dev:backend:host     # Backend FastAPI en http://localhost:8000
-pnpm dev:web:host         # Panel Web Angular en http://localhost:4200
-pnpm dev:docs:host        # Manual Docusaurus en http://localhost:3001
-pnpm dev:ml:host          # Microservicio ML en http://localhost:8001
+pnpm dev:backend:host     # Backend FastAPI en http://localhost:8050
+pnpm dev:web:host         # Panel Web Angular en http://localhost:4250
+pnpm dev:docs:host        # Manual Docusaurus en http://localhost:3050
+pnpm dev:ml:host          # Microservicio ML en http://localhost:8051
 pnpm dev:mobile:host      # App móvil Flutter en emulador o dispositivo físico
 ```
+
+> **Dispositivos móviles (Emulador, USB o Wi-Fi):**
+> Para listar y seleccionar emuladores (`flutter emulators`), dispositivos conectados por USB (`flutter devices`) o configurar depuración inalámbrica por Wi-Fi (`adb tcpip` / `adb pair`), consultar la guía detallada en [`apps/mobile/README.md`](../apps/mobile/README.md#ejecutar-en-desarrollo).
 
 ### 2.4 Verificación de Calidad
 

@@ -1,0 +1,36 @@
+# === Secretos ===
+.env
+.env.*
+!.env.example
+
+# === Git ===
+.git/
+.gitignore
+.github/
+
+# === Dependencias y caches Node/Docusaurus ===
+node_modules/
+.docusaurus/
+.cache/
+build/
+
+# === Tests / coverage ===
+coverage/
+
+# === IDE ===
+.idea/
+.vscode/
+*.swp
+
+# === Docker ===
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# === Logs ===
+*.log
+
+# === OS ===
+.DS_Store
+Thumbs.db
+desktop.ini

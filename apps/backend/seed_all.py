@@ -130,18 +130,18 @@ LAST_NAMES = [
 ]
 
 BIOS = [
-    "Aprendiendo piano desde cero 🎹",
-    "Amante de la música clásica",
-    "Practicando todos los días para mejorar",
-    "Pianista aficionado, fan de Chopin",
-    "Estudiante de música, me encanta el jazz",
-    "Autodidacta del piano 🎵",
-    "Buscando tocar mi canción favorita",
-    "Profesor de música aprendiendo nuevas técnicas",
-    "La música es mi pasión 🎶",
-    "Practicando escalas y acordes",
-    "Fan del piano desde niño",
-    "Empezando mi viaje musical",
+    "Aprendiendo quena y zampoña desde cero 🎋",
+    "Amante de la música andina tradicional",
+    "Practicando el soplo y la embocadura todos los días",
+    "Quenista aficionado, fan de la música del altiplano",
+    "Estudiante de sikus y tarkas",
+    "Autodidacta de la zampoña 🎵",
+    "Buscando tocar mis melodías andinas favoritas",
+    "Profesor de música explorando aerófonos andinos",
+    "La música andina es mi pasión 🎶",
+    "Practicando escalas pentatónicas y digitaciones",
+    "Fan de los sikuris desde niño",
+    "Empezando mi viaje con los vientos andinos",
     "Compositor en formación",
     "Músico de hobby, ingeniero de profesión",
     "Aprendiendo con Aliento Andino",
@@ -153,36 +153,36 @@ BIOS = [
 ]
 
 POST_CONTENTS = [
-    "¡Acabo de completar mi primera lección de escalas! 🎹",
-    "Logré tocar la escala de Do Mayor sin errores 💪",
-    "Practicando acordes menores, ¡cada vez suena mejor!",
-    "30 días seguidos practicando, ¡no paro! 🔥",
-    "¿Alguien más practica de noche? Es mi momento favorito 🌙",
-    "Tip: practicar lento al principio ayuda mucho con la precisión",
-    "¡Conseguí 100% en una lección por primera vez! ⭐",
-    "La escala de Fa Mayor me costó, pero ya la domino",
-    "Hoy descubrí que los acordes invertidos suenan increíble",
-    "¡Nivel 5 desbloqueado! Seguimos creciendo 🚀",
-    "Practicar 15 minutos al día hace una gran diferencia",
-    "¡Mi racha más larga hasta ahora: 7 días! 🎯",
-    "Escuchando a Debussy para inspirarme antes de practicar",
-    "Los acordes de séptima son mi nuevo reto",
-    "¡Primera vez tocando con las dos manos! Fue difícil pero genial",
-    "Compartiendo mi progreso: de 60% a 95% en la escala de Sol 📈",
-    "¿Cuál es su lección favorita? A mí me encanta Melodías",
-    "Hoy practiqué 45 minutos sin parar, nuevo récord personal",
-    "La app me ayudó mucho a mejorar mi timing",
-    "¡Desbloqueé el logro 'Pianista en Formación'! 🏆",
-    "Empecé hace un mes y ya noto mucho progreso",
-    "Los ejercicios de ritmo son muy divertidos",
-    "Recomiendo empezar por las escalas, dan mucha base",
-    "¡Feliz de ser parte de esta comunidad de pianistas! 🎹❤️",
-    "Hoy me animé a tocar para mi familia, les encantó",
-    "Practicando acordes mayores, la progresión I-IV-V suena genial",
-    "¿Alguien tiene tips para mejorar la velocidad en escalas?",
+    "¡Acabo de completar mi primera lección de escalas en quena! 🎋",
+    "Logré tocar la escala pentatónica de Sol sin errores de afinación 💪",
+    "Practicando el diálogo Ira y Arca en la zampoña, ¡cada vez suena mejor!",
+    "30 días seguidos practicando postura y soplo, ¡no paro! 🔥",
+    "¿Alguien más practica de noche? El sonido de la quena es mágico 🌙",
+    "Tip: calibrar el umbral de soplo antes de practicar ayuda mucho con la afinación",
+    "¡Conseguí 100% de afinación en una lección por primera vez! ⭐",
+    "La escala de Re en tarka me costó por la presión del aire, pero ya la domino",
+    "Hoy descubrí que el control de respiración diafragmática cambia todo el sonido",
+    "¡Nivel 5 desbloqueado! Seguimos creciendo con los vientos andinos 🚀",
+    "Practicar 15 minutos al día de soplo limpio hace una gran diferencia",
+    "¡Mi racha más larga hasta ahora: 7 días tocando sikus! 🎯",
+    "Escuchando sikuris del altiplano para inspirarme antes de practicar",
+    "Las notas agudas de la segunda octava en quena son mi nuevo reto",
+    "¡Primera vez dominando la digitación de la tarka con buena postura!",
+    "Compartiendo mi progreso: de 60% a 95% de estabilidad de afinación en Sol 📈",
+    "¿Cuál es su instrumento favorito? A mí me fascina la zampoña",
+    "Hoy practiqué 45 minutos de embocadura sin parar, nuevo récord personal",
+    "La app me ayudó mucho a corregir la postura frente a la cámara",
+    "¡Desbloqueé el logro 'Maestro del Siku'! 🏆",
+    "Empecé hace un mes y ya domino la escala base de quena",
+    "Los ejercicios de ritmo andino son muy divertidos",
+    "Recomiendo empezar por las notas largas de calibración, dan mucha base",
+    "¡Feliz de ser parte de esta comunidad de vientos andinos! 🎋❤️",
+    "Hoy me animé a tocar un huayño para mi familia, les encantó",
+    "Practicando el soplo suave y continuo en la zampoña",
+    "¿Alguien tiene tips para la transición rápida entre tubos de zampoña?",
     "¡Mi primera semana perfecta de práctica! 7/7 días ✅",
-    "La constancia es la clave, aunque sea 10 minutos al día",
-    "Probando las lecciones avanzadas, ¡son un reto! 💪",
+    "La constancia en la embocadura es la clave, aunque sea 10 minutos al día",
+    "Probando las lecciones avanzadas de quena, ¡son un reto! 💪",
 ]
 
 COMMENT_CONTENTS = [
@@ -234,7 +234,7 @@ async def seed_users(db) -> list[User]:
         return list(result.scalars().all())
 
     users = []
-    hashed = hash_password("Piano123!")  # Contraseña común para demo
+    hashed = hash_password("Andino123!")  # Contraseña común para demo andino
 
     used_emails = set()
     used_usernames = set()
@@ -720,7 +720,7 @@ REPORT_DESCRIPTIONS = [
     "Información falsa o engañosa",
     "Comportamiento tóxico en los comentarios",
     "Suplantación de identidad",
-    "Contenido que no tiene que ver con piano/música",
+    "Contenido que no tiene que ver con aerófonos andinos/música",
 ]
 
 BAN_REASONS = [

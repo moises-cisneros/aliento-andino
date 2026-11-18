@@ -20,14 +20,19 @@ class AppConfig {
   // URL base del API (configurar via --dart-define en producción)
   static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
 
+  // URL base del portal Web para compartir enlaces (configurar via --dart-define en producción)
+  static const String _envWebBaseUrl = String.fromEnvironment('WEB_BASE_URL');
+  static String get webBaseUrl =>
+      _envWebBaseUrl.isNotEmpty ? _envWebBaseUrl : 'https://alientoandino.org';
+
   /// URL base del API según la plataforma.
   /// Si se configura API_BASE_URL via --dart-define, usa ese valor.
   /// Si no, usa los defaults de desarrollo local.
   static String get apiBaseUrl {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
-    if (kIsWeb) return 'http://localhost:8000/api';
-    if (Platform.isAndroid) return 'http://10.0.2.2:8000/api';
-    return 'http://localhost:8000/api'; // iOS, macOS, desktop
+    if (kIsWeb) return 'http://localhost:8050/api';
+    if (Platform.isAndroid) return 'http://10.0.2.2:8050/api';
+    return 'http://localhost:8050/api'; // iOS, macOS, desktop
   }
 
   // Endpoints de autenticación
