@@ -1,18 +1,19 @@
 """
 Microservicio ML para Aliento Andino.
-Provee endpoints de inferencia acústica, modelos de acordes y matching semántico offline.
+Provee endpoints de inferencia acústica y matching semántico offline.
 """
 
 from __future__ import annotations
 
 import math
+import time
 from typing import Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 app = FastAPI(
     title="Aliento Andino ML Service",
-    description="Servicio de inferencia acústica, modelos de acordes y matching semántico",
+    description="Servicio de inferencia acústica y matching semántico",
     version="1.0.0",
 )
 
@@ -78,6 +79,7 @@ def health_check():
 @app.post("/pitch/benchmark", response_model=AcousticBenchmarkResponse)
 def benchmark_pitch(req: AcousticBenchmarkRequest):
     """Valida la desviación en cents para notas de Quena, Zampoña y Tarka."""
+    started = time.perf_counter()
     valid_instruments = {"quena", "zampona", "tarka"}
     inst = req.instrument.lower()
     if inst not in valid_instruments:
@@ -93,7 +95,7 @@ def benchmark_pitch(req: AcousticBenchmarkRequest):
             detected_hz=req.detected_hz,
             cents_deviation=0.0,
             is_tuned=False,
-            latency_ms=12.5,
+            latency_ms=(time.perf_counter() - started) * 1000.0,
             status="silent",
         )
 
@@ -106,7 +108,7 @@ def benchmark_pitch(req: AcousticBenchmarkRequest):
         detected_hz=req.detected_hz,
         cents_deviation=round(cents, 2),
         is_tuned=is_tuned,
-        latency_ms=18.4,
+        latency_ms=(time.perf_counter() - started) * 1000.0,
         status="tuned" if is_tuned else "out_of_tune",
     )
 
@@ -114,6 +116,7 @@ def benchmark_pitch(req: AcousticBenchmarkRequest):
 @app.post("/tutor/pedagogical-feedback", response_model=PedagogicalFeedbackResponse)
 def pedagogical_feedback(req: PedagogicalFeedbackRequest):
     """Genera recomendaciones pedagógicas estructuradas en español andino para Quena, Zampoña y Tarka."""
+    started = time.perf_counter()
     valid_instruments = {"quena", "zampona", "tarka"}
     inst = (req.instrument or "quena").lower()
     if inst not in valid_instruments:
@@ -143,7 +146,7 @@ def pedagogical_feedback(req: PedagogicalFeedbackRequest):
     return PedagogicalFeedbackResponse(
         feedback=feedback,
         instrument=inst,
-        latency_ms=45.2,
+        latency_ms=(time.perf_counter() - started) * 1000.0,
         status="generated",
         model="gemma-2-2b-int4-mock",
     )

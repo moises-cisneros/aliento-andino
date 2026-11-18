@@ -185,7 +185,9 @@ class PracticeSession(Base):
 
     # Relaciones
     user: Mapped["User"] = relationship("User", lazy="selectin")
-    lesson: Mapped["Lesson"] = relationship("Lesson", back_populates="practice_sessions")
+    lesson: Mapped["Lesson"] = relationship(
+        "Lesson", back_populates="practice_sessions", lazy="selectin"
+    )
 
     def __repr__(self) -> str:
         return f"<PracticeSession user={self.user_id} lesson={self.lesson_id} score={self.score}>"
