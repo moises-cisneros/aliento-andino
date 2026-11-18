@@ -88,6 +88,15 @@ class _RankingsScreenState extends State<RankingsScreen>
           title: const Text('Rankings'),
           actions: [
             IconButton(
+              key: const Key('open-instrument-leaderboard'),
+              icon: Icon(
+                Icons.leaderboard,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              onPressed: () => context.push('/leaderboard'),
+              tooltip: 'Ranking por instrumento',
+            ),
+            IconButton(
               icon: Icon(
                 Icons.person,
                 color: Theme.of(context).colorScheme.primary,
