@@ -6,7 +6,7 @@ import 'instrument.dart';
 /// el patrón de servicio-por-feature del resto de la app (ej. DailyGoalService).
 class InstrumentService {
   static const _key = 'synth_instrument';
-  static const Instrument defaultInstrument = Instrument.piano;
+  static const Instrument defaultInstrument = Instrument.quena;
 
   Future<Instrument> get() async {
     final p = await SharedPreferences.getInstance();
