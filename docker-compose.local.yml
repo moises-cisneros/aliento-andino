@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   db:
     image: postgres:16-alpine
@@ -11,7 +9,7 @@ services:
     volumes:
       - pgdata_local:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${PORT_DB:-15432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U aliento_andino -d aliento_andino"]
       interval: 10s
@@ -24,19 +22,24 @@ services:
       dockerfile: Dockerfile
     container_name: aliento-andino-backend-local
     environment:
-      DATABASE_URL: postgresql+asyncpg://aliento_andino:localdev123@db:5432/aliento_andino
-      SECRET_KEY: dev-secret-key-cambiar-en-produccion
-      GOOGLE_CLIENT_ID: tu-client-id.apps.googleusercontent.com
-      CORS_ORIGINS: '["http://localhost:4200","http://localhost:4000","http://localhost:8000","http://localhost:3001"]'
-      SMTP_HOST: smtp.gmail.com
-      SMTP_PORT: "587"
-      SMTP_USER: tu-email@gmail.com
-      SMTP_PASSWORD: tu-app-password-de-google
-      SMTP_FROM_EMAIL: tu-email@gmail.com
-      FRONTEND_URL: http://localhost:4200
-      DEBUG: "true"
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-aliento_andino}:${POSTGRES_PASSWORD:-localdev123}@db:5432/${POSTGRES_DB:-aliento_andino}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-cambiar-en-produccion}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-tu-client-id.apps.googleusercontent.com}
+      CORS_ORIGINS: ${CORS_ORIGINS:-'["http://localhost:4250","http://localhost:4200","http://localhost:4000","http://localhost:8050","http://localhost:8000","http://localhost:3050","http://localhost:3001","http://localhost:8090","http://localhost:80"]'}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-tu-email@gmail.com}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-tu-app-password-de-google}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Aliento Andino}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-tu-email@gmail.com}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4250}
+      DEBUG: "${DEBUG:-true}"
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@alientoandino.org}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin1234!}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_NAME: ${ADMIN_NAME:-"Administrador Aliento Andino"}
     ports:
-      - "8000:8000"
+      - "${PORT_BACKEND:-8050}:8000"
     depends_on:
       db:
         condition: service_healthy

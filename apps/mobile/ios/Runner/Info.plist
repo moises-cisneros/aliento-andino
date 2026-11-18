@@ -50,10 +50,10 @@
 	<string>Aliento Andino usa el micrófono para escuchar las notas que tocás y evaluar tu práctica.</string>
 	<!-- Cámara: vista de tus manos durante la práctica -->
 	<key>NSCameraUsageDescription</key>
-	<string>Aliento Andino usa la cámara para mostrarte tus manos mientras practicás en el piano.</string>
-	<!-- MIDI por Bluetooth LE (teclados/pianos digitales inalámbricos) -->
+	<string>Aliento Andino usa la cámara para analizar tu postura y manos mientras practicás con tu instrumento andino.</string>
+	<!-- MIDI por Bluetooth LE (controladores e instrumentos digitales inalámbricos) -->
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Aliento Andino usa Bluetooth para conectar tu teclado o piano MIDI y evaluar lo que tocás con máxima precisión.</string>
+	<string>Aliento Andino usa Bluetooth para conectar tu controlador o instrumento MIDI y evaluar lo que tocás con máxima precisión.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Aliento Andino usa la red local para conectar dispositivos MIDI por red (Network Session).</string>
 </dict>
