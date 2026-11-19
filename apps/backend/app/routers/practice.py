@@ -156,6 +156,7 @@ async def submit_practice_session(
     result.xp_earned = xp_result["xp_earned"]
     result.new_level = xp_result["new_level"]
     result.current_level = xp_result["current_level"]
+    result.current_streak = xp_result.get("current_streak", 0)
     result.new_achievements = _map_achievements(xp_result)
     return result
 
@@ -198,6 +199,7 @@ async def submit_practice(
                 ),
                 ai_feedback=_visible_feedback(current_user, existing.ai_feedback),
                 current_level=user_xp.level,
+                current_streak=user_xp.current_streak,
             )
 
     try:
@@ -216,6 +218,7 @@ async def submit_practice(
         difficulty=session.lesson.difficulty if session.lesson else "principiante",
         is_completed=data.completed and data.score >= 70,
         total_time_seconds=data.total_time_seconds,
+        now=data.practice_datetime,
     )
 
     # La tarea IA usa otra conexión; la sesión debe existir antes de actualizarla.
@@ -248,6 +251,7 @@ async def submit_practice(
         new_level=xp_result["new_level"],
         current_level=xp_result["current_level"],
         new_achievements=new_achievements,
+        current_streak=xp_result.get("current_streak", 0),
     )
 
 

@@ -268,6 +268,7 @@ class PracticeSubmitRequest(BaseModel):
     total_time_seconds: float = Field(ge=0)
     errors_detail: list[dict] | None = None
     completed: bool = True
+    practice_datetime: datetime | None = None
 
 
 class PracticeSessionResponse(BaseModel):
@@ -305,6 +306,7 @@ class PracticeSessionResult(PracticeSessionResponse):
     new_level: bool = False
     current_level: int = 1
     new_achievements: list = []
+    current_streak: int = 0
 
 
 class PracticeSubmitResponse(BaseModel):
@@ -316,6 +318,7 @@ class PracticeSubmitResponse(BaseModel):
     new_level: bool = False
     current_level: int = 1
     new_achievements: list = []
+    current_streak: int = 0
 
 
 # ===================== PROGRESS / STATS =====================

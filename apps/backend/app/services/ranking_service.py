@@ -149,6 +149,7 @@ async def process_practice_xp(
     difficulty: str,
     is_completed: bool,
     total_time_seconds: float,
+    now: datetime | None = None,
 ) -> dict:
     """
     Procesar XP después de una sesión de práctica.
@@ -192,7 +193,8 @@ async def process_practice_xp(
         user_xp.average_score = round(old_avg + (score - old_avg) / n, 2)
 
     # Racha diaria con congeladores (día calendario UTC; ver update_user_streak).
-    await update_user_streak(db, user_id, datetime.now(UTC))
+    current_time = now or datetime.now(UTC)
+    await update_user_streak(db, user_id, current_time)
 
     # Actualizar xp_level en User
     result = await db.execute(select(User).where(User.id == user_id))
@@ -251,6 +253,7 @@ async def process_practice_xp(
         "xp_earned": xp_earned,
         "new_level": new_level or (user_xp.level > old_level),
         "current_level": user_xp.level,
+        "current_streak": user_xp.current_streak,
         "new_achievements": new_achievements,
     }
 

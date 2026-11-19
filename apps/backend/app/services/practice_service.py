@@ -108,6 +108,7 @@ async def submit_practice_session(
         difficulty=session.lesson.difficulty if session.lesson else "principiante",
         is_completed=request.completed and request.score >= 70,
         total_time_seconds=request.total_time_seconds,
+        now=request.practice_datetime,
     )
     return session, xp_result
 
