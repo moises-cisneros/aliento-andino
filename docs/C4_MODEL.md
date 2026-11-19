@@ -92,6 +92,8 @@ flowchart TB
     BackendAPI -.->|"Llamada interna RPC/HTTP"| MicroML
 ```
 
+> **Nota:** el motor YIN se ejecuta 100 % on-device dentro de un Isolate C++/Dart en Flutter. No se envía audio a la nube en tiempo de ejecución.
+
 ### Especificación de Contenedores
 
 | Contenedor           | Tecnología                     | Responsabilidad                                                                                             | Protocolos                      |
@@ -227,7 +229,9 @@ flowchart TD
     subgraph UIViews ["Capa de Presentación (UI)"]
         TunerScreen["AfinadorScreen<br/>(Aguja reactiva, cents, calado/alto, tema claro/oscuro)"]
         PracticeScreen["PracticeScreen<br/>(Reproductor de melodía, digitación interactiva)"]
-        FingeringWidget["FingeringWidget<br/>(Quena 7 orif., Zampoña 2 filas, Tarka 6 orif.)"]
+        QuenaFingeringWidget["QuenaFingeringWidget<br/>(7 orificios)"]
+        ZamponaFingeringWidget["ZamponaFingeringWidget<br/>(2 filas: Ira y Arca)"]
+        TarkaFingeringWidget["TarkaFingeringWidget<br/>(6 orificios)"]
         PostureCameraView["PostureCameraView<br/>(Overlay de hombros, verticalidad y puntuación 0-100)"]
         InstrumentSelector["InstrumentSelectorAppBar<br/>(Conmutador dinámico Quena/Zampoña/Tarka)"]
         OfflineLessonsScreen["OfflineLessonsScreen<br/>(Gestor de lecciones cacheadas y descargas)"]
@@ -268,7 +272,12 @@ flowchart TD
     BlocsLayer --> DataRepositories
     DataRepositories --> DioClient
     DataRepositories --> LocalDb
+    PracticeScreen --> QuenaFingeringWidget
+    PracticeScreen --> ZamponaFingeringWidget
+    PracticeScreen --> TarkaFingeringWidget
 ```
+
+> La especialización refleja la organología andina distinta por instrumento (orificios vs tubos, embocadura, digitación).
 
 ---
 
@@ -766,3 +775,30 @@ flowchart TD
 3. **Resiliencia de Inferencia On-Device**:
    - Si la señal del micrófono tiene energía RMS por debajo del umbral de "Soplo Suave", el motor YIN ignora el bloque PCM sin emitir notas falsas.
    - Si la cámara pierde visibilidad del alumno (confianza $<0.5$), el pipeline de MediaPipe suspende la evaluación postural sin interrumpir la evaluación tonal de audio.
+
+---
+
+## Ciclo de Práctica Interactiva (Secuencia)
+
+```mermaid
+sequenceDiagram
+    participant E as Estudiante
+    participant App as AppMobile
+    participant YIN as YINEngine
+    participant MP as MediaPipe
+    participant ML as MLService
+    participant API as BackendAPI
+    participant DB as DB
+
+    E->>App: inicia práctica
+    App->>YIN: abre stream de audio
+    YIN-->>App: pitch (Hz) + cents
+    App->>MP: frame de cámara
+    MP-->>App: landmarks pose/manos
+    App->>App: sintetiza telemetría a prompt
+    App->>ML: POST /feedback (prompt)
+    ML-->>App: feedback pedagógico
+    App->>API: POST /practice/session (XP, racha)
+    API->>DB: persiste sesión
+    API-->>App: ACK + XP otorgado
+```
