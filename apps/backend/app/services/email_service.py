@@ -15,9 +15,7 @@ def _is_smtp_configured() -> bool:
     return bool(settings.smtp_host and settings.smtp_user and settings.smtp_password)
 
 
-async def _send_email(
-    to: str, subject: str, html_body: str, text_body: str | None = None
-) -> None:
+async def _send_email(to: str, subject: str, html_body: str, text_body: str | None = None) -> None:
     """Enviar un email via SMTP con fallback a logging si no está configurado."""
     if not _is_smtp_configured():
         logger.warning(
