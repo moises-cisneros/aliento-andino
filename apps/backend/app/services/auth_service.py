@@ -200,12 +200,34 @@ async def google_auth(data: GoogleAuthRequest, db: AsyncSession) -> tuple[User, 
         # Si el usuario ya existe con ese google_id, es un login normal
         if user.google_id == google_id:
             logger.info("Login Google exitoso: %s", email)
+            if picture and not user.avatar_url:
+                user.avatar_url = picture
+            if name and not user.full_name:
+                user.full_name = name
+            await db.flush()
+            await db.refresh(user)
         elif user.google_id is None:
-            # Usuario local existente — NO vincular automáticamente (evitar account takeover)
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Ya existe una cuenta con ese email. Iniciá sesión con tu contraseña.",
-            )
+            # Vinculación automática si el email está verificado por Google (Criterio 3 - Issue #137)
+            is_email_verified = google_data.get("email_verified", True)
+            if is_email_verified:
+                user.google_id = google_id
+                user.is_verified = True
+                if picture and not user.avatar_url:
+                    user.avatar_url = picture
+                if name and not user.full_name:
+                    user.full_name = name
+                await db.flush()
+                await db.refresh(user)
+                logger.info(
+                    "Perfil de usuario vinculado automáticamente con Google: %s (%s)",
+                    email,
+                    user.id,
+                )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="El email de Google no está verificado. No se puede vincular la cuenta.",
+                )
 
     if not user.is_active:
         raise HTTPException(
