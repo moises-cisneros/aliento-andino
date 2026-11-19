@@ -21,9 +21,17 @@ class ZamponaFingeringWidget extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _TubeRow(row: 'arca', active: resolved),
-        const SizedBox(height: 8),
-        _TubeRow(row: 'ira', active: resolved),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _TubeRow(row: 'arca', active: resolved),
+              const SizedBox(height: 8),
+              _TubeRow(row: 'ira', active: resolved),
+            ],
+          ),
+        ),
         if (resolved == null && note != null)
           const Padding(
             padding: EdgeInsets.only(top: 8),
@@ -48,14 +56,15 @@ class _TubeRow extends StatelessWidget {
     final count = ZamponaFingering.tubeCounts[row]!;
     return Row(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         for (var i = 1; i <= count; i++)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: _Tube(
               key: Key('zampona-$row-$i'),
-              // Height grows with the index, like a real pan flute.
-              height: 64.0 + i * 8,
+              // Graves más largos (i=1), agudos más cortos (i=count).
+              height: 64.0 + (count - i) * 8.0,
               highlighted:
                   active != null &&
                   active!.activeRow == row &&

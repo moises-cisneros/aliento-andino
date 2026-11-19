@@ -37,6 +37,36 @@ void main() {
       final f = QuenaFingering.forNote('G5')!;
       expect(f.states[0], HoleState.half);
     });
+
+    test(
+      'second octave preserves half holes on altered notes (Issue #149)',
+      () {
+        // Sol#4 (G#4) has half hole on hole 6 (index 6)
+        final gSharp4 = QuenaFingering.forNote('G#4')!;
+        expect(gSharp4.halfHoles, contains(6));
+
+        // Sol#5 (G#5) in 2nd octave must preserve hole 6 and include thumb (0)
+        final gSharp5 = QuenaFingering.forNote('G#5')!;
+        expect(gSharp5.halfHoles, containsAll({0, 6}));
+        expect(gSharp5.states[0], HoleState.half);
+        expect(gSharp5.states[6], HoleState.half);
+      },
+    );
+
+    test('Sol6 maps to cross-fingering (T 0 2 3 0 0 0) (Issue #149)', () {
+      final sol6 = QuenaFingering.forNote('Sol6')!;
+      // Pulgar medio cubierto
+      expect(sol6.states[0], HoleState.half);
+      // Agujero 1 abierto
+      expect(sol6.states[1], HoleState.open);
+      // Agujeros 2 y 3 tapados
+      expect(sol6.states[2], HoleState.covered);
+      expect(sol6.states[3], HoleState.covered);
+      // Agujeros 4, 5 y 6 abiertos
+      expect(sol6.states[4], HoleState.open);
+      expect(sol6.states[5], HoleState.open);
+      expect(sol6.states[6], HoleState.open);
+    });
   });
 
   group('QuenaFingeringWidget', () {

@@ -6,16 +6,16 @@ import 'package:audioplayers/audioplayers.dart';
 import 'instrument.dart';
 
 /// Sintetizador de tonos SIN assets: genera el WAV de una nota en memoria
-/// (armónicos + envolvente según el [Instrument] elegido) y lo reproduce con
+/// (armónicos + envolvente según el [InstrumentType] elegido) y lo reproduce con
 /// audioplayers. Así la app "suena" al tocar/escuchar, sin soundfonts ni samples.
 class ToneSynth {
   static const int _sampleRate = 44100;
 
   /// Instrumento/timbre actual. Se puede cambiar en caliente (el cache está
   /// segmentado por instrumento, así que no hay que limpiarlo).
-  Instrument instrument;
+  InstrumentType instrument;
 
-  ToneSynth({this.instrument = Instrument.quena});
+  ToneSynth({this.instrument = InstrumentType.quena});
 
   // Pool de reproductores para permitir notas/acordes superpuestos. El
   // constructor por defecto genera un playerId único por reproductor.

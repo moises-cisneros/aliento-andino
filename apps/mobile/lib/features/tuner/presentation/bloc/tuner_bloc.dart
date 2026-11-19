@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mobile/core/audio/audio_capture_service.dart';
+import 'package:mobile/core/audio/fingering_models.dart';
 import 'package:mobile/core/audio/instrument.dart';
 import 'package:mobile/core/audio/yin_pitch_detector.dart';
 
@@ -294,74 +296,94 @@ class TunerBloc extends Bloc<TunerEvent, TunerState> {
     return super.close();
   }
 
-  /// Busca la nota andina más cercana a la frecuencia detectada según el instrumento.
+  /// Convierte un número MIDI a su nombre en español con octava (ej. 67 -> 'Sol4').
+  static String midiToSpanishNote(int midi) {
+    const names = [
+      'Do',
+      'Do#',
+      'Re',
+      'Re#',
+      'Mi',
+      'Fa',
+      'Fa#',
+      'Sol',
+      'Sol#',
+      'La',
+      'La#',
+      'Si',
+    ];
+    final semitone = midi % 12;
+    final octave = (midi ~/ 12) - 1;
+    return '${names[semitone]}$octave';
+  }
+
+  /// Calcula la frecuencia en Hz para una nota MIDI en afinación estándar A440.
+  static double midiToFrequency(int midi) {
+    return 440.0 * math.pow(2.0, (midi - 69) / 12.0);
+  }
+
+  /// Notas andinas derivadas directamente de los modelos de digitación.
+  static final Map<InstrumentType, List<(String, double)>> _instrumentNotes = {
+    // Quena: Sol4 (MIDI 67) a Sol6 (MIDI 91). Rango cromático real, sin registro de quenacho.
+    InstrumentType.quena: [
+      for (
+        int m = QuenaFingering.lowestMidi;
+        m <= QuenaFingering.highestMidi;
+        m++
+      )
+        (midiToSpanishNote(m), midiToFrequency(m)),
+    ],
+    // Zampoña Malta tradicional de 13 tubos: Fa#4 (MIDI 66) a Re6 (MIDI 86).
+    InstrumentType.zampona: () {
+      final set = <int>{};
+      for (final n in [
+        ...ZamponaFingering.arcaNotes,
+        ...ZamponaFingering.iraNotes,
+      ]) {
+        final midi = parseNoteToMidi(n);
+        if (midi != null) set.add(midi);
+      }
+      final sorted = set.toList()..sort();
+      return sorted
+          .map((m) => (midiToSpanishNote(m), midiToFrequency(m)))
+          .toList();
+    }(),
+    // Tarka tradicional: Do5 (MIDI 72) a Re6 (MIDI 86) con sobretonos de tara.
+    InstrumentType.tarka: const [
+      72,
+      74,
+      76,
+      77,
+      79,
+      81,
+      83,
+      84,
+      86,
+    ].map((m) => (midiToSpanishNote(m), midiToFrequency(m))).toList(),
+  };
+
+  /// Busca la nota andina más cercana a la frecuencia detectada según el instrumento,
+  /// utilizando distancia logarítmica en cents: 1200 * |log2(f / f_target)|.
   static ({String name, double frequency}) _closestAndeanNote(
     double detectedHz,
     InstrumentType instrument,
   ) {
-    final List<(String, double)> notes;
-    switch (instrument) {
-      case InstrumentType.tarka:
-        notes = const [
-          ('Do5', 523.25),
-          ('Re5', 587.33),
-          ('Mi5', 659.25),
-          ('Fa5', 698.46),
-          ('Sol5', 783.99),
-          ('La5', 880.00),
-          ('Si5', 987.77),
-        ];
-        break;
-      case InstrumentType.zampona:
-        notes = const [
-          ('Sol4', 392.00),
-          ('La4', 440.00),
-          ('Si4', 493.88),
-          ('Do5', 523.25),
-          ('Re5', 587.33),
-          ('Mi5', 659.25),
-          ('Fa#5', 739.99),
-          ('Sol5', 783.99),
-          ('La5', 880.00),
-          ('Si5', 987.77),
-          ('Do6', 1046.50),
-          ('Re6', 1174.66),
-          ('Mi6', 1318.51),
-          ('Fa#6', 1479.98),
-        ];
-        break;
-      case InstrumentType.quena:
-        notes = const [
-          ('Sol3', 196.00),
-          ('La3', 220.00),
-          ('Si3', 246.94),
-          ('Do4', 261.63),
-          ('Re4', 293.66),
-          ('Mi4', 329.63),
-          ('Fa#4', 369.99),
-          ('Sol4', 392.00),
-          ('La4', 440.00),
-          ('Si4', 493.88),
-          ('Do5', 523.25),
-          ('Re5', 587.33),
-          ('Mi5', 659.25),
-          ('Fa#5', 739.99),
-          ('Sol5', 783.99),
-          ('La5', 880.00),
-          ('Si5', 987.77),
-          ('Do6', 1046.50),
-          ('Re6', 1174.66),
-        ];
-        break;
+    final notes =
+        _instrumentNotes[instrument] ?? _instrumentNotes[InstrumentType.quena]!;
+
+    if (detectedHz <= 0.0) {
+      return (name: notes.first.$1, frequency: notes.first.$2);
     }
 
     var bestNote = notes.first;
-    var minDiff = (detectedHz - bestNote.$2).abs();
+    var minCentsDiff =
+        (1200.0 * (math.log(detectedHz / bestNote.$2) / math.ln2)).abs();
 
     for (final n in notes) {
-      final diff = (detectedHz - n.$2).abs();
-      if (diff < minDiff) {
-        minDiff = diff;
+      final centsDiff = (1200.0 * (math.log(detectedHz / n.$2) / math.ln2))
+          .abs();
+      if (centsDiff < minCentsDiff) {
+        minCentsDiff = centsDiff;
         bestNote = n;
       }
     }

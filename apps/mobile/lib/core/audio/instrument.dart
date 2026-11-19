@@ -26,10 +26,10 @@ extension InstrumentTypeExtension on InstrumentType {
   }
 }
 
-/// Instrumentos/timbres disponibles para el sintetizador ([ToneSynth]).
+/// Instrumentos/timbres disponibles para el sintetizador ([ToneSynth]) y el dominio andino.
 ///
 /// Solo los instrumentos andinos canónicos: Quena, Zampoña y Tarka.
-enum Instrument { quena, zampona, tarka }
+typedef Instrument = InstrumentType;
 
 /// Perfil sonoro de un instrumento.
 class InstrumentVoice {
@@ -44,21 +44,26 @@ class InstrumentVoice {
 
   const InstrumentVoice(this.harmonics, this.decay, this.gain);
 
-  static const Map<Instrument, InstrumentVoice> _map = {
+  static const Map<InstrumentType, InstrumentVoice> _map = {
     // Quena: sonido cálido con armónicos pares e impares y aire suave.
-    Instrument.quena: InstrumentVoice([1.0, 0.6, 0.35, 0.2, 0.1], 1.8, 0.7),
+    InstrumentType.quena: InstrumentVoice([1.0, 0.6, 0.35, 0.2, 0.1], 1.8, 0.7),
     // Zampoña: flauta de pan con armónicos impares pronunciados y ataque aéreo.
-    Instrument.zampona: InstrumentVoice([1.0, 0.1, 0.5, 0.05, 0.25], 1.2, 0.65),
+    InstrumentType.zampona: InstrumentVoice(
+      [1.0, 0.1, 0.5, 0.05, 0.25],
+      1.2,
+      0.65,
+    ),
     // Tarka: aerófono de madera con sonido rasposo y ricos armónicos superiores.
-    Instrument.tarka: InstrumentVoice([1.0, 0.8, 0.7, 0.5, 0.3], 1.0, 0.7),
+    InstrumentType.tarka: InstrumentVoice([1.0, 0.8, 0.7, 0.5, 0.3], 1.0, 0.7),
   };
 
-  static InstrumentVoice of(Instrument i) => _map[i] ?? _map[Instrument.quena]!;
+  static InstrumentVoice of(InstrumentType i) =>
+      _map[i] ?? _map[InstrumentType.quena]!;
 }
 
 /// Nombre legible (español) de cada instrumento, para la UI.
-const Map<Instrument, String> instrumentLabels = {
-  Instrument.quena: 'Quena',
-  Instrument.zampona: 'Zampoña',
-  Instrument.tarka: 'Tarka',
+const Map<InstrumentType, String> instrumentLabels = {
+  InstrumentType.quena: 'Quena',
+  InstrumentType.zampona: 'Zampoña',
+  InstrumentType.tarka: 'Tarka',
 };

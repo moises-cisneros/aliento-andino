@@ -142,20 +142,21 @@ class QuenaFingering {
     if (midi == null || midi < lowestMidi || midi > highestMidi) return null;
     final offset = midi - lowestMidi;
     if (offset < 12) return _firstOctave[offset];
-    // Sol6 (offset 24) has no first-octave twin: fully open, half thumb.
-    final base = _firstOctave[offset - 12];
-    if (base == null) {
+    // Sol6 (offset 24): digitación cruzada (T 0 2 3 0 0 0) con pulgar en medio orificio.
+    if (offset == 24) {
       return const QuenaFingering(
+        true,
         false,
-        false,
-        false,
-        false,
+        true,
+        true,
         false,
         false,
         false,
         halfHoles: {0},
       );
     }
+    final base = _firstOctave[offset - 12];
+    if (base == null) return null;
     return QuenaFingering(
       base.thumb,
       base.hole1,
@@ -164,7 +165,7 @@ class QuenaFingering {
       base.hole4,
       base.hole5,
       base.hole6,
-      halfHoles: const {0},
+      halfHoles: {0, ...base.halfHoles},
     );
   }
 }
@@ -214,15 +215,16 @@ class ZamponaFingering {
   static const Map<String, int> tubeCounts = {'ira': 6, 'arca': 7};
 
   // Andean diatonic G-major layout: the two rows alternate scale degrees.
+  // Zampoña Malta tradicional de 13 tubos (Arca 7 tubos comenzando en Fa#4, Ira 6 tubos comenzando en Sol4):
   static const List<String> iraNotes = ['G4', 'B4', 'D5', 'F#5', 'A5', 'C6'];
   static const List<String> arcaNotes = [
+    'F#4',
     'A4',
     'C5',
     'E5',
     'G5',
     'B5',
     'D6',
-    'F#6',
   ];
 
   /// Returns the tube that plays [note], or null if the zampoña cannot play it.
@@ -257,7 +259,11 @@ class TarkaFingering {
 
   static const int holeCount = 6;
 
-  // Diatonic scale from Do5, uncovering one hole at a time from the bottom.
+  // Diatonic scale from Do5 to Re6.
+  // 1st octave (Do5..Si5): uncovering one hole at a time from the bottom.
+  // 2nd octave / overblown harmonics (tara):
+  // Do6 (MIDI 84): sobre-soplo brillante sobre la fundamental (6 orificios cubiertos).
+  // Re6 (MIDI 86): sobre-soplo sobre Re5 (5 orificios cubiertos).
   static const Map<int, List<bool>> _byMidi = {
     72: [true, true, true, true, true, true], // Do5
     74: [true, true, true, true, true, false], // Re5
@@ -266,6 +272,8 @@ class TarkaFingering {
     79: [true, true, false, false, false, false], // Sol5
     81: [true, false, false, false, false, false], // La5
     83: [false, false, false, false, false, false], // Si5
+    84: [true, true, true, true, true, true], // Do6 (sobre-soplo tara)
+    86: [true, true, true, true, true, false], // Re6 (sobre-soplo)
   };
 
   /// Returns the fingering for [note], or null when the tarka scale does not

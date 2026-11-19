@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/audio/instrument.dart';
 import '../../../../core/audio/instrument_service.dart';
+import '../../../instrument_select/bloc/active_instrument_bloc.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/practice/daily_goal_service.dart';
 import '../../../../core/theme/theme_cubit.dart';
@@ -855,36 +856,24 @@ class _InstrumentTile extends StatefulWidget {
 
 class _InstrumentTileState extends State<_InstrumentTile> {
   final _service = InstrumentService();
-  Instrument _instrument = InstrumentService.defaultInstrument;
 
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    final i = await _service.get();
-    if (mounted) setState(() => _instrument = i);
-  }
-
-  Future<void> _pick() async {
+  Future<void> _pick(InstrumentType current) async {
     final cs = Theme.of(context).colorScheme;
-    final picked = await showDialog<Instrument>(
+    final picked = await showDialog<InstrumentType>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: cs.surfaceContainerHigh,
         title: Text('Instrumento', style: TextStyle(color: cs.onSurface)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
-          children: Instrument.values
+          children: InstrumentType.values
               .map(
                 (ins) => ListTile(
                   title: Text(
-                    instrumentLabels[ins] ?? ins.name,
+                    instrumentLabels[ins] ?? ins.displayName,
                     style: TextStyle(color: cs.onSurface),
                   ),
-                  trailing: ins == _instrument
+                  trailing: ins == current
                       ? Icon(Icons.check, color: cs.primary)
                       : null,
                   onTap: () => Navigator.of(ctx).pop(ins),
@@ -896,45 +885,56 @@ class _InstrumentTileState extends State<_InstrumentTile> {
     );
     if (picked != null) {
       await _service.set(picked);
-      if (mounted) setState(() => _instrument = picked);
+      if (mounted) {
+        context.read<ActiveInstrumentBloc>().add(SelectInstrumentEvent(picked));
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Material(
-      color: cs.surface,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: _pick,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(Icons.music_note, color: cs.primary, size: 22),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  'Instrumento',
-                  style: TextStyle(color: cs.onSurface, fontSize: 15),
-                ),
+    return BlocBuilder<ActiveInstrumentBloc, ActiveInstrumentState>(
+      builder: (context, activeState) {
+        final instrument = activeState.activeInstrument;
+        return Material(
+          color: cs.surface,
+          borderRadius: BorderRadius.circular(10),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => _pick(instrument),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Icon(Icons.music_note, color: cs.primary, size: 22),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      'Instrumento',
+                      style: TextStyle(color: cs.onSurface, fontSize: 15),
+                    ),
+                  ),
+                  Text(
+                    instrumentLabels[instrument] ?? instrument.displayName,
+                    style: TextStyle(
+                      color: cs.primary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right,
+                    color: cs.onSurfaceVariant,
+                    size: 20,
+                  ),
+                ],
               ),
-              Text(
-                instrumentLabels[_instrument] ?? _instrument.name,
-                style: TextStyle(
-                  color: cs.primary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Icon(Icons.chevron_right, color: cs.onSurfaceVariant, size: 20),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

@@ -5,17 +5,28 @@ import 'package:mobile/features/lessons/presentation/widgets/instruments/zampona
 
 void main() {
   group('ZamponaFingering', () {
-    test('maps diatonic notes to ira and arca tubes', () {
-      final g4 = ZamponaFingering.forNote('G4')!;
-      expect([g4.activeRow, g4.tubeIndex], ['ira', 1]);
-      final a4 = ZamponaFingering.forNote('La4')!;
-      expect([a4.activeRow, a4.tubeIndex], ['arca', 1]);
-      final fs6 = ZamponaFingering.forNote('F#6')!;
-      expect([fs6.activeRow, fs6.tubeIndex], ['arca', 7]);
-    });
+    test(
+      'maps diatonic notes to ira and arca tubes (Malta tradicional 13 tubos F#4..D6)',
+      () {
+        final fs4 = ZamponaFingering.forNote('F#4')!;
+        expect([fs4.activeRow, fs4.tubeIndex], ['arca', 1]);
+        final g4 = ZamponaFingering.forNote('G4')!;
+        expect([g4.activeRow, g4.tubeIndex], ['ira', 1]);
+        final a4 = ZamponaFingering.forNote('La4')!;
+        expect([a4.activeRow, a4.tubeIndex], ['arca', 2]);
+        final c6 = ZamponaFingering.forNote('C6')!;
+        expect([c6.activeRow, c6.tubeIndex], ['ira', 6]);
+        final d6 = ZamponaFingering.forNote('D6')!;
+        expect([d6.activeRow, d6.tubeIndex], ['arca', 7]);
+      },
+    );
 
     test('returns null for notes the zampoña cannot play', () {
       expect(ZamponaFingering.forNote('C3'), isNull);
+      expect(
+        ZamponaFingering.forNote('F#6'),
+        isNull,
+      ); // fuera de Malta 13 tubos
     });
 
     test('throws ArgumentError for out-of-range tube or invalid row', () {
@@ -59,5 +70,26 @@ void main() {
       final size = tester.getSize(find.byKey(const Key('zampona-ira-1')));
       expect(size.width, greaterThanOrEqualTo(48));
     });
+
+    testWidgets(
+      'inverts tube heights (graves longer, agudos shorter) and uses FittedBox',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(body: ZamponaFingeringWidget(note: 'G4')),
+          ),
+        );
+        expect(find.byType(FittedBox), findsOneWidget);
+
+        final tube1Size = tester.getSize(
+          find.byKey(const Key('zampona-arca-1')),
+        );
+        final tube7Size = tester.getSize(
+          find.byKey(const Key('zampona-arca-7')),
+        );
+        // Tubo 1 (grave F#4) debe ser más largo que tubo 7 (agudo D6)
+        expect(tube1Size.height, greaterThan(tube7Size.height));
+      },
+    );
   });
 }
