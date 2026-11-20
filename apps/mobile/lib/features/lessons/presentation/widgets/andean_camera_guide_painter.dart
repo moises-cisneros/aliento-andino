@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 /// Guía de encuadre para práctica de aerófonos andinos: dibuja esquinas tipo "visor"
 /// sobre la zona del preview para encuadrar rostro (embocadura) y manos
 /// sosteniendo el instrumento andino + un texto de ayuda estático.
-class KeyboardGuidePainter extends CustomPainter {
+///
+/// Biomecánica: en Quena y Tarka los orificios se sellan con el contacto plano
+/// del pulpejo (no con los dedos curvados en cúpula), por eso la guía lo indica.
+class AndeanCameraGuidePainter extends CustomPainter {
   final Color color;
-  const KeyboardGuidePainter({this.color = Colors.white});
+  const AndeanCameraGuidePainter({this.color = Colors.white});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -41,7 +44,7 @@ class KeyboardGuidePainter extends CustomPainter {
     // Etiqueta centrada arriba de la zona.
     final tp = TextPainter(
       text: TextSpan(
-        text: 'Encuadrá embocadura y manos aquí',
+        text: 'Encuadrá embocadura y manos · sellá con el pulpejo plano',
         style: TextStyle(
           color: color.withValues(alpha: 0.9),
           fontSize: 12,
@@ -60,5 +63,6 @@ class KeyboardGuidePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant KeyboardGuidePainter old) => old.color != color;
+  bool shouldRepaint(covariant AndeanCameraGuidePainter old) =>
+      old.color != color;
 }

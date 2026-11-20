@@ -8,8 +8,6 @@ class NoteSequenceModel {
   final int? finger;
   final String? hand;
   final int velocity;
-  final bool isChord;
-  final int? chordGroup;
 
   const NoteSequenceModel({
     required this.id,
@@ -20,8 +18,6 @@ class NoteSequenceModel {
     this.finger,
     this.hand,
     this.velocity = 80,
-    this.isChord = false,
-    this.chordGroup,
   });
 
   factory NoteSequenceModel.fromJson(Map<String, dynamic> json) {
@@ -34,8 +30,6 @@ class NoteSequenceModel {
       finger: json['finger'] as int?,
       hand: json['hand'] as String?,
       velocity: json['velocity'] as int? ?? 80,
-      isChord: json['is_chord'] as bool? ?? false,
-      chordGroup: json['chord_group'] as int?,
     );
   }
 
@@ -47,7 +41,5 @@ class NoteSequenceModel {
     'finger': finger,
     'hand': hand,
     'velocity': velocity,
-    'is_chord': isChord,
-    'chord_group': chordGroup,
   };
 }

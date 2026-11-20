@@ -166,8 +166,8 @@ _Head? _parseHead(NoteSequenceModel n) {
   return _Head(step, accidental, n.duration, treble);
 }
 
-/// Agrupa la lista plana en columnas: cada `chordGroup` consecutivo es una
-/// columna (acorde), cada silencio una columna propia, el resto notas sueltas.
+/// Agrupa la lista plana en columnas: cada silencio y cada nota (monofónica)
+/// es una columna propia.
 List<_Col> _buildColumns(List<NoteSequenceModel> notes) {
   final cols = <_Col>[];
   var i = 0;
@@ -178,25 +178,9 @@ List<_Col> _buildColumns(List<NoteSequenceModel> notes) {
       i++;
       continue;
     }
-    if (n.isChord && n.chordGroup != null) {
-      final g = n.chordGroup;
-      final heads = <_Head>[];
-      var j = i;
-      while (j < notes.length &&
-          notes[j].isChord &&
-          notes[j].chordGroup == g &&
-          !notes[j].isRest) {
-        final h = _parseHead(notes[j]);
-        if (h != null) heads.add(h);
-        j++;
-      }
-      cols.add(_Col(heads, heads.isEmpty, i, j - 1));
-      i = j;
-    } else {
-      final h = _parseHead(n);
-      cols.add(_Col(h == null ? const [] : [h], h == null, i, i));
-      i++;
-    }
+    final h = _parseHead(n);
+    cols.add(_Col(h == null ? const [] : [h], h == null, i, i));
+    i++;
   }
   return cols;
 }

@@ -9,7 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../services/hand_landmarker_service.dart';
 import '../services/hand_tracker.dart';
 import 'hand_landmarks_painter.dart';
-import 'keyboard_guide_painter.dart';
+import 'andean_camera_guide_painter.dart';
 
 /// Widget que renderiza el preview de cámara para práctica de aerófonos andinos.
 class HandTrackerCamera extends StatefulWidget {
@@ -253,7 +253,7 @@ class _HandTrackerCameraState extends State<HandTrackerCamera>
         // Guía de encuadre para embocadura y manos (estática: no repinta por frame).
         const Positioned.fill(
           child: IgnorePointer(
-            child: CustomPaint(painter: KeyboardGuidePainter()),
+            child: CustomPaint(painter: AndeanCameraGuidePainter()),
           ),
         ),
         Positioned.fill(

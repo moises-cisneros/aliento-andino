@@ -62,8 +62,6 @@ class CachedNotes extends Table {
   IntColumn get finger => integer().nullable()();
   TextColumn get hand => text().nullable()();
   IntColumn get velocity => integer().withDefault(const Constant(80))();
-  BoolColumn get isChord => boolean().withDefault(const Constant(false))();
-  IntColumn get chordGroup => integer().nullable()();
 }
 
 /// Cola "outbox": prácticas realizadas sin conexión, pendientes de enviar al
@@ -114,7 +112,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'aliento_andino'));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -129,6 +127,14 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 4) {
         await m.addColumn(cachedLessons, cachedLessons.instrument);
+      }
+      if (from < 5) {
+        // Pipeline polifónico purgado: los aerófonos andinos son monofónicos.
+        // Se eliminan las columnas de acordes (SQLite >= 3.35 soporta DROP COLUMN).
+        await customStatement('ALTER TABLE cached_notes DROP COLUMN is_chord');
+        await customStatement(
+          'ALTER TABLE cached_notes DROP COLUMN chord_group',
+        );
       }
     },
   );
