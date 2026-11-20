@@ -1,0 +1,43 @@
+# Blueprint de Render (plan free, region Ohio). Ver infra/DEPLOYMENT_GUIDE.md
+services:
+  - type: web
+    name: aliento-andino-backend
+    runtime: docker
+    plan: free
+    region: ohio
+    branch: main
+    rootDir: apps/backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # dockerCommand reemplaza ENTRYPOINT y CMD: se invoca entrypoint.sh (alembic upgrade head) explicitamente.
+    # Un solo worker para respetar los 512 MB del plan free.
+    dockerCommand: ./entrypoint.sh uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+  - type: web
+    name: aliento-andino-ml
+    runtime: docker
+    plan: free
+    region: ohio
+    branch: main
+    rootDir: apps/ml
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: "8001"
