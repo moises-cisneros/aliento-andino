@@ -39,7 +39,7 @@ nace de un **soplido fuerte y decidido**:
 
 ## 4. Cómo te ayuda Aliento Andino
 
-La app evalúa on-device la **estabilidad del ataque** y el **timbre
+La app evalúa en tu teléfono la **estabilidad del ataque** y el **timbre
 característico** de la Tarka, además de la afinación. Si venís de la Quena,
 recordá recalibrar tu [soplo suave](../calibracion/soplo-suave.md): la Tarka
 trabaja con más energía de aire y el umbral de detección cambia.

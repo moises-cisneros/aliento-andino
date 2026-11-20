@@ -56,12 +56,6 @@ const sidebars: SidebarsConfig = {
       collapsed: false,
       items: ["soporte/faq"],
     },
-    {
-      type: "category",
-      label: "8. Arquitectura",
-      collapsed: false,
-      items: ["arquitectura/c4"],
-    },
   ],
 }
 

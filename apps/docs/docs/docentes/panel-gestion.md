@@ -1,6 +1,6 @@
 # Panel Web de Gestión para Docentes
 
-El panel administrativo web (desarrollado en Angular 21) está diseñado para profesores de academias, colegios y talleres de música andina.
+El panel web está diseñado para profesores de academias, colegios y talleres de música andina.
 
 ## Funcionalidades Principales
 
