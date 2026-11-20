@@ -18,7 +18,7 @@ saturar la medición.
 
 El asistente toma una medición **basal** de la energía de tu soplo durante unos
 **3 segundos** y ajusta de forma dinámica el umbral de detección (energía RMS).
-Todo el proceso es **100% on-device**: tu audio no sale del teléfono.
+Todo el proceso ocurre **100% en tu teléfono**: tu audio no sale de él.
 
 ## 3. Paso a paso
 

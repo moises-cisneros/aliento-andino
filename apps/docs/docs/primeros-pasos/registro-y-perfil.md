@@ -5,7 +5,7 @@ Aprender a tocar un instrumento andino con **Aliento Andino** es un viaje guiado
 ## 1. Descarga e Instalación
 
 1. Descarga la aplicación oficial desde Google Play Store o Apple App Store.
-2. Abre la aplicación y acepta los permisos indispensables para la inferencia on-device:
+2. Abre la aplicación y acepta los permisos indispensables para analizar tu práctica directamente en tu teléfono:
    - **Micrófono**: Necesario para el análisis de frecuencia acústica y tono fundamental.
    - **Cámara**: Requerido para la retroalimentación ergonómica y postural (opcional si solo practicas audio).
 
