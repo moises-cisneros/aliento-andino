@@ -74,6 +74,47 @@ LocalTutorService _service(
 }
 
 void main() {
+  group('sanitizeSlmReply', () {
+    test(
+      'repairs UTF-8 split into Latin-1 pairs without touching good text',
+      () {
+        expect(
+          repairMojibake('música: AsegÃºrate de que estÃ© bien'),
+          'música: Asegúrate de que esté bien',
+        );
+      },
+    );
+
+    test('strips markdown and list markers', () {
+      expect(
+        sanitizeSlmReply('1. **Respira** hondo\n2. Relaja los hombros'),
+        'Respira hondo Relaja los hombros',
+      );
+    });
+
+    test('removes literal \n sequences', () {
+      expect(sanitizeSlmReply(r'\nHola. Sigue así.'), 'Hola. Sigue así.');
+    });
+
+    test('drops a dangling sentence when the token cap cut the reply', () {
+      expect(
+        sanitizeSlmReply(
+          'Respira hondo. Relaja los hombros y el',
+          truncated: true,
+        ),
+        'Respira hondo.',
+      );
+    });
+
+    test('caps length at a sentence boundary', () {
+      final long =
+          '${List.filled(40, 'uno').join(' ')}. ${List.filled(40, 'dos').join(' ')}.';
+      final out = sanitizeSlmReply(long, maxWords: 50);
+      expect(out.endsWith('.'), isTrue);
+      expect(out.split(' ').length, lessThanOrEqualTo(50));
+    });
+  });
+
   group('EdgeAiSlmRuntime', () {
     test('is not loaded until loadModel succeeds', () async {
       final runtime = EdgeAiSlmRuntime(
@@ -116,6 +157,7 @@ void main() {
       expect(text, 'Respira profundo y suelta el aire.');
       expect(generator.lastPrompt, contains('Quena'));
       expect(service.isUsingModel, isTrue);
+      expect(service.lastFeedbackFromModel, isTrue);
     });
 
     test('falls back to rules when the model is not installed', () async {
@@ -151,6 +193,8 @@ void main() {
 
       expect(text, isNot('late answer'));
       expect(text, isNotEmpty);
+      expect(service.isUsingModel, isTrue);
+      expect(service.lastFeedbackFromModel, isFalse);
     });
 
     test('installModel downloads and switches to the model', () async {

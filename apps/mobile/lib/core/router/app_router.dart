@@ -35,11 +35,12 @@ import '../../features/profile/presentation/screens/my_profile_screen.dart';
 import '../../features/profile/presentation/screens/practice_history_screen.dart';
 import '../../features/profile/presentation/screens/privacy_policy_screen.dart';
 import '../../features/profile/presentation/screens/recordings_list_screen.dart';
+import '../../features/instrument_select/bloc/active_instrument_bloc.dart';
+import '../../features/practice/posture/presentation/screens/posture_camera_view.dart';
 import '../../features/profile/presentation/screens/settings_screen.dart';
 import '../../features/profile/presentation/screens/terms_screen.dart';
 import '../../features/profile/presentation/screens/achievements_screen.dart'
     as profile_achievements;
-import '../../features/instrument_select/bloc/active_instrument_bloc.dart';
 import '../../features/rankings/presentation/screens/achievements_screen.dart';
 import '../../features/rankings/presentation/screens/leaderboard_screen.dart';
 import '../../features/rankings/presentation/screens/lesson_ranking_screen.dart';
@@ -227,6 +228,15 @@ class AppRouter {
       GoRoute(
         path: '/edit-profile',
         builder: (context, state) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: '/posture',
+        builder: (context, state) => PostureCameraView(
+          instrument: context
+              .read<ActiveInstrumentBloc>()
+              .state
+              .activeInstrument,
+        ),
       ),
       GoRoute(
         path: '/settings',

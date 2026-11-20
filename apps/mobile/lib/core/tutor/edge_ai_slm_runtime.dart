@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_edge_ai/flutter_edge_ai.dart';
 import 'package:flutter_edge_ai_mediapipe/flutter_edge_ai_mediapipe.dart';
@@ -28,7 +29,7 @@ class SlmModelConfig {
   static const int contextTokens = 1024;
 
   /// Hard cap on generated tokens: advice must stay under ~50 words.
-  static const int maxOutputTokens = 120;
+  static const int maxOutputTokens = 90;
 }
 
 /// Minimal text generator the runtime needs. Kept separate from the plugin so
@@ -108,20 +109,22 @@ class _EdgeAiGenerator implements SlmGenerator {
 
   @override
   Future<String> generate(String prompt) async {
-    final session = await _model.openSession(temperature: 0.7, topK: 40);
+    final session = await _model.openSession(temperature: 0.4, topK: 30);
     try {
       await session.addQueryChunk(Message(text: prompt, isUser: true));
       final reply = StringBuffer();
       var tokens = 0;
+      var capped = false;
       await for (final token in session.getResponseAsync()) {
         reply.write(token);
         // MediaPipe ignores maxOutputTokens: bound the reply ourselves.
         if (++tokens >= SlmModelConfig.maxOutputTokens) {
+          capped = true;
           await session.stopGeneration();
           break;
         }
       }
-      return reply.toString();
+      return sanitizeSlmReply(reply.toString(), truncated: capped);
     } finally {
       await session.close();
     }
@@ -129,4 +132,53 @@ class _EdgeAiGenerator implements SlmGenerator {
 
   @override
   Future<void> close() => _model.close();
+}
+
+/// Repairs UTF-8 sequences that the engine surfaced as Latin-1 (`Ã©` -> `é`).
+///
+/// Byte-level BPE tokens can split a multi-byte character across tokens; the
+/// plugin then decodes each half separately. Only `Â`/`Ã` + continuation
+/// bytes are touched, so already-correct text is left alone.
+String repairMojibake(String text) {
+  return text.replaceAllMapped(RegExp('[ÂÃ][\u0080-¿]'), (m) {
+    try {
+      return utf8.decode(latin1.encode(m[0]!));
+    } on FormatException {
+      return m[0]!;
+    }
+  });
+}
+
+/// Turns raw model output into short plain text for the feedback card:
+/// repairs encoding, strips markdown/list markers and caps the length at a
+/// sentence boundary.
+String sanitizeSlmReply(
+  String raw, {
+  int maxWords = 60,
+  bool truncated = false,
+}) {
+  var text = repairMojibake(raw)
+      // Some engines emit newlines as the two characters `\n`.
+      .replaceAll(r'\n', ' ')
+      .replaceAll(RegExp(r'[*#`>]+'), '')
+      .replaceAll(RegExp(r'^\s*(\d+[.)]|[-•])\s+', multiLine: true), '')
+      .replaceAll(RegExp(r'\s*\n+\s*'), ' ')
+      .replaceAll(RegExp(r'\s{2,}'), ' ')
+      .trim();
+
+  if (truncated && !RegExp(r'[.!?]$').hasMatch(text)) {
+    // The reply was cut by the token cap: drop the dangling sentence.
+    final stop = text.lastIndexOf(RegExp(r'[.!?]'));
+    text = stop > 0 ? text.substring(0, stop + 1) : '$text…';
+  }
+
+  final words = text.split(' ');
+  if (words.length <= maxWords) return text;
+
+  final clipped = words.take(maxWords).join(' ');
+  final lastStop = clipped.lastIndexOf(RegExp(r'[.!?]'));
+  if (lastStop > clipped.length ~/ 2) {
+    return clipped.substring(0, lastStop + 1);
+  }
+  return '$clipped…';
 }

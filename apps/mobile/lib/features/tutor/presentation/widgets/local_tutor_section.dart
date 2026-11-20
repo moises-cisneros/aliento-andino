@@ -32,6 +32,7 @@ class _LocalTutorSectionState extends State<LocalTutorSection> {
       widget.service ?? LocalTutorService.instance;
 
   String? _feedback;
+  bool _fromModel = false;
   bool _loading = true;
   bool _modelInstalled = false;
   int? _downloadPercent;
@@ -53,6 +54,7 @@ class _LocalTutorSectionState extends State<LocalTutorSection> {
     if (!mounted) return;
     setState(() {
       _modelInstalled = installed;
+      _fromModel = _service.lastFeedbackFromModel;
       _feedback = text;
       _loading = false;
     });
@@ -92,6 +94,16 @@ class _LocalTutorSectionState extends State<LocalTutorSection> {
           instrument: widget.instrument,
           isLoading: _loading,
         ),
+        if (!_loading) ...[
+          const SizedBox(height: 6),
+          Text(
+            _fromModel
+                ? 'Generado por el modelo local en tu dispositivo.'
+                : 'Consejo predefinido (el modelo local no respondió a tiempo o no está activo).',
+            key: const Key('local_tutor_source'),
+            style: theme.textTheme.bodySmall,
+          ),
+        ],
         if (!_loading && !_modelInstalled) ...[
           const SizedBox(height: 8),
           if (_downloadPercent != null) ...[

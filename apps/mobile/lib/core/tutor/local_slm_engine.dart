@@ -118,6 +118,7 @@ class LocalSlmEngine {
 
   bool _isModelInitialized = false;
   bool _fallbackActive = false;
+  bool _lastFeedbackFromModel = false;
   String? _loadedModelPath;
 
   /// [generationTimeout] defaults to [maxGenerationTimeout]; real devices
@@ -180,6 +181,7 @@ class LocalSlmEngine {
   /// Si ocurre un timeout, una excepción o el fallback está activo, retorna
   /// la recomendación del motor determinista.
   Future<String> generatePedagogicalFeedback({required String prompt}) async {
+    _lastFeedbackFromModel = false;
     if (_fallbackActive || !_isModelInitialized || _runtime == null) {
       return _fallback.generateFeedback(prompt);
     }
@@ -193,15 +195,19 @@ class LocalSlmEngine {
         return _fallback.generateFeedback(prompt);
       }
 
+      _lastFeedbackFromModel = true;
       return feedback.trim();
     } on TimeoutException {
-      // Si la inferencia excede los 3 segundos, degradar inmediatamente a fallback
+      // Si la inferencia excede el tiempo permitido, degradar a fallback
       return _fallback.generateFeedback(prompt);
     } catch (_) {
       // Error de inferencia capturado limpiamente sin propagar fallos a la UI
       return _fallback.generateFeedback(prompt);
     }
   }
+
+  /// `true` si el último consejo lo generó el modelo y no el fallback.
+  bool get lastFeedbackFromModel => _lastFeedbackFromModel;
 
   /// Libera recursos del modelo si el runtime está cargado.
   void dispose() {

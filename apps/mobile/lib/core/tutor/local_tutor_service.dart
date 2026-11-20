@@ -53,7 +53,8 @@ class LocalTutorService {
   static final LocalTutorService instance = LocalTutorService();
 
   /// Budget for one generation on a phone CPU (the engine default is 3 s).
-  static const Duration generationTimeout = Duration(seconds: 25);
+  /// Measured on an x86 emulator: ~30 s for a 120-token reply.
+  static const Duration generationTimeout = Duration(seconds: 60);
 
   final SlmModelStore _store;
   final LocalSlmEngine Function() _engineFactory;
@@ -107,8 +108,12 @@ class LocalTutorService {
     }
   }
 
-  /// `true` when the last feedback came from the model, not the fallback.
+  /// `true` when the model is loaded and ready to generate.
   bool get isUsingModel => _engine?.isModelInitialized ?? false;
+
+  /// `true` when the last feedback text came from the model (not the rules
+  /// fallback after a timeout, an error or a missing model).
+  bool get lastFeedbackFromModel => _engine?.lastFeedbackFromModel ?? false;
 
   Future<LocalSlmEngine> _readyEngine() {
     final cached = _engine;

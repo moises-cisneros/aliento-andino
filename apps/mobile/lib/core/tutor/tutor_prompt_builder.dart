@@ -124,6 +124,9 @@ class TutorPromptBuilder {
     buffer.writeln(
       'Sé empático, constructivo y mantén el consejo en menos de 50 palabras.',
     );
+    buffer.writeln(
+      'Responde solo en texto plano, sin listas ni formato markdown, y habla únicamente de $instrumentName (nunca de piano ni de otros instrumentos).',
+    );
 
     return buffer.toString().trim();
   }
