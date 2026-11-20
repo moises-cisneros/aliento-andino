@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "aliento-keepalive",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "triggers": {
+    "crons": ["*/10 * * * *"],
+  },
+  "vars": {
+    // Lista separada por comas de URLs completas a consultar (ej. health checks).
+    // Backend:  https://<backend>.onrender.com/health
+    // ML:       https://<ml>.onrender.com/health
+    // Vacia por ahora: agregar las URLs al desplegar los servicios.
+    "TARGETS": "https://aliento-andino-backend.onrender.com/health,https://aliento-andino-ml.onrender.com/health,https://alientoandinoo.duckdns.org",
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+}

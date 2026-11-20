@@ -141,7 +141,7 @@ Cubre `nginx -t` (unitaria), redirección HTTP→HTTPS y ráfaga contra `/api/au
 
 En esta topología, ningún servicio comparte máquina física con otro. Cada capa corre en la plataforma óptima para su naturaleza técnica:
 
-> **Estado de implementación**: esta topología es una guía de referencia; el repositorio aún no incluye `render.yaml`, `vercel.json`, `wrangler.toml` ni configuración de Supabase. La única automatización de despliegue existente es `.github/workflows/deploy.yml` (imágenes a GCP Artifact Registry y despliegue por SSH a una VM, ver Topología A) y `.github/workflows/docs.yml` (manual en GitHub Pages).
+> **Estado de implementación**: esta topología es una guía de referencia; el repositorio incluye `render.yaml` (backend y ML en Render) pero aún no `vercel.json`, `wrangler.toml` ni configuración de Supabase. La única automatización de despliegue existente es `.github/workflows/deploy.yml` (imágenes a GCP Artifact Registry y despliegue por SSH a una VM, ver Topología A) y `.github/workflows/docs.yml` (manual en GitHub Pages).
 >
 > **Herramientas de operación**: CLI `render` y `vercel`; MCP de Neon y plugin MCP de Render (requieren autenticación); `wrangler` (Cloudflare), `neonctl` y `supabase` deben instalarse antes de usarlos. Cloudflare D1 no sirve como base de datos (es SQLite y los modelos SQLAlchemy/Alembic son PostgreSQL). El servicio ML escucha en el puerto 8001 del contenedor (8051 en el host por defecto) y nunca debe recibir audio ni video crudos.
 
@@ -178,6 +178,8 @@ En esta topología, ningún servicio comparte máquina física con otro. Cada ca
   - `SECRET_KEY`: Llave de firma JWT.
   - `CORS_ORIGINS`: `["https://admin.alientoandino.org","https://alientoandino.org"]`
   - `GOOGLE_CLIENT_ID`: Credencial OAuth.
+- **Blueprint**: `render.yaml` (raíz) define `aliento-andino-backend` (plan free, región Ohio, health check `/health`, puerto 8000). `SECRET_KEY` se genera automáticamente; `DATABASE_URL` y `CORS_ORIGINS` se cargan manualmente (`sync: false`).
+- **Migraciones**: `entrypoint.sh` ejecuta `alembic upgrade head` en cada arranque. Con el pooler de Neon (PgBouncer) pueden fallar; usá la URL directa para la primera migración.
 
 ### 4. Base de Datos Relacional -> Neon Serverless Postgres / Supabase
 
@@ -191,11 +193,21 @@ En esta topología, ningún servicio comparte máquina física con otro. Cada ca
 - **Plataforma recomendada**: Render Background/Web Service o RunPod.
 - **Tipo de entorno**: Dockerfile (`apps/ml/Dockerfile`).
 - Expone el puerto `8001` con endpoints `/health` y matching semántico.
+- Definido como `aliento-andino-ml` en `render.yaml` (plan free, región Ohio, `PORT=8001`).
 
 ### 6. Aplicación Móvil (`apps/mobile`) -> Google Play / App Store
 
 - Inferencia de Pitch (YIN/SPICE), visión postural (MediaPipe) y tutor SLM **corren 100% on-device** en el cliente del estudiante.
 - Se comunica vía HTTPS únicamente con `https://api.alientoandino.org` para sincronización de progreso, ranking social y autenticación.
+
+### 5. Keep-alive de servicios free-tier -> Cloudflare Worker (Cron Trigger)
+
+Los web services gratuitos de Render se duermen tras ~15 min sin tráfico. El Worker `aliento-keepalive` (`infra/cloudflare-keepalive/`) los consulta cada 10 minutos (`*/10 * * * *`, plan gratuito de Cloudflare) con `GET` y `User-Agent: aliento-keepalive`, timeout de 10 s.
+
+- **Targets**: variable `TARGETS` (URLs completas separadas por comas) en `infra/cloudflare-keepalive/wrangler.jsonc`. Salud del backend: `/health`; del ML: `/health` (puerto 8001 en el contenedor). Ejemplo: `https://<backend>.onrender.com/health,https://<ml>.onrender.com/health`.
+- **Despliegue**: `cd infra/cloudflare-keepalive && pnpm install && npx wrangler deploy` (requiere `npx wrangler login` o `CLOUDFLARE_API_TOKEN`).
+- **Verificación**: `GET` a la URL `workers.dev` del Worker devuelve el JSON con los últimos resultados; `npx wrangler tail` muestra los logs del cron.
+- **Pruebas**: `pnpm test` en el mismo directorio.
 
 ---
 
