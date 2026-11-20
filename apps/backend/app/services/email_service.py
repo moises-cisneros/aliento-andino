@@ -12,11 +12,11 @@ logger = logging.getLogger(__name__)
 
 def _is_smtp_configured() -> bool:
     """Verificar si las credenciales SMTP están configuradas."""
-    return bool(settings.smtp_user and settings.smtp_password)
+    return bool(settings.smtp_host and settings.smtp_user and settings.smtp_password)
 
 
-async def _send_email(to: str, subject: str, html_body: str) -> None:
-    """Enviar un email via SMTP. Si SMTP no está configurado, solo logea."""
+async def _send_email(to: str, subject: str, html_body: str, text_body: str | None = None) -> None:
+    """Enviar un email via SMTP con fallback a logging si no está configurado."""
     if not _is_smtp_configured():
         logger.warning(
             "[SMTP NO CONFIGURADO] Email no enviado a %s — subject: %s",
@@ -30,7 +30,15 @@ async def _send_email(to: str, subject: str, html_body: str) -> None:
     msg["From"] = f"{settings.smtp_from_name} <{from_addr}>"
     msg["To"] = to
     msg["Subject"] = subject
-    msg.set_content(html_body, subtype="html")
+
+    # Multipart con fallback en texto plano (mejora score antispam SPF/DKIM)
+    plain_content = text_body or subject
+    msg.set_content(plain_content)
+    msg.add_alternative(html_body, subtype="html")
+
+    # Puerto 465 usa TLS implícito (directo), 587/25 usa STARTTLS explícito
+    use_tls = settings.smtp_port == 465
+    start_tls = not use_tls
 
     try:
         await aiosmtplib.send(
@@ -39,7 +47,9 @@ async def _send_email(to: str, subject: str, html_body: str) -> None:
             port=settings.smtp_port,
             username=settings.smtp_user,
             password=settings.smtp_password,
-            start_tls=True,
+            use_tls=use_tls,
+            start_tls=start_tls,
+            timeout=15.0,
         )
         logger.info("Email enviado exitosamente a: %s", to)
     except Exception:
@@ -49,6 +59,11 @@ async def _send_email(to: str, subject: str, html_body: str) -> None:
 async def send_verification_email(email: str, username: str) -> None:
     """Enviar email de verificación de cuenta."""
     subject = "Verifica tu cuenta en Aliento Andino"
+    text_body = (
+        f"¡Bienvenido a Aliento Andino, {username}!\n\n"
+        "Gracias por registrarte. Tu cuenta ha sido creada exitosamente.\n\n"
+        "Aliento Andino"
+    )
     html = f"""
     <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
       <h2 style="color: #6366f1;">¡Bienvenido a Aliento Andino!</h2>
@@ -57,12 +72,19 @@ async def send_verification_email(email: str, username: str) -> None:
       <p style="color: #888; font-size: 12px;">Aliento Andino</p>
     </div>
     """
-    await _send_email(email, subject, html)
+    await _send_email(email, subject, html, text_body=text_body)
 
 
 async def send_email_verification_code(email: str, code: str) -> None:
     """Enviar email con el código de 6 dígitos para verificar la cuenta."""
     subject = "Verificá tu email — Aliento Andino"
+    text_body = (
+        f"Tu código de verificación en Aliento Andino es: {code}\n\n"
+        "Ingresá este código en la app para confirmar que sos vos.\n"
+        "Este código expira en 15 minutos.\n\n"
+        "Si no creaste esta cuenta, ignorá este email.\n"
+        "Aliento Andino"
+    )
 
     digits = "".join(
         f'<span style="display:inline-block;width:40px;height:48px;line-height:48px;'
@@ -97,12 +119,18 @@ async def send_email_verification_code(email: str, code: str) -> None:
       </p>
     </div>
     """
-    await _send_email(email, subject, html)
+    await _send_email(email, subject, html, text_body=text_body)
 
 
 async def send_password_reset_email(email: str, reset_code: str) -> None:
     """Enviar email de recuperación con código de 6 dígitos."""
     subject = "Tu código de verificación — Aliento Andino"
+    text_body = (
+        f"Tu código para restablecer tu contraseña en Aliento Andino es: {reset_code}\n\n"
+        "Este código expira en 15 minutos.\n\n"
+        "Si no solicitaste este cambio, ignorá este email.\n"
+        "Aliento Andino"
+    )
 
     # Separar dígitos para mostrar estilo PIN
     digits = "".join(
@@ -140,4 +168,4 @@ async def send_password_reset_email(email: str, reset_code: str) -> None:
       </p>
     </div>
     """
-    await _send_email(email, subject, html)
+    await _send_email(email, subject, html, text_body=text_body)

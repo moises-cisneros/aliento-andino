@@ -337,7 +337,11 @@ async def reset_password(data: ResetPasswordRequest, db: AsyncSession) -> tuple[
         )
 
     # Verificar que el token no haya expirado
-    if user.password_reset_expires is None or user.password_reset_expires < datetime.now(UTC):
+    reset_expires = user.password_reset_expires
+    if reset_expires and reset_expires.tzinfo is None:
+        reset_expires = reset_expires.replace(tzinfo=UTC)
+
+    if reset_expires is None or reset_expires < datetime.now(UTC):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Token de reset expirado",

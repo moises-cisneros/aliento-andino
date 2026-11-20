@@ -354,7 +354,11 @@ async def verify_email(
             detail="Primero solicitá el código",
         )
 
-    if current_user.email_verification_expires < datetime.now(UTC):
+    expires = current_user.email_verification_expires
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=UTC)
+
+    if expires < datetime.now(UTC):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="El código expiró. Pedí uno nuevo.",
