@@ -183,7 +183,7 @@ En esta topología, ningún servicio comparte máquina física con otro. Cada ca
 
 #### Despliegue en Google Cloud Run (activo, en paralelo a Render)
 
-El backend y el microservicio ML corren en GCP y son el backend activo de la web. Render sigue desplegado como respaldo (suspendido solo cuando ya no haya clientes con su URL) y ambos **comparten la misma base de Neon**.
+El backend, el microservicio ML y el panel web corren en GCP; el backend de Cloud Run es el que usa la web de Vercel. El manual de usuario no se despliega aquí: se publica en GitHub Pages. Render sigue desplegado como respaldo (suspendido solo cuando ya no haya clientes con su URL) y ambos **comparten la misma base de Neon**.
 
 - **Proyecto**: `aliento-andino-prod`, región `us-central1` (región elegible para la capa gratuita).
 - **Servicios** (se despliegan desde el `Dockerfile` de cada app, sin imagen previa):
@@ -193,15 +193,20 @@ El backend y el microservicio ML corren en GCP y son el backend activo de la web
   | `aliento-backend` | `https://aliento-backend-788250326019.us-central1.run.app` | 512 MiB, 0 a 2 instancias, :8000 |
   | `aliento-ml`      | `https://aliento-ml-788250326019.us-central1.run.app`      | 1 GiB, 0 a 1 instancia, :8001    |
 
+| `aliento-web` | `https://aliento-web-788250326019.us-central1.run.app` | 256 MiB, 0 a 2 instancias, :80 |
+
 - **Secretos** (Secret Manager, montados como variables): `DATABASE_URL` (URL directa asyncpg de Neon, igual que en Render) y `SECRET_KEY`. `CORS_ORIGINS` y `FRONTEND_URL` son variables de entorno normales; como `CORS_ORIGINS` lleva comas, en `--set-env-vars` hay que declarar otro delimitador (`^@^`).
 - **Comandos**:
 
   ```bash
   gcloud run deploy aliento-backend --source apps/backend --project aliento-andino-prod --region us-central1     --port 8000 --allow-unauthenticated --min-instances 0 --max-instances 2 --memory 512Mi     --command ./entrypoint.sh --args "uvicorn,app.main:app,--host,0.0.0.0,--port,8000,--workers,1"     --set-secrets "DATABASE_URL=DATABASE_URL:latest,SECRET_KEY=SECRET_KEY:latest"     --set-env-vars "^@^CORS_ORIGINS=<origen1>,<origen2>@FRONTEND_URL=<url del front>"
 
+  gcloud run deploy aliento-web --source apps/web --project aliento-andino-prod --region us-central1 \n    --port 80 --allow-unauthenticated --min-instances 0 --max-instances 2 --memory 256Mi \n    --set-env-vars "BACKEND_UPSTREAM=https://aliento-backend-788250326019.us-central1.run.app"
+
   gcloud run deploy aliento-ml --source apps/ml --project aliento-andino-prod --region us-central1     --port 8001 --allow-unauthenticated --min-instances 0 --max-instances 1 --memory 1Gi
   ```
 
+- **Panel web (nginx)**: `apps/web/nginx.conf` se instala como plantilla de nginx y `BACKEND_UPSTREAM` define el destino de `/api/` (por defecto `http://backend:8000`, para Docker Compose). En Cloud Run apunta a la URL del backend. La web de Cloud Run convive con la de Vercel.
 - **Verificación**: `gcloud run services list --project aliento-andino-prod` y `GET /health` en cada URL. Cloud Run no aparece en `gcloud compute instances list`, que solo lista máquinas virtuales.
 - **Límites**: un solo worker de uvicorn para respetar los 512 MiB (el `CMD` del Dockerfile usa 4). Arranque en frío de unos segundos con `--min-instances 0`.
 - **Pendiente en esta copia**: `GOOGLE_CLIENT_ID` no está configurado, así que el inicio de sesión con Google no funciona hasta cargarlo.
@@ -214,7 +219,7 @@ Cambiar de proveedor obliga a actualizar todo lo que apuntaba al backend de Rend
 | :-------------------------- | :------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
 | Panel web (Vercel)          | `apps/web/vercel.json` (rewrite `/api`)                  | Hecho: apunta a Cloud Run y la web se desplegó en producción (`vercel deploy --prod --yes`).                                            |
 | Keep-alive (Cloudflare)     | `TARGETS` en `infra/cloudflare-keepalive/wrangler.jsonc` | Hecho: consulta `/health` del backend y del ML en Cloud Run y el front. El Worker se desplegó con `npx wrangler deploy`.                |
-| CORS del backend            | Variable `CORS_ORIGINS` del servicio                     | Hecho: cargada en Cloud Run con los tres orígenes del front.                                                                            |
+| CORS del backend            | Variable `CORS_ORIGINS` del servicio                     | Hecho: cargada en Cloud Run con los orígenes del front (duckdns, los dos de Vercel y el de `aliento-web`).                              |
 | Base de datos               | `DATABASE_URL`                                           | Hecho: Cloud Run usa la misma base de Neon (URL directa, secreto en Secret Manager).                                                    |
 | App móvil                   | `--dart-define=API_BASE_URL=...`                         | **Pendiente**: compilar una nueva versión con `API_BASE_URL=https://aliento-backend-788250326019.us-central1.run.app/api` y publicarla. |
 | Microservicio ML            | Ninguna                                                  | Nada lo referencia por configuración; solo cambia su URL pública.                                                                       |
