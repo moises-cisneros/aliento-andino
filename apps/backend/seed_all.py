@@ -378,7 +378,7 @@ async def seed_user_xp(db, users: list[User]) -> list[UserXP]:
 
 async def seed_practice_sessions(db, users: list[User]) -> list[PracticeSession]:
     """Crear sesiones de práctica realistas."""
-    print("🎹 Generando sesiones de práctica...")
+    print("🎶 Generando sesiones de práctica...")
 
     # Obtener lecciones disponibles
     result = await db.execute(select(Lesson))

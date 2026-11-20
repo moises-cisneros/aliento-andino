@@ -319,7 +319,7 @@ def _assign_subscription(u: User, created: datetime) -> None:
 
 # ── Prácticas ────────────────────────────────────────────────────────────
 async def seed_practice(db, users, lessons) -> list[PracticeSession]:
-    print("🎹 Generando prácticas distribuidas en el año...")
+    print("🎶 Generando prácticas distribuidas en el año...")
     sessions: list[PracticeSession] = []
     for u in users:
         if u.is_banned and random.random() < 0.5:

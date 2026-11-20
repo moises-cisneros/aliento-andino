@@ -206,7 +206,7 @@ class _TutorSheetState extends State<TutorSheet> {
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            '¡Hola! Soy Vivi 🎹 Preguntame cómo hacer algo en la app y te llevo '
+            '¡Hola! Soy Vivi 🎶 Preguntame cómo hacer algo en la app y te llevo '
             'al lugar correcto.',
             style: TextStyle(color: cs.onSurfaceVariant, height: 1.4),
           ),

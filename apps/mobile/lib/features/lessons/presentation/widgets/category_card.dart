@@ -19,6 +19,7 @@ class CategoryCard extends StatelessWidget {
     switch (category.icon) {
       case 'music_note':
         return Icons.music_note;
+      case 'air':
       case 'quena':
       case 'zampona':
       case 'tarka':
