@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://aliento-andino-backend.onrender.com/api/:path*"
+      "destination": "https://aliento-backend-788250326019.us-central1.run.app/api/:path*"
     },
     { "source": "/(.*)", "destination": "/index.html" }
   ],

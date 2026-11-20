@@ -26,4 +26,4 @@ Encuentra soluciones rápidas a las dudas comunes sobre el uso de la aplicación
 
 ### ¿Puedo usar la aplicación sin conexión a internet?
 
-Sí. El motor de inferencia acústica, postural y el tutor SLM corren 100% de manera local en tu teléfono. Únicamente requieres conexión a internet cuando desees sincronizar tus puntos en el ranking, enviar tareas a tu profesor o participar en duelos comunitarios.
+Sí. El afinador, la guía de postura y el tutor virtual funcionan 100% en tu teléfono. Únicamente requieres conexión a internet cuando desees sincronizar tus puntos en el ranking, enviar tareas a tu profesor o participar en duelos comunitarios.

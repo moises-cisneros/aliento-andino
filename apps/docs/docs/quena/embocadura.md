@@ -43,7 +43,7 @@ adentro o hacia afuera hasta encontrar el ángulo donde el tono "engancha".
 
 ## 5. Cómo te ayuda Aliento Andino
 
-Durante la práctica, la app analiza **on-device** tu frecuencia fundamental
+Durante la práctica, la app analiza **en tu teléfono** tu frecuencia fundamental
 (afinación en Sol Mayor, _G4_) y tu postura con la cámara, y te marca en tiempo
 real si el tono está calado o alto. Antes de empezar, conviene ajustar tu
 sensibilidad con la [calibración de soplo suave](../calibracion/soplo-suave.md).
