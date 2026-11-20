@@ -18,7 +18,11 @@ import {
   MultiSeries,
   OverviewData,
 } from '../../../core/services/analytics.service';
-import { forkJoin } from 'rxjs';
+import {
+  AnalyticsAdminService,
+  InstrumentMetrics,
+} from '../../../core/services/analytics-admin.service';
+import { catchError, forkJoin, of } from 'rxjs';
 
 @Component({
   selector: 'app-reports-dashboard',
@@ -272,6 +276,44 @@ import { forkJoin } from 'rxjs';
           </div>
         </div>
 
+        <!-- Métricas pedagógicas por instrumento andino -->
+        <div class="chart-row">
+          <div class="chart-card chart-full">
+            <h3>
+              <svg lucideMusic [size]="18" class="icon-primary"></svg>
+              Métricas por instrumento andino
+            </h3>
+            @if (instrumentMetrics().length) {
+              <table class="instrument-table">
+                <thead>
+                  <tr>
+                    <th>Instrumento</th>
+                    <th>Sesiones</th>
+                    <th>Puntaje prom.</th>
+                    <th>Precisión de notas</th>
+                    <th>Precisión de tempo</th>
+                    <th>Completitud</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (m of instrumentMetrics(); track m.instrument) {
+                    <tr>
+                      <td>{{ m.instrument | titlecase }}</td>
+                      <td>{{ m.sessions }}</td>
+                      <td>{{ m.avg_score | number: '1.0-1' }}</td>
+                      <td>{{ m.avg_note_precision | number: '1.0-1' }}</td>
+                      <td>{{ m.avg_tempo_accuracy | number: '1.0-1' }}</td>
+                      <td>{{ m.completion_rate | number: '1.0-1' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            } @else {
+              <div class="chart-empty">Sin datos de práctica por instrumento</div>
+            }
+          </div>
+        </div>
+
         <!-- Row 4: Top lessons bar chart -->
         <div class="chart-row">
           <div class="chart-card chart-full">
@@ -394,6 +436,21 @@ import { forkJoin } from 'rxjs';
         grid-template-columns: 1fr 1fr 1fr;
       }
 
+      .instrument-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      .instrument-table th,
+      .instrument-table td {
+        padding: 8px 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--bg-border);
+      }
+      .instrument-table th {
+        color: var(--text-muted);
+        font-weight: 500;
+      }
       .chart-card {
         padding: 20px 0;
         min-height: 320px;
@@ -614,6 +671,7 @@ import { forkJoin } from 'rxjs';
 })
 export class ReportsDashboardComponent implements OnInit {
   private analytics = inject(AnalyticsService);
+  private analyticsAdmin = inject(AnalyticsAdminService);
 
   readonly loading = signal(true);
   readonly overview = signal<OverviewData | null>(null);
@@ -625,6 +683,7 @@ export class ReportsDashboardComponent implements OnInit {
   readonly lessonsByDifficulty = signal<DataPoint[]>([]);
   readonly reportsByStatus = signal<DataPoint[]>([]);
   readonly topLessons = signal<DataPoint[]>([]);
+  readonly instrumentMetrics = signal<InstrumentMetrics[]>([]);
   readonly selectedDays = signal(30);
 
   readonly usersTimeSeries = signal<MultiSeries[]>([]);
@@ -704,6 +763,9 @@ export class ReportsDashboardComponent implements OnInit {
       byDifficulty: this.analytics.getLessonsByDifficulty(),
       byStatus: this.analytics.getReportsByStatus(),
       topLessons: this.analytics.getTopLessons(),
+      instruments: this.analyticsAdmin
+        .getInstrumentMetrics('all')
+        .pipe(catchError(() => of([] as InstrumentMetrics[]))),
     }).subscribe({
       next: (data) => {
         this.overview.set(data.overview);
@@ -712,6 +774,7 @@ export class ReportsDashboardComponent implements OnInit {
         this.lessonsByDifficulty.set(data.byDifficulty);
         this.reportsByStatus.set(data.byStatus);
         this.topLessons.set(data.topLessons);
+        this.instrumentMetrics.set(data.instruments);
         this.loading.set(false);
       },
       error: () => this.loading.set(false),

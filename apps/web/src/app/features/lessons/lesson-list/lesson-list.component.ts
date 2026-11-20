@@ -297,6 +297,7 @@ export class LessonListComponent implements OnInit {
         page: this.currentPage,
         limit: this.pageSize,
         category_id: this.selectedCategory || undefined,
+        instrument: this.selectedInstrument || undefined,
         difficulty: this.selectedDifficulty || undefined,
         search: this.searchTerm || undefined,
       })
