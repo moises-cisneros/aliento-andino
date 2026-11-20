@@ -59,12 +59,8 @@ describe('LessonFormDialogComponent', () => {
         note: 'G4',
         duration: 1.0,
         is_rest: false,
-        is_chord: false,
-        chord_group: null,
         velocity: 80,
-        finger: null,
-        hand: null,
-        has_breath_mark: false,
+        breath_mark: false,
         created_at: new Date().toISOString(),
       },
       {
@@ -74,12 +70,8 @@ describe('LessonFormDialogComponent', () => {
         note: 'A4',
         duration: 1.0,
         is_rest: false,
-        is_chord: false,
-        chord_group: null,
         velocity: 80,
-        finger: null,
-        hand: null,
-        has_breath_mark: true,
+        breath_mark: true,
         created_at: new Date().toISOString(),
       },
     ],
@@ -213,7 +205,7 @@ describe('LessonFormDialogComponent', () => {
         note: 'G4',
         duration: 1.0,
         is_rest: false,
-        has_breath_mark: true,
+        breath_mark: true,
         velocity: 80,
       });
       // El flag de respiración se resetea para la siguiente nota
@@ -235,13 +227,13 @@ describe('LessonFormDialogComponent', () => {
       component.newNoteBreath = false;
       component.addNote();
 
-      expect(component.notes()[0].has_breath_mark).toBe(false);
+      expect(component.notes()[0].breath_mark).toBe(false);
 
       component.toggleBreathMark(0);
-      expect(component.notes()[0].has_breath_mark).toBe(true);
+      expect(component.notes()[0].breath_mark).toBe(true);
 
       component.toggleBreathMark(0);
-      expect(component.notes()[0].has_breath_mark).toBe(false);
+      expect(component.notes()[0].breath_mark).toBe(false);
     });
 
     it('debe remover una nota y reordenar las posiciones correlativas', () => {
@@ -337,7 +329,7 @@ describe('LessonFormDialogComponent', () => {
       expect(component.isEdit()).toBe(true);
       expect(component.form.get('title')?.value).toBe('Escala de Sol Mayor en Quena');
       expect(component.notes().length).toBe(2);
-      expect(component.notes()[1].has_breath_mark).toBe(true);
+      expect(component.notes()[1].breath_mark).toBe(true);
 
       component.save();
 

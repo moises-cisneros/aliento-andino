@@ -1,5 +1,10 @@
 /// Modelo de lección musical andina (Quena, Zampoña, Tarka).
 export type AndeanInstrument = 'quena' | 'zampona' | 'tarka';
+export const ANDEAN_INSTRUMENT_OPTIONS: { value: AndeanInstrument; label: string }[] = [
+  { value: 'quena', label: 'Quena' },
+  { value: 'zampona', label: 'Zampoña' },
+  { value: 'tarka', label: 'Tarka' },
+];
 export type LessonDifficulty = 'principiante' | 'intermedio' | 'avanzado';
 
 export interface Lesson {
@@ -71,13 +76,10 @@ export interface NoteSequence {
   note: string;
   duration: number;
   is_rest: boolean;
-  is_chord: boolean;
-  chord_group: number | null;
+  breath_mark: boolean;
   velocity: number;
-  finger: number | null;
-  hand: string | null;
-  has_breath_mark?: boolean;
-  fingering?: string | null;
+  fingering_id?: string | null;
+  fingering_data?: unknown;
   created_at: string;
 }
 
@@ -86,13 +88,9 @@ export interface NoteSequenceCreate {
   note: string;
   duration: number;
   is_rest?: boolean;
-  is_chord?: boolean;
-  chord_group?: number | null;
+  breath_mark?: boolean;
   velocity?: number;
-  finger?: number | null;
-  hand?: string | null;
-  has_breath_mark?: boolean;
-  fingering?: string | null;
+  fingering_id?: string | null;
 }
 
 /// Respuesta paginada.
