@@ -159,7 +159,7 @@ En esta topología, ningún servicio comparte máquina física con otro. Cada ca
 
 - **Proyecto**: `aliento-andino-web` (plan Hobby). URL: `https://aliento-andino-web.vercel.app`.
 - **Configuración**: `apps/web/vercel.json` (install `pnpm install --frozen-lockfile`, build `pnpm build`, salida `dist/web/browser`).
-- **Backend (único lugar a cambiar)**: el rewrite `/api/:path*` de `apps/web/vercel.json` apunta al marcador `https://aliento-andino-backend.onrender.com/api/:path*`. Al desplegar el backend con otra URL, edítese solo ese `destination`. El fallback SPA (`/(.*)` -> `/index.html`) va después.
+- **Backend (único lugar a cambiar)**: el rewrite `/api/:path*` de `apps/web/vercel.json` apunta al backend de Cloud Run (`https://aliento-backend-788250326019.us-central1.run.app/api/:path*`). Para cambiar de backend, edítese solo ese `destination` (el fallback SPA `/(.*)` -> `/index.html` va después) y vuelva a desplegarse la web.
 - **CORS**: el backend debe incluir `https://aliento-andino-web.vercel.app` en `CORS_ORIGINS`.
 - **Despliegue manual**: `cd apps/web && vercel deploy --prod --yes` (el directorio `.vercel/` está ignorado por git).
 
@@ -183,7 +183,7 @@ En esta topología, ningún servicio comparte máquina física con otro. Cada ca
 
 #### Despliegue en Google Cloud Run (activo, en paralelo a Render)
 
-El backend y el microservicio ML también corren en GCP. Ambos despliegues conviven y **comparten la misma base de Neon**; el tráfico de la web y del móvil sigue yendo a Render hasta completar la reconexión descrita más abajo.
+El backend y el microservicio ML corren en GCP y son el backend activo de la web. Render sigue desplegado como respaldo (suspendido solo cuando ya no haya clientes con su URL) y ambos **comparten la misma base de Neon**.
 
 - **Proyecto**: `aliento-andino-prod`, región `us-central1` (región elegible para la capa gratuita).
 - **Servicios** (se despliegan desde el `Dockerfile` de cada app, sin imagen previa):
@@ -206,34 +206,30 @@ El backend y el microservicio ML también corren en GCP. Ambos despliegues convi
 - **Límites**: un solo worker de uvicorn para respetar los 512 MiB (el `CMD` del Dockerfile usa 4). Arranque en frío de unos segundos con `--min-instances 0`.
 - **Pendiente en esta copia**: `GOOGLE_CLIENT_ID` no está configurado, así que el inicio de sesión con Google no funciona hasta cargarlo.
 
-#### Reconexión al reemplazar Render por Cloud Run
+#### Reconexión de Render a Cloud Run
 
-Cambiar de proveedor no es solo "bajar uno y subir otro": hay piezas que apuntan al backend de Render y deben actualizarse. Estos son todos los puntos de conexión del repositorio:
+Cambiar de proveedor obliga a actualizar todo lo que apuntaba al backend de Render. Estado de cada punto de conexión:
 
-| Pieza que apunta al backend | Dónde                                                    | Qué cambiar                                                                                                                    |
-| :-------------------------- | :------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------- |
-| Panel web (Vercel)          | `apps/web/vercel.json` (rewrite `/api`)                  | `destination` a `https://aliento-backend-788250326019.us-central1.run.app/api/:path*` y volver a desplegar la web.             |
-| App móvil                   | `--dart-define=API_BASE_URL=...`                         | Compilar una nueva versión con `API_BASE_URL=https://aliento-backend-788250326019.us-central1.run.app/api`.                    |
-| CORS del backend            | Variable `CORS_ORIGINS` del servicio                     | Sin cambios: los orígenes del front (web) no se mueven. Solo debe estar cargada en Cloud Run.                                  |
-| Keep-alive                  | `TARGETS` en `infra/cloudflare-keepalive/wrangler.jsonc` | Reemplazar las URLs `onrender.com` por las de Cloud Run o quitarlas: Cloud Run factura por solicitud y no necesita keep-alive. |
-| Microservicio ML            | Ninguna                                                  | Ni el backend ni la app lo referencian por configuración; solo cambia su URL pública.                                          |
-| Blueprint de Render         | `render.yaml`                                            | Queda como referencia; no se borra.                                                                                            |
+| Pieza que apunta al backend | Dónde                                                    | Estado                                                                                                                                  |
+| :-------------------------- | :------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
+| Panel web (Vercel)          | `apps/web/vercel.json` (rewrite `/api`)                  | Hecho: apunta a Cloud Run y la web se desplegó en producción (`vercel deploy --prod --yes`).                                            |
+| Keep-alive (Cloudflare)     | `TARGETS` en `infra/cloudflare-keepalive/wrangler.jsonc` | Hecho: consulta `/health` del backend y del ML en Cloud Run y el front. El Worker se desplegó con `npx wrangler deploy`.                |
+| CORS del backend            | Variable `CORS_ORIGINS` del servicio                     | Hecho: cargada en Cloud Run con los tres orígenes del front.                                                                            |
+| Base de datos               | `DATABASE_URL`                                           | Hecho: Cloud Run usa la misma base de Neon (URL directa, secreto en Secret Manager).                                                    |
+| App móvil                   | `--dart-define=API_BASE_URL=...`                         | **Pendiente**: compilar una nueva versión con `API_BASE_URL=https://aliento-backend-788250326019.us-central1.run.app/api` y publicarla. |
+| Microservicio ML            | Ninguna                                                  | Nada lo referencia por configuración; solo cambia su URL pública.                                                                       |
+| Blueprint de Render         | `render.yaml`                                            | Se conserva como referencia y respaldo.                                                                                                 |
 
-**Orden recomendado** (sin tiempo de caída, porque ambos backends usan la misma base):
+**Comprobación de la web**: una petición a `/api/...` del front devuelve el encabezado `X-Cloud-Trace-Context`, propio de GCP (por ejemplo, `POST /api/auth/login` con credenciales falsas responde `401`).
 
-1. Comprobar `GET /health` en ambos servicios de Cloud Run.
-2. Cambiar el `destination` de `apps/web/vercel.json` y desplegar la web (`cd apps/web && vercel deploy --prod --yes`).
-3. Probar el inicio de sesión desde la web.
-4. Publicar la nueva compilación móvil. **Mantener Render encendido** mientras haya instalaciones con la URL anterior.
-5. Actualizar `TARGETS` y desplegar el Worker (`npx wrangler deploy`).
-6. Suspender (no eliminar) los servicios de Render.
+**Retiro de Render**: mantener sus servicios encendidos mientras haya instalaciones móviles con la URL anterior; después, suspenderlos (no eliminarlos).
 
-**Reversión**: volver a poner el `destination` de Render en `vercel.json` y redesplegar la web.
+**Reversión**: volver a poner el `destination` de Render (`https://aliento-andino-backend.onrender.com/api/:path*`) en `vercel.json`, redesplegar la web y restaurar `TARGETS`.
 
 **Advertencias**:
 
-- Ambos backends ejecutan `alembic upgrade head` al arrancar sobre la misma base. Durante la transición no desplegar versiones distintas del código en cada proveedor.
-- Cada despliegue tiene su propio `SECRET_KEY`: los tokens emitidos por uno no valen en el otro, y los usuarios deberán iniciar sesión de nuevo al cambiar.
+- Ambos backends ejecutan `alembic upgrade head` al arrancar sobre la misma base. Mientras convivan, no desplegar versiones distintas del código en cada proveedor.
+- Cada despliegue tiene su propio `SECRET_KEY`: los tokens emitidos por Render no valen en Cloud Run, así que los usuarios deben iniciar sesión de nuevo tras el cambio.
 
 ### 4. Base de Datos Relacional -> Neon Serverless Postgres / Supabase
 
@@ -257,9 +253,9 @@ Cambiar de proveedor no es solo "bajar uno y subir otro": hay piezas que apuntan
 
 ### 5. Keep-alive de servicios free-tier -> Cloudflare Worker (Cron Trigger)
 
-Los web services gratuitos de Render se duermen tras ~15 min sin tráfico. El Worker `aliento-keepalive` (`infra/cloudflare-keepalive/`) los consulta cada 10 minutos (`*/10 * * * *`, plan gratuito de Cloudflare) con `GET` y `User-Agent: aliento-keepalive`, timeout de 10 s.
+Los web services gratuitos de Render se duermen tras ~15 min sin tráfico. El Worker `aliento-keepalive` (`infra/cloudflare-keepalive/`) consulta los servicios cada 10 minutos (`*/10 * * * *`, plan gratuito de Cloudflare) con `GET` y `User-Agent: aliento-keepalive`, timeout de 10 s. Hoy sus targets son el backend y el ML de Cloud Run y el front; en Cloud Run (escala a cero, facturación por solicitud) sirve como monitor de salud más que como keep-alive.
 
-- **Targets**: variable `TARGETS` (URLs completas separadas por comas) en `infra/cloudflare-keepalive/wrangler.jsonc`. Salud del backend: `/health`; del ML: `/health` (puerto 8001 en el contenedor). Ejemplo: `https://<backend>.onrender.com/health,https://<ml>.onrender.com/health`.
+- **Targets**: variable `TARGETS` (URLs completas separadas por comas) en `infra/cloudflare-keepalive/wrangler.jsonc`. Salud del backend: `/health`; del ML: `/health` (puerto 8001 en el contenedor). Ejemplo: `https://<backend>.run.app/health,https://<ml>.run.app/health`.
 - **Despliegue**: `cd infra/cloudflare-keepalive && pnpm install && npx wrangler deploy` (requiere `npx wrangler login` o `CLOUDFLARE_API_TOKEN`).
 - **Verificación**: `GET` a la URL `workers.dev` del Worker devuelve el JSON con los últimos resultados; `npx wrangler tail` muestra los logs del cron.
 - **Pruebas**: `pnpm test` en el mismo directorio.
