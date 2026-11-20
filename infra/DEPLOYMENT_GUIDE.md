@@ -189,6 +189,15 @@ En esta topología, ningún servicio comparte máquina física con otro. Cada ca
 - Inferencia de Pitch (YIN/SPICE), visión postural (MediaPipe) y tutor SLM **corren 100% on-device** en el cliente del estudiante.
 - Se comunica vía HTTPS únicamente con `https://api.alientoandino.org` para sincronización de progreso, ranking social y autenticación.
 
+### 5. Keep-alive de servicios free-tier -> Cloudflare Worker (Cron Trigger)
+
+Los web services gratuitos de Render se duermen tras ~15 min sin tráfico. El Worker `aliento-keepalive` (`infra/cloudflare-keepalive/`) los consulta cada 10 minutos (`*/10 * * * *`, plan gratuito de Cloudflare) con `GET` y `User-Agent: aliento-keepalive`, timeout de 10 s.
+
+- **Targets**: variable `TARGETS` (URLs completas separadas por comas) en `infra/cloudflare-keepalive/wrangler.jsonc`. Salud del backend: `/health`; del ML: `/health` (puerto 8001 en el contenedor). Ejemplo: `https://<backend>.onrender.com/health,https://<ml>.onrender.com/health`.
+- **Despliegue**: `cd infra/cloudflare-keepalive && pnpm install && npx wrangler deploy` (requiere `npx wrangler login` o `CLOUDFLARE_API_TOKEN`).
+- **Verificación**: `GET` a la URL `workers.dev` del Worker devuelve el JSON con los últimos resultados; `npx wrangler tail` muestra los logs del cron.
+- **Pruebas**: `pnpm test` en el mismo directorio.
+
 ---
 
 ## Comandos Unificados de Gestión (`package.json`)
