@@ -24,12 +24,12 @@ import '../bloc/practice/practice_event.dart';
 import '../bloc/practice/practice_state.dart';
 import '../services/hand_tracker.dart';
 import '../services/note_detector.dart';
-import '../services/posture_analyzer.dart';
-import '../widgets/falling_notes_view.dart';
+import '../widgets/cascade_fingering_panel.dart';
 import '../widgets/hand_tracker_camera.dart';
 import '../widgets/midi_listener_widget.dart';
 import '../widgets/note_listener_widget.dart';
 import '../widgets/note_sequence_viewer.dart';
+import '../../../instrument_select/bloc/active_instrument_bloc.dart';
 import '../../../instrument_select/presentation/widgets/instrument_selector_appbar.dart';
 import '../widgets/practice_progress_bar.dart';
 import '../widgets/practice_toolbar_help_sheet.dart';
@@ -169,25 +169,13 @@ class _PracticeContentState extends State<_PracticeContent> {
   /// Stats de manos (cámara) acumuladas para alimentar el feedback con IA.
   int _hFrames = 0, _hWith = 0, _hLeft = 0, _hRight = 0;
 
-  /// Postura: frames analizados y cuántos con dedos planos (poca curvatura).
-  int _postureFrames = 0, _flatFrames = 0;
-
-  /// Suavizado del tip en vivo (evita parpadeo): rachas de frames planos/buenos.
-  int _flatStreak = 0, _goodStreak = 0;
-  String? _postureTip;
-
   void _onHands(List<Hand> hands) {
     _hFrames++;
     if (hands.isEmpty) {
-      // Sin manos: reiniciar rachas y limpiar el tip (no quedar pegado).
-      _flatStreak = 0;
-      _goodStreak = 0;
-      if (_postureTip != null) setState(() => _postureTip = null);
       return;
     }
     _hWith++;
     var left = false, right = false;
-    double? straightness;
     for (final h in hands) {
       if (h.landmarks.isEmpty) continue;
       var sx = 0.0;
@@ -200,30 +188,9 @@ class _PracticeContentState extends State<_PracticeContent> {
       } else {
         right = true;
       }
-      // Curvatura de la primera mano con landmarks completos.
-      straightness ??= PostureAnalyzer.fingerStraightness(h.landmarks);
     }
     if (left) _hLeft++;
     if (right) _hRight++;
-
-    // Postura: acumular y actualizar el tip en vivo con suavizado.
-    if (straightness != null) {
-      _postureFrames++;
-      final flat = straightness > PostureAnalyzer.flatThreshold;
-      if (flat) {
-        _flatFrames++;
-        _flatStreak++;
-        _goodStreak = 0;
-      } else {
-        _goodStreak++;
-        _flatStreak = 0;
-      }
-      // Mostrar el tip tras ~5 frames planos seguidos; ocultarlo tras ~3 buenos.
-      final String? next = _flatStreak >= 5
-          ? 'Curvá más los dedos 🤚'
-          : (_goodStreak >= 3 ? null : _postureTip);
-      if (next != _postureTip) setState(() => _postureTip = next);
-    }
   }
 
   Map<String, dynamic>? _handTrackingEntry() {
@@ -235,15 +202,12 @@ class _PracticeContentState extends State<_PracticeContent> {
       'left_hand_pct': (_hLeft * 100 / _hFrames).round(),
       'right_hand_pct': (_hRight * 100 / _hFrames).round(),
     };
-    if (_postureFrames > 0) {
-      entry['fingers_flat_pct'] = (_flatFrames * 100 / _postureFrames).round();
-    }
     return entry;
   }
 
   /// Posición 1-based contando solo notas TOCABLES (sin silencios), para que el
   /// "Nota X de Y" nunca se pase del total. `currentPosition` es el índice crudo
-  /// del array (incluye silencios y cada nota de un acorde), por eso no sirve
+  /// del array (incluye silencios), por eso no sirve
   /// directo: en lecciones con silencios/acordes daba "Nota 10 de 9".
   int _playablePosition(PracticePlaying state, int totalPlayable) {
     var n = 0;
@@ -531,8 +495,12 @@ class _PracticeContentState extends State<_PracticeContent> {
             // hay MIDI (MIDI tiene prioridad para no evaluar dos veces la nota).
             if (_micEnabled && !_midiEnabled)
               Positioned.fill(
-                child: NoteListenerWidget(
-                  onDetector: (d) => _sharedDetector = d,
+                child: BlocBuilder<ActiveInstrumentBloc, ActiveInstrumentState>(
+                  builder: (context, instrument) => NoteListenerWidget(
+                    toleranceCents:
+                        instrument.activeInstrument.defaultToleranceCents,
+                    onDetector: (d) => _sharedDetector = d,
+                  ),
                 ),
               ),
 
@@ -568,8 +536,6 @@ class _PracticeContentState extends State<_PracticeContent> {
                     _hWith = 0;
                     _hLeft = 0;
                     _hRight = 0;
-                    _postureFrames = 0;
-                    _flatFrames = 0;
                   }
                   // Mientras se GRABA no se reproduce el synth: su salida de
                   // audio resetea la sesión en dispositivos reales y trunca la
@@ -1040,7 +1006,7 @@ class _PracticeContentState extends State<_PracticeContent> {
         Expanded(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: FallingNotesView(
+            child: CascadeFingeringPanel(
               notes: state.notes,
               currentPosition: state.currentPosition,
               currentExpectedNote: state.currentExpectedNote,
@@ -1194,13 +1160,6 @@ class _PracticeContentState extends State<_PracticeContent> {
           ),
         ),
 
-        // Tip de postura en vivo (cuando detecta dedos planos sostenidos).
-        if (_postureTip != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: _buildPostureTip(context, _postureTip!),
-          ),
-
         const SizedBox(height: 8),
 
         // Nota a tocar — versión compacta
@@ -1262,40 +1221,6 @@ class _PracticeContentState extends State<_PracticeContent> {
 
         const SizedBox(height: 12),
       ],
-    );
-  }
-
-  /// Tip de postura en vivo (guía aproximada, no un juez): se muestra cuando la
-  /// cámara detecta dedos planos de forma sostenida.
-  Widget _buildPostureTip(BuildContext context, String tip) {
-    return Center(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppTheme.warning.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppTheme.warning.withValues(alpha: 0.4)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.lightbulb_outline,
-              size: 15,
-              color: AppTheme.warning,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              tip,
-              style: const TextStyle(
-                color: AppTheme.warning,
-                fontSize: 12.5,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

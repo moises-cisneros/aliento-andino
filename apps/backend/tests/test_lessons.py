@@ -622,15 +622,15 @@ class TestAndeanCurricularCatalog:
             + get_ritmos_lessons(dummy_cat_id, dummy_admin)
         )
 
-        assert len(all_lessons) == 36
+        assert len(all_lessons) == 38
 
-        # Distribución equitativa: 12 por instrumento
+        # Distribución andina por instrumento (incluye Llorando se fue en quena y zampoña)
         quena_lessons = [l for l in all_lessons if l["lesson"]["instrument"] == "quena"]
         zampona_lessons = [l for l in all_lessons if l["lesson"]["instrument"] == "zampona"]
         tarka_lessons = [l for l in all_lessons if l["lesson"]["instrument"] == "tarka"]
 
-        assert len(quena_lessons) == 12
-        assert len(zampona_lessons) == 12
+        assert len(quena_lessons) == 13
+        assert len(zampona_lessons) == 13
         assert len(tarka_lessons) == 12
 
         # Todas las notas deben ser monofónicas para aerófonos andinos (sin campos polifónicos)
