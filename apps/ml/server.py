@@ -177,7 +177,11 @@ def pedagogical_feedback(req: PedagogicalFeedbackRequest):
                 "Adopta la sujeción bimanual lateral y cuida no ocluir las bocas de los tubos; "
                 "mantén los hombros relajados para favorecer una respiración diafragmática fluida."
             )
-        elif "ira" in lower_prompt or "arca" in lower_prompt or "alternancia" in lower_prompt:
+        elif (
+            "ira" in lower_prompt
+            or "arca" in lower_prompt
+            or "alternancia" in lower_prompt
+        ):
             feedback = (
                 "Practica la alternancia y el diálogo entre las hileras Ira y Arca; "
                 "un soplo continuo y bien dirigido es clave para la fluidez melódica."

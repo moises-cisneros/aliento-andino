@@ -74,7 +74,7 @@ void main() {
       'que hago para que la gente me siga': 'seguir_usuarios',
       'en que puesto del ranking voy': 'rankings',
       'se puede practicar sin wifi': 'modo_offline',
-      'la app escucha lo que toco y lo reconoce': 'deteccion_acordes',
+      'la app escucha lo que toco y lo reconoce': 'deteccion_notas',
       'como subo una publicacion a la comunidad': 'crear_publicacion',
     };
 

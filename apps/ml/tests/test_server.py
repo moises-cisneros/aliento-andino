@@ -95,7 +95,11 @@ def test_pedagogical_feedback_valid():
     assert data["instrument"] == "tarka"
     assert data["status"] == "generated"
     assert data["model"]
-    assert "embocadura" in data["feedback"] or "columna de aire" in data["feedback"] or "tara" in data["feedback"]
+    assert (
+        "embocadura" in data["feedback"]
+        or "columna de aire" in data["feedback"]
+        or "tara" in data["feedback"]
+    )
     assert data["latency_ms"] >= 0
     assert data["latency_ms"] not in OLD_CONSTANTS
 
@@ -120,8 +124,16 @@ def test_pedagogical_feedback_unsupported_instrument():
 # ---------------------------------------------------------------------------
 
 PALABRAS_PROHIBIDAS = [
-    "acorde", "chord", "polif", "cúpula", "cupula",
-    "pelotita", "piano", "teclado", "mano izquierda", "mano derecha",
+    "acorde",
+    "chord",
+    "polif",
+    "cúpula",
+    "cupula",
+    "pelotita",
+    "piano",
+    "teclado",
+    "mano izquierda",
+    "mano derecha",
 ]
 
 
@@ -178,7 +190,9 @@ def test_feedback_instrumento_desconocido_fallback():
     # Verificar que el mensaje de error no contiene palabras prohibidas
     detail = res.json()["detail"].lower()
     for palabra in PALABRAS_PROHIBIDAS:
-        assert palabra not in detail, f"Palabra prohibida '{palabra}' en el detalle de error"
+        assert palabra not in detail, (
+            f"Palabra prohibida '{palabra}' en el detalle de error"
+        )
 
 
 def test_feedback_sin_palabras_prohibidas():

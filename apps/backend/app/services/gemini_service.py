@@ -103,9 +103,7 @@ def _build_prompt(
                     posture_tracking_summary += (
                         f"\n- Dedos planos (poca curvatura): {flat_pct}% del tiempo"
                     )
-                posture_tracking_instruction = (
-                    "\nSi la detección postural es baja, sugiere ajustar la postura frente a la cámara."
-                )
+                posture_tracking_instruction = "\nSi la detección postural es baja, sugiere ajustar la postura frente a la cámara."
                 if flat_pct is not None and flat_pct >= 40:
                     posture_tracking_instruction += (
                         f" Los dedos estuvieron planos buena parte del tiempo: "

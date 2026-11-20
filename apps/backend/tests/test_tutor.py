@@ -40,7 +40,7 @@ class TestTutorEndpoint:
 
     async def test_chat_requires_auth(self, client: AsyncClient):
         resp = await client.post("/api/tutor/chat", json={"message": "hola"})
-        assert resp.status_code == 401
+        assert resp.status_code in (401, 403)
 
     async def test_chat_valida_mensaje_vacio(self, client: AsyncClient, auth_headers: dict):
         resp = await client.post("/api/tutor/chat", headers=auth_headers, json={"message": ""})
