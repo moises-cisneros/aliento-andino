@@ -7,8 +7,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:pitch_detector_dart/pitch_detector.dart';
 import 'package:record/record.dart';
 
-import 'chord_detector.dart';
-
 /// Resultado de una detección de pitch.
 class DetectedNote {
   final String note; // "C4", "F#4", "Bb3"
@@ -16,20 +14,16 @@ class DetectedNote {
   final double confidence; // 0-1
   final int? midiNumber;
 
+  /// Desviación en cents respecto a la nota más cercana (negativo = grave).
+  final double cents;
+
   const DetectedNote({
     required this.note,
     required this.frequency,
     required this.confidence,
     this.midiNumber,
+    this.cents = 0.0,
   });
-}
-
-/// Resultado de una detección polifónica.
-class ChordDetectionResult {
-  final List<DetectedPitch> pitches;
-  final ChordMatch? match;
-
-  const ChordDetectionResult({required this.pitches, this.match});
 }
 
 /// Detector de notas en tiempo real usando algoritmo YIN sobre audio del micrófono.
@@ -40,14 +34,15 @@ class ChordDetectionResult {
 ///
 /// Para aerófonos andinos (quena, zampoña, tarka ~200Hz a ~2500Hz), YIN es suficiente.
 /// Latencia esperada: 80-150ms.
+///
+/// Solo se emiten notas cuya desviación respecto a la nota más cercana esté
+/// dentro de [toleranceCents] (ver `InstrumentType.defaultToleranceCents`).
 class NoteDetector {
   final AudioRecorder _recorder = AudioRecorder();
   late final PitchDetector _pitchDetector;
-  final ChordDetector _chordDetector = ChordDetector();
 
   StreamSubscription<Uint8List>? _audioSubscription;
   final _noteController = StreamController<DetectedNote>.broadcast();
-  final _chordController = StreamController<ChordDetectionResult>.broadcast();
 
   static const int _sampleRate = 44100;
   static const int _bufferSize = 4096; // ~93ms a 44.1kHz
@@ -61,13 +56,6 @@ class NoteDetector {
 
   // Buffer interno para acumular samples (monophonic YIN)
   final List<double> _sampleBuffer = [];
-
-  // Buffer rodante para chord detection (FFT requiere 8192 samples)
-  final List<double> _chordBuffer = [];
-  static const int _chordWindowSize = 8192;
-  DateTime _lastChordEmit = DateTime.fromMillisecondsSinceEpoch(0);
-  static const Duration _chordInterval = Duration(milliseconds: 400);
-  bool _chordEnabled = false;
 
   // Anti-repetición por ONSET: la misma nota no se vuelve a emitir hasta que
   // haya habido una "liberación" (silencio) entre medio. Así una nota sostenida
@@ -95,7 +83,11 @@ class NoteDetector {
 
   bool get isRecording => _wavSink != null;
 
-  NoteDetector() {
+  /// Tolerancia de afinación (±cents) del instrumento activo. Se puede
+  /// actualizar en caliente cuando el alumno cambia de instrumento.
+  double toleranceCents;
+
+  NoteDetector({this.toleranceCents = 15.0}) {
     _pitchDetector = PitchDetector(
       audioSampleRate: _sampleRate.toDouble(),
       bufferSize: _bufferSize,
@@ -104,19 +96,6 @@ class NoteDetector {
 
   /// Stream con cada nota detectada (filtradas por confianza y debouncing).
   Stream<DetectedNote> get notes => _noteController.stream;
-
-  /// Stream con detecciones polifónicas (acordes). Solo emite cuando
-  /// `chordDetectionEnabled` está activo.
-  Stream<ChordDetectionResult> get chords => _chordController.stream;
-
-  /// Activa o desactiva la detección polifónica. Cuando se activa, el detector
-  /// empieza a acumular buffer y a correr FFT periódicamente. Cuando se
-  /// desactiva, se libera el buffer.
-  void setChordDetectionEnabled(bool enabled) {
-    if (_chordEnabled == enabled) return;
-    _chordEnabled = enabled;
-    if (!enabled) _chordBuffer.clear();
-  }
 
   /// Pide permiso de mic y arranca a escuchar. Retorna `true` si arrancó OK.
   Future<bool> start() async {
@@ -225,7 +204,6 @@ class NoteDetector {
       await _recorder.stop();
     } catch (_) {}
     _sampleBuffer.clear();
-    _chordBuffer.clear();
     _lastEmittedNote = null;
     _released = true;
     _silenceFrames = 0;
@@ -242,9 +220,6 @@ class NoteDetector {
     } catch (_) {}
     try {
       await _noteController.close();
-    } catch (_) {}
-    try {
-      await _chordController.close();
     } catch (_) {}
     try {
       await _recorder.dispose();
@@ -269,35 +244,6 @@ class NoteDetector {
       final chunk = _sampleBuffer.sublist(0, _bufferSize);
       _sampleBuffer.removeRange(0, _bufferSize);
       _analyzeBuffer(chunk);
-    }
-
-    // Acumular para chord detection si está activo
-    if (_chordEnabled) {
-      _chordBuffer.addAll(samples);
-      // Mantener ventana rodante (descartar lo más viejo)
-      if (_chordBuffer.length > _chordWindowSize * 2) {
-        _chordBuffer.removeRange(0, _chordBuffer.length - _chordWindowSize);
-      }
-      final now = DateTime.now();
-      if (_chordBuffer.length >= _chordWindowSize &&
-          now.difference(_lastChordEmit) >= _chordInterval) {
-        _lastChordEmit = now;
-        _analyzeChordBuffer();
-      }
-    }
-  }
-
-  /// Corre FFT polifónica sobre el buffer acumulado y emite resultado.
-  void _analyzeChordBuffer() {
-    try {
-      final pitches = _chordDetector.detectNotes(_chordBuffer);
-      if (pitches.isEmpty) return;
-      final match = _chordDetector.identifyChord(pitches);
-      _chordController.add(
-        ChordDetectionResult(pitches: pitches, match: match),
-      );
-    } catch (e) {
-      debugPrint('NoteDetector: error en chord detection: $e');
     }
   }
 
@@ -337,6 +283,10 @@ class NoteDetector {
       }
       _silenceFrames = 0;
 
+      // Fuera de la tolerancia del instrumento: nota desafinada, no cuenta.
+      final cents = centsFromNearestNote(freq);
+      if (cents.abs() > toleranceCents) return;
+
       final note = _frequencyToNote(freq);
       _maybeEmit(
         DetectedNote(
@@ -344,6 +294,7 @@ class NoteDetector {
           frequency: freq,
           confidence: result.probability,
           midiNumber: _frequencyToMidi(freq),
+          cents: cents,
         ),
       );
     } catch (e) {
@@ -372,6 +323,15 @@ class NoteDetector {
     final noteIdx = midi % 12;
     final octave = (midi / 12).floor() - 1;
     return '${noteNames[noteIdx]}$octave';
+  }
+
+  /// Desviación en cents de [freq] respecto a la nota temperada más cercana
+  /// (A4 = 440 Hz). Rango (-50, +50].
+  @visibleForTesting
+  static double centsFromNearestNote(double freq) {
+    if (freq <= 0) return 0.0;
+    final exact = 69 + 12 * (math.log(freq / 440.0) / math.ln2);
+    return (exact - exact.round()) * 100.0;
   }
 
   int _frequencyToMidi(double freq) {

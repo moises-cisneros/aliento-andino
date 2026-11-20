@@ -73,8 +73,6 @@ class OfflineLessonsDao {
             'finger': n.finger,
             'hand': n.hand,
             'velocity': n.velocity,
-            'is_chord': n.isChord,
-            'chord_group': n.chordGroup,
           },
       ]),
       localAudioPath: row.audioLocalPath,

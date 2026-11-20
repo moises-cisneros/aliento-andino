@@ -131,8 +131,6 @@ class LocalLessonDataSource {
           finger: Value(n.finger),
           hand: Value(n.hand),
           velocity: Value(n.velocity),
-          isChord: Value(n.isChord),
-          chordGroup: Value(n.chordGroup),
         ),
     ];
   }
@@ -150,8 +148,6 @@ class LocalLessonDataSource {
             finger: r.finger,
             hand: r.hand,
             velocity: r.velocity,
-            isChord: r.isChord,
-            chordGroup: r.chordGroup,
           ),
         )
         .toList();

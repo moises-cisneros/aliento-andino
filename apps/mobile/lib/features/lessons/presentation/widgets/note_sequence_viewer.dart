@@ -49,9 +49,8 @@ class _NoteSequenceViewerState extends State<NoteSequenceViewer> {
   double _cardWidth(NoteSequenceModel n) =>
       (n.duration * 50).clamp(30.0, 120.0) + 4;
 
-  /// Desplaza para centrar la tarjeta de la nota actual. Suma los anchos REALES
-  /// (las notas de acorde que no son la primera del grupo se dibujan con ancho
-  /// cero), así el cálculo es exacto pese a los anchos variables.
+  /// Desplaza para centrar la tarjeta de la nota actual. Suma los anchos de
+  /// cada tarjeta, que varían según la duración de la nota.
   void _scrollToCurrent() {
     final pos = widget.currentPosition;
     final notes = widget.notes;
@@ -59,22 +58,11 @@ class _NoteSequenceViewerState extends State<NoteSequenceViewer> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_controller.hasClients) return;
 
-      final grouped = _groupChords(notes);
-      // Tarjeta a mostrar: la primera nota del acorde, o la nota misma.
-      var cardIdx = pos;
-      final cur = notes[pos];
-      if (cur.isChord && cur.chordGroup != null) {
-        cardIdx = notes.indexOf(grouped[cur.chordGroup!]!.first);
-      }
-
+      final cardIdx = pos;
       var before = 0.0;
       var cardW = 0.0;
       for (var i = 0; i <= cardIdx && i < notes.length; i++) {
         final n = notes[i];
-        if (n.isChord && n.chordGroup != null) {
-          // Continuación de acorde: ancho cero (no es una tarjeta propia).
-          if (grouped[n.chordGroup!]!.indexOf(n) > 0) continue;
-        }
         if (i == cardIdx) {
           cardW = _cardWidth(n);
         } else {
@@ -93,18 +81,6 @@ class _NoteSequenceViewerState extends State<NoteSequenceViewer> {
         curve: Curves.easeInOut,
       );
     });
-  }
-
-  Map<int, List<NoteSequenceModel>> _groupChords(
-    List<NoteSequenceModel> notes,
-  ) {
-    final grouped = <int, List<NoteSequenceModel>>{};
-    for (final n in notes) {
-      if (n.isChord && n.chordGroup != null) {
-        grouped.putIfAbsent(n.chordGroup!, () => []).add(n);
-      }
-    }
-    return grouped;
   }
 
   /// Color basado en la altura de la nota.
@@ -126,7 +102,6 @@ class _NoteSequenceViewerState extends State<NoteSequenceViewer> {
   @override
   Widget build(BuildContext context) {
     final notes = widget.notes;
-    final grouped = _groupChords(notes);
 
     return SizedBox(
       height: 80,
@@ -136,12 +111,6 @@ class _NoteSequenceViewerState extends State<NoteSequenceViewer> {
         itemCount: notes.length,
         itemBuilder: (context, index) {
           final note = notes[index];
-
-          // Saltar notas de acorde que no son la primera del grupo
-          if (note.isChord && note.chordGroup != null) {
-            final group = grouped[note.chordGroup!]!;
-            if (group.indexOf(note) > 0) return const SizedBox.shrink();
-          }
 
           final isCurrent =
               widget.currentPosition != null &&
@@ -155,17 +124,6 @@ class _NoteSequenceViewerState extends State<NoteSequenceViewer> {
 
           if (note.isRest) {
             return _buildRestBlock(context, width, isCurrent);
-          }
-
-          if (note.isChord && note.chordGroup != null) {
-            final group = grouped[note.chordGroup!]!;
-            return _buildChordBlock(
-              context,
-              group,
-              width,
-              isCurrent,
-              isCompleted,
-            );
           }
 
           return _buildNoteBlock(context, note, width, isCurrent, isCompleted);
@@ -232,45 +190,6 @@ class _NoteSequenceViewerState extends State<NoteSequenceViewer> {
               style: const TextStyle(color: AppTheme.muted, fontSize: 9),
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildChordBlock(
-    BuildContext context,
-    List<NoteSequenceModel> group,
-    double width,
-    bool isCurrent,
-    bool isCompleted,
-  ) {
-    final borderColor = isCurrent
-        ? Theme.of(context).colorScheme.primary
-        : isCompleted
-        ? AppTheme.success
-        : Colors.transparent;
-
-    return Container(
-      width: width,
-      margin: const EdgeInsets.symmetric(horizontal: 2),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderColor, width: isCurrent ? 2 : 1),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: group.reversed.map((n) {
-          return Text(
-            n.note,
-            style: TextStyle(
-              color: isCurrent
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.onSurface,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          );
-        }).toList(),
       ),
     );
   }

@@ -367,33 +367,12 @@ class PracticeBloc extends Bloc<PracticeEvent, PracticeState> {
     );
   }
 
-  /// Primer/último índice del grupo de acorde de [i] (para no partir un acorde
-  /// con los límites del loop).
-  int _chordStart(int i) {
-    final g = _notes[i].chordGroup;
-    if (g == null) return i;
-    while (i > 0 && _notes[i - 1].chordGroup == g) {
-      i--;
-    }
-    return i;
-  }
-
-  int _chordEnd(int i) {
-    final g = _notes[i].chordGroup;
-    if (g == null) return i;
-    while (i < _notes.length - 1 && _notes[i + 1].chordGroup == g) {
-      i++;
-    }
-    return i;
-  }
-
-  /// Configura el loop de sección. Ajusta los límites a bordes de acorde y
-  /// valida que el rango tenga al menos una nota tocable; si no, lo desactiva.
+  /// Configura el loop de sección. Valida que el rango tenga al menos una nota tocable; si no, lo desactiva.
   void _onSetLoop(PracticeSetLoop event, Emitter<PracticeState> emit) {
     if (_notes.isEmpty) return;
     final maxIdx = _notes.length - 1;
-    final start = _chordStart(event.start.clamp(0, maxIdx));
-    final end = _chordEnd(event.end.clamp(start, maxIdx));
+    final start = event.start.clamp(0, maxIdx);
+    final end = event.end.clamp(start, maxIdx);
     final hasPlayable = _notes.sublist(start, end + 1).any((n) => !n.isRest);
     if (!event.enabled || !hasPlayable) {
       _loopOn = false;

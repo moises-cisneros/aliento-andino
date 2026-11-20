@@ -1772,32 +1772,6 @@ class $CachedNotesTable extends CachedNotes
     requiredDuringInsert: false,
     defaultValue: const Constant(80),
   );
-  static const VerificationMeta _isChordMeta = const VerificationMeta(
-    'isChord',
-  );
-  @override
-  late final GeneratedColumn<bool> isChord = GeneratedColumn<bool>(
-    'is_chord',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_chord" IN (0, 1))',
-    ),
-    defaultValue: const Constant(false),
-  );
-  static const VerificationMeta _chordGroupMeta = const VerificationMeta(
-    'chordGroup',
-  );
-  @override
-  late final GeneratedColumn<int> chordGroup = GeneratedColumn<int>(
-    'chord_group',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
   @override
   List<GeneratedColumn> get $columns => [
     localId,
@@ -1809,8 +1783,6 @@ class $CachedNotesTable extends CachedNotes
     finger,
     hand,
     velocity,
-    isChord,
-    chordGroup,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1886,18 +1858,6 @@ class $CachedNotesTable extends CachedNotes
         velocity.isAcceptableOrUnknown(data['velocity']!, _velocityMeta),
       );
     }
-    if (data.containsKey('is_chord')) {
-      context.handle(
-        _isChordMeta,
-        isChord.isAcceptableOrUnknown(data['is_chord']!, _isChordMeta),
-      );
-    }
-    if (data.containsKey('chord_group')) {
-      context.handle(
-        _chordGroupMeta,
-        chordGroup.isAcceptableOrUnknown(data['chord_group']!, _chordGroupMeta),
-      );
-    }
     return context;
   }
 
@@ -1943,14 +1903,6 @@ class $CachedNotesTable extends CachedNotes
         DriftSqlType.int,
         data['${effectivePrefix}velocity'],
       )!,
-      isChord: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_chord'],
-      )!,
-      chordGroup: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}chord_group'],
-      ),
     );
   }
 
@@ -1970,8 +1922,6 @@ class CachedNote extends DataClass implements Insertable<CachedNote> {
   final int? finger;
   final String? hand;
   final int velocity;
-  final bool isChord;
-  final int? chordGroup;
   const CachedNote({
     required this.localId,
     required this.lessonId,
@@ -1982,8 +1932,6 @@ class CachedNote extends DataClass implements Insertable<CachedNote> {
     this.finger,
     this.hand,
     required this.velocity,
-    required this.isChord,
-    this.chordGroup,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2001,10 +1949,6 @@ class CachedNote extends DataClass implements Insertable<CachedNote> {
       map['hand'] = Variable<String>(hand);
     }
     map['velocity'] = Variable<int>(velocity);
-    map['is_chord'] = Variable<bool>(isChord);
-    if (!nullToAbsent || chordGroup != null) {
-      map['chord_group'] = Variable<int>(chordGroup);
-    }
     return map;
   }
 
@@ -2021,10 +1965,6 @@ class CachedNote extends DataClass implements Insertable<CachedNote> {
           : Value(finger),
       hand: hand == null && nullToAbsent ? const Value.absent() : Value(hand),
       velocity: Value(velocity),
-      isChord: Value(isChord),
-      chordGroup: chordGroup == null && nullToAbsent
-          ? const Value.absent()
-          : Value(chordGroup),
     );
   }
 
@@ -2043,8 +1983,6 @@ class CachedNote extends DataClass implements Insertable<CachedNote> {
       finger: serializer.fromJson<int?>(json['finger']),
       hand: serializer.fromJson<String?>(json['hand']),
       velocity: serializer.fromJson<int>(json['velocity']),
-      isChord: serializer.fromJson<bool>(json['isChord']),
-      chordGroup: serializer.fromJson<int?>(json['chordGroup']),
     );
   }
   @override
@@ -2060,8 +1998,6 @@ class CachedNote extends DataClass implements Insertable<CachedNote> {
       'finger': serializer.toJson<int?>(finger),
       'hand': serializer.toJson<String?>(hand),
       'velocity': serializer.toJson<int>(velocity),
-      'isChord': serializer.toJson<bool>(isChord),
-      'chordGroup': serializer.toJson<int?>(chordGroup),
     };
   }
 
@@ -2075,8 +2011,6 @@ class CachedNote extends DataClass implements Insertable<CachedNote> {
     Value<int?> finger = const Value.absent(),
     Value<String?> hand = const Value.absent(),
     int? velocity,
-    bool? isChord,
-    Value<int?> chordGroup = const Value.absent(),
   }) => CachedNote(
     localId: localId ?? this.localId,
     lessonId: lessonId ?? this.lessonId,
@@ -2087,8 +2021,6 @@ class CachedNote extends DataClass implements Insertable<CachedNote> {
     finger: finger.present ? finger.value : this.finger,
     hand: hand.present ? hand.value : this.hand,
     velocity: velocity ?? this.velocity,
-    isChord: isChord ?? this.isChord,
-    chordGroup: chordGroup.present ? chordGroup.value : this.chordGroup,
   );
   CachedNote copyWithCompanion(CachedNotesCompanion data) {
     return CachedNote(
@@ -2101,10 +2033,6 @@ class CachedNote extends DataClass implements Insertable<CachedNote> {
       finger: data.finger.present ? data.finger.value : this.finger,
       hand: data.hand.present ? data.hand.value : this.hand,
       velocity: data.velocity.present ? data.velocity.value : this.velocity,
-      isChord: data.isChord.present ? data.isChord.value : this.isChord,
-      chordGroup: data.chordGroup.present
-          ? data.chordGroup.value
-          : this.chordGroup,
     );
   }
 
@@ -2119,9 +2047,7 @@ class CachedNote extends DataClass implements Insertable<CachedNote> {
           ..write('isRest: $isRest, ')
           ..write('finger: $finger, ')
           ..write('hand: $hand, ')
-          ..write('velocity: $velocity, ')
-          ..write('isChord: $isChord, ')
-          ..write('chordGroup: $chordGroup')
+          ..write('velocity: $velocity')
           ..write(')'))
         .toString();
   }
@@ -2137,8 +2063,6 @@ class CachedNote extends DataClass implements Insertable<CachedNote> {
     finger,
     hand,
     velocity,
-    isChord,
-    chordGroup,
   );
   @override
   bool operator ==(Object other) =>
@@ -2152,9 +2076,7 @@ class CachedNote extends DataClass implements Insertable<CachedNote> {
           other.isRest == this.isRest &&
           other.finger == this.finger &&
           other.hand == this.hand &&
-          other.velocity == this.velocity &&
-          other.isChord == this.isChord &&
-          other.chordGroup == this.chordGroup);
+          other.velocity == this.velocity);
 }
 
 class CachedNotesCompanion extends UpdateCompanion<CachedNote> {
@@ -2167,8 +2089,6 @@ class CachedNotesCompanion extends UpdateCompanion<CachedNote> {
   final Value<int?> finger;
   final Value<String?> hand;
   final Value<int> velocity;
-  final Value<bool> isChord;
-  final Value<int?> chordGroup;
   const CachedNotesCompanion({
     this.localId = const Value.absent(),
     this.lessonId = const Value.absent(),
@@ -2179,8 +2099,6 @@ class CachedNotesCompanion extends UpdateCompanion<CachedNote> {
     this.finger = const Value.absent(),
     this.hand = const Value.absent(),
     this.velocity = const Value.absent(),
-    this.isChord = const Value.absent(),
-    this.chordGroup = const Value.absent(),
   });
   CachedNotesCompanion.insert({
     this.localId = const Value.absent(),
@@ -2192,8 +2110,6 @@ class CachedNotesCompanion extends UpdateCompanion<CachedNote> {
     this.finger = const Value.absent(),
     this.hand = const Value.absent(),
     this.velocity = const Value.absent(),
-    this.isChord = const Value.absent(),
-    this.chordGroup = const Value.absent(),
   }) : lessonId = Value(lessonId),
        position = Value(position),
        note = Value(note),
@@ -2208,8 +2124,6 @@ class CachedNotesCompanion extends UpdateCompanion<CachedNote> {
     Expression<int>? finger,
     Expression<String>? hand,
     Expression<int>? velocity,
-    Expression<bool>? isChord,
-    Expression<int>? chordGroup,
   }) {
     return RawValuesInsertable({
       if (localId != null) 'local_id': localId,
@@ -2221,8 +2135,6 @@ class CachedNotesCompanion extends UpdateCompanion<CachedNote> {
       if (finger != null) 'finger': finger,
       if (hand != null) 'hand': hand,
       if (velocity != null) 'velocity': velocity,
-      if (isChord != null) 'is_chord': isChord,
-      if (chordGroup != null) 'chord_group': chordGroup,
     });
   }
 
@@ -2236,8 +2148,6 @@ class CachedNotesCompanion extends UpdateCompanion<CachedNote> {
     Value<int?>? finger,
     Value<String?>? hand,
     Value<int>? velocity,
-    Value<bool>? isChord,
-    Value<int?>? chordGroup,
   }) {
     return CachedNotesCompanion(
       localId: localId ?? this.localId,
@@ -2249,8 +2159,6 @@ class CachedNotesCompanion extends UpdateCompanion<CachedNote> {
       finger: finger ?? this.finger,
       hand: hand ?? this.hand,
       velocity: velocity ?? this.velocity,
-      isChord: isChord ?? this.isChord,
-      chordGroup: chordGroup ?? this.chordGroup,
     );
   }
 
@@ -2284,12 +2192,6 @@ class CachedNotesCompanion extends UpdateCompanion<CachedNote> {
     if (velocity.present) {
       map['velocity'] = Variable<int>(velocity.value);
     }
-    if (isChord.present) {
-      map['is_chord'] = Variable<bool>(isChord.value);
-    }
-    if (chordGroup.present) {
-      map['chord_group'] = Variable<int>(chordGroup.value);
-    }
     return map;
   }
 
@@ -2304,9 +2206,7 @@ class CachedNotesCompanion extends UpdateCompanion<CachedNote> {
           ..write('isRest: $isRest, ')
           ..write('finger: $finger, ')
           ..write('hand: $hand, ')
-          ..write('velocity: $velocity, ')
-          ..write('isChord: $isChord, ')
-          ..write('chordGroup: $chordGroup')
+          ..write('velocity: $velocity')
           ..write(')'))
         .toString();
   }
@@ -4223,8 +4123,6 @@ typedef $$CachedNotesTableCreateCompanionBuilder =
       Value<int?> finger,
       Value<String?> hand,
       Value<int> velocity,
-      Value<bool> isChord,
-      Value<int?> chordGroup,
     });
 typedef $$CachedNotesTableUpdateCompanionBuilder =
     CachedNotesCompanion Function({
@@ -4237,8 +4135,6 @@ typedef $$CachedNotesTableUpdateCompanionBuilder =
       Value<int?> finger,
       Value<String?> hand,
       Value<int> velocity,
-      Value<bool> isChord,
-      Value<int?> chordGroup,
     });
 
 class $$CachedNotesTableFilterComposer
@@ -4292,16 +4188,6 @@ class $$CachedNotesTableFilterComposer
 
   ColumnFilters<int> get velocity => $composableBuilder(
     column: $table.velocity,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get isChord => $composableBuilder(
-    column: $table.isChord,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get chordGroup => $composableBuilder(
-    column: $table.chordGroup,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4359,16 +4245,6 @@ class $$CachedNotesTableOrderingComposer
     column: $table.velocity,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<bool> get isChord => $composableBuilder(
-    column: $table.isChord,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get chordGroup => $composableBuilder(
-    column: $table.chordGroup,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$CachedNotesTableAnnotationComposer
@@ -4406,14 +4282,6 @@ class $$CachedNotesTableAnnotationComposer
 
   GeneratedColumn<int> get velocity =>
       $composableBuilder(column: $table.velocity, builder: (column) => column);
-
-  GeneratedColumn<bool> get isChord =>
-      $composableBuilder(column: $table.isChord, builder: (column) => column);
-
-  GeneratedColumn<int> get chordGroup => $composableBuilder(
-    column: $table.chordGroup,
-    builder: (column) => column,
-  );
 }
 
 class $$CachedNotesTableTableManager
@@ -4456,8 +4324,6 @@ class $$CachedNotesTableTableManager
                 Value<int?> finger = const Value.absent(),
                 Value<String?> hand = const Value.absent(),
                 Value<int> velocity = const Value.absent(),
-                Value<bool> isChord = const Value.absent(),
-                Value<int?> chordGroup = const Value.absent(),
               }) => CachedNotesCompanion(
                 localId: localId,
                 lessonId: lessonId,
@@ -4468,8 +4334,6 @@ class $$CachedNotesTableTableManager
                 finger: finger,
                 hand: hand,
                 velocity: velocity,
-                isChord: isChord,
-                chordGroup: chordGroup,
               ),
           createCompanionCallback:
               ({
@@ -4482,8 +4346,6 @@ class $$CachedNotesTableTableManager
                 Value<int?> finger = const Value.absent(),
                 Value<String?> hand = const Value.absent(),
                 Value<int> velocity = const Value.absent(),
-                Value<bool> isChord = const Value.absent(),
-                Value<int?> chordGroup = const Value.absent(),
               }) => CachedNotesCompanion.insert(
                 localId: localId,
                 lessonId: lessonId,
@@ -4494,8 +4356,6 @@ class $$CachedNotesTableTableManager
                 finger: finger,
                 hand: hand,
                 velocity: velocity,
-                isChord: isChord,
-                chordGroup: chordGroup,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
