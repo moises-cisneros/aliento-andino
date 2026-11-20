@@ -8,6 +8,7 @@ import { LucideArrowLeft } from '@lucide/angular';
 import { LessonService } from '../../../core/services/lesson.service';
 import { CategoryService } from '../../../core/services/category.service';
 import { UploadService } from '../../../core/services/upload.service';
+import { ANDEAN_INSTRUMENT_OPTIONS } from '../../../core/models/lesson.model';
 
 @Component({
   selector: 'app-lesson-form',
@@ -39,6 +40,18 @@ import { UploadService } from '../../../core/services/upload.service';
           <div class="form-group">
             <label>Descripción</label>
             <textarea class="form-textarea" formControlName="description" rows="3"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="instrument">Instrumento andino</label>
+            <select id="instrument" class="form-select" formControlName="instrument">
+              @for (opt of instruments; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+            @if (form.get('instrument')?.hasError('required') && form.get('instrument')?.touched) {
+              <span class="form-error">El instrumento es obligatorio</span>
+            }
           </div>
 
           <div class="row-2">
@@ -220,6 +233,8 @@ export class LessonFormComponent implements OnInit {
   readonly uploadingAudio = signal(false);
   private lessonId = '';
 
+  readonly instruments = ANDEAN_INSTRUMENT_OPTIONS;
+
   form!: FormGroup;
 
   ngOnInit(): void {
@@ -228,6 +243,7 @@ export class LessonFormComponent implements OnInit {
     this.form = this.fb.group({
       title: ['', Validators.required],
       description: [''],
+      instrument: ['quena', Validators.required],
       category_id: ['', Validators.required],
       difficulty: ['principiante', Validators.required],
       tempo_bpm: [120, [Validators.required, Validators.min(20), Validators.max(300)]],
@@ -247,6 +263,7 @@ export class LessonFormComponent implements OnInit {
           this.form.patchValue({
             title: lesson.title,
             description: lesson.description,
+            instrument: lesson.instrument ?? 'quena',
             category_id: lesson.category_id,
             difficulty: lesson.difficulty,
             tempo_bpm: lesson.tempo_bpm,
