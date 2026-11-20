@@ -211,3 +211,9 @@ pnpm docker:docs
 - **Por qué**: Quena, Zampoña y Tarka son instrumentos de viento de emisión esencialmente monofónica (una nota a la vez); el reconocimiento de acordes, el dataset y sus clases estaban pensados para contenido no andino y no aplican al dominio (regla dura 1). Refactorizarlo a contenido andino no tendría datos ni caso de uso reales.
 - **Alternativa**: la retroalimentación acústica sigue siendo detección de frecuencia fundamental (YIN / SPICE) en el cliente móvil, sin acordes.
 - **Pendiente fuera de este cambio**: `apps/ml/server.py` (descripción) y la entrada `deteccion_acordes` del FAQ móvil aún mencionan acordes.
+
+### Modo cascada con digitación andina y pipeline monofónico en móvil (#150)
+
+- **Decisión**: la práctica en cascada (`FallingNotesView`) se compone con `ActiveInstrumentFingeringWidget` en `CascadeFingeringPanel` (`cascade_fingering_panel.dart`), que muestra los orificios de Quena/Tarka o los tubos de Zampoña de la nota esperada. Se purgó el pipeline polifónico del cliente (`chord_detector.dart`, `isChord`/`chordGroup` en modelo, DAO y SQLite; migración Drift v5 que elimina las columnas) y la regla de dedos en cúpula (`PostureAnalyzer`).
+- **Tolerancia en cents**: `InstrumentType.defaultToleranceCents` (Quena 15, Zampoña 20, Tarka 25) alimenta la cascada y `NoteDetector`, que descarta notas fuera de tolerancia.
+- **Biomecánica**: en Quena y Tarka los orificios se sellan con el contacto plano del pulpejo; la guía de cámara (`andean_camera_guide_painter.dart`) lo indica y la app ya no envía `fingers_flat_pct`.

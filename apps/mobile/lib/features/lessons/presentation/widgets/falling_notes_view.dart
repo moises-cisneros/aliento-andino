@@ -9,17 +9,23 @@ import '../../data/models/note_sequence_model.dart';
 /// Las notas caen desde arriba hacia una línea de impacto / target bar en la base.
 /// Como el motor de práctica es por turnos (espera la nota correcta), la cascada
 /// se mueve según el progreso musical ([currentPosition]), no por reloj.
-/// La nota actual se alinea sobre la línea de impacto con indicación de cents y frecuencia.
+/// La nota actual se alinea sobre la línea de impacto con indicación de cents y
+/// frecuencia; la tolerancia en cents depende del instrumento activo.
 class FallingNotesView extends StatelessWidget {
   final List<NoteSequenceModel> notes;
   final int currentPosition;
   final String? currentExpectedNote;
+
+  /// Tolerancia de afinación (±cents) del instrumento activo
+  /// (`InstrumentType.defaultToleranceCents`).
+  final double toleranceCents;
 
   const FallingNotesView({
     super.key,
     required this.notes,
     required this.currentPosition,
     this.currentExpectedNote,
+    this.toleranceCents = 15.0,
   });
 
   @override
@@ -47,6 +53,7 @@ class FallingNotesView extends StatelessWidget {
             animPos: animPos,
             currentPosition: currentPosition,
             currentExpectedNote: currentExpectedNote,
+            toleranceCents: toleranceCents,
             minMidi: minMidi,
             maxMidi: maxMidi,
             primary: cs.primary,
@@ -105,6 +112,7 @@ class _FallingPainter extends CustomPainter {
   final double animPos;
   final int currentPosition;
   final String? currentExpectedNote;
+  final double toleranceCents;
   final int minMidi;
   final int maxMidi;
   final Color primary;
@@ -118,6 +126,7 @@ class _FallingPainter extends CustomPainter {
     required this.animPos,
     required this.currentPosition,
     required this.currentExpectedNote,
+    required this.toleranceCents,
     required this.minMidi,
     required this.maxMidi,
     required this.primary,
@@ -293,7 +302,7 @@ class _FallingPainter extends CustomPainter {
     final freq = _midiToFreq(expectedMidi);
     final freqStr = freq != null ? '${freq.toStringAsFixed(1)} Hz' : '';
     final label = currentExpectedNote != null
-        ? 'Nota: $currentExpectedNote  ·  $freqStr  ·  ±15 cents'
+        ? 'Nota: $currentExpectedNote  ·  $freqStr  ·  ±${toleranceCents.round()} cents'
         : 'Esperando nota…';
 
     final barTextPainter = TextPainter(
@@ -322,6 +331,7 @@ class _FallingPainter extends CustomPainter {
   bool shouldRepaint(covariant _FallingPainter old) =>
       old.animPos != animPos ||
       old.currentExpectedNote != currentExpectedNote ||
+      old.toleranceCents != toleranceCents ||
       old.currentPosition != currentPosition ||
       old.minMidi != minMidi ||
       old.maxMidi != maxMidi ||
