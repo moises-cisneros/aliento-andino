@@ -155,6 +155,14 @@ En esta topología, ningún servicio comparte máquina física con otro. Cada ca
   - Variable de entorno en Cloudflare:
     - `API_BASE_URL`: `https://api.alientoandino.org`
 
+#### Despliegue en Vercel (activo)
+
+- **Proyecto**: `aliento-andino-web` (plan Hobby). URL: `https://aliento-andino-web.vercel.app`.
+- **Configuración**: `apps/web/vercel.json` (install `pnpm install --frozen-lockfile`, build `pnpm build`, salida `dist/web/browser`).
+- **Backend (único lugar a cambiar)**: el rewrite `/api/:path*` de `apps/web/vercel.json` apunta al marcador `https://aliento-andino-backend.onrender.com/api/:path*`. Al desplegar el backend con otra URL, edítese solo ese `destination`. El fallback SPA (`/(.*)` -> `/index.html`) va después.
+- **CORS**: el backend debe incluir `https://aliento-andino-web.vercel.app` en `CORS_ORIGINS`.
+- **Despliegue manual**: `cd apps/web && vercel deploy --prod --yes` (el directorio `.vercel/` está ignorado por git).
+
 ### 2. Manual de Usuario Oficial (`apps/docs`) -> GitHub Pages
 
 - **Plataforma recomendada**: GitHub Pages (Integrado directamente mediante el repositorio).

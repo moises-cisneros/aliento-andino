@@ -82,3 +82,6 @@ exports/
 seeds/generated/
 apps/backend/seeds/generated/
 *.dump
+
+# Vercel
+.vercel
