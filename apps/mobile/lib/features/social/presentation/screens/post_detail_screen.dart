@@ -71,8 +71,8 @@ class _PostDetailViewState extends State<_PostDetailView> {
   ) async {
     final url = 'https://alientoandino.com/post/$postId';
     final text = content == null || content.isEmpty
-        ? 'Mirá esta publicación de @$username en Aliento Andino 🎹\n$url'
-        : '$content\n\n— @$username en Aliento Andino 🎹\n$url';
+        ? 'Mirá esta publicación de @$username en Aliento Andino 🎶\n$url'
+        : '$content\n\n— @$username en Aliento Andino 🎶\n$url';
     await SharePlus.instance.share(ShareParams(text: text));
   }
 
