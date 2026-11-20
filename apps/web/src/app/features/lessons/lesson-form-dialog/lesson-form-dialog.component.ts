@@ -263,13 +263,13 @@ import {
                 <div
                   class="note-chip"
                   [class.note-rest]="note.is_rest"
-                  [class.has-breath]="note.has_breath_mark"
+                  [class.has-breath]="note.breath_mark"
                 >
                   <span class="note-pos">#{{ note.position }}</span>
                   <span class="note-tone">{{ note.is_rest ? 'REST' : note.note }}</span>
                   <span class="note-dur">{{ note.duration }}b</span>
 
-                  @if (note.has_breath_mark) {
+                  @if (note.breath_mark) {
                     <span class="breath-indicator" title="Marca de respiración andina">
                       <svg lucideWind [size]="12"></svg>
                     </span>
@@ -684,7 +684,7 @@ export class LessonFormDialogComponent implements OnInit {
             note: n.note,
             duration: n.duration,
             is_rest: n.is_rest,
-            has_breath_mark: n.has_breath_mark || false,
+            breath_mark: n.breath_mark || false,
             velocity: n.velocity || 80,
           })),
         );
@@ -706,7 +706,7 @@ export class LessonFormDialogComponent implements OnInit {
         note: isRest ? 'REST' : tone,
         duration: Number(this.newNoteDuration),
         is_rest: isRest,
-        has_breath_mark: this.newNoteBreath,
+        breath_mark: this.newNoteBreath,
         velocity: 80,
       },
     ]);
@@ -724,7 +724,7 @@ export class LessonFormDialogComponent implements OnInit {
         note: 'REST',
         duration: Number(this.newNoteDuration),
         is_rest: true,
-        has_breath_mark: false,
+        breath_mark: false,
         velocity: 0,
       },
     ]);
@@ -740,7 +740,7 @@ export class LessonFormDialogComponent implements OnInit {
 
   toggleBreathMark(index: number): void {
     this.notes.update((prev) =>
-      prev.map((n, i) => (i === index ? { ...n, has_breath_mark: !n.has_breath_mark } : n)),
+      prev.map((n, i) => (i === index ? { ...n, breath_mark: !n.breath_mark } : n)),
     );
   }
 

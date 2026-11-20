@@ -33,6 +33,7 @@ export class LessonService {
     page?: number;
     limit?: number;
     category_id?: string;
+    instrument?: string;
     difficulty?: string;
     search?: string;
   }): Observable<PaginatedResponse<Lesson>> {
@@ -41,6 +42,7 @@ export class LessonService {
     if (params?.page) httpParams = httpParams.set('page', params.page);
     if (params?.limit) httpParams = httpParams.set('limit', params.limit);
     if (params?.category_id) httpParams = httpParams.set('category_id', params.category_id);
+    if (params?.instrument) httpParams = httpParams.set('instrument', params.instrument);
     if (params?.difficulty) httpParams = httpParams.set('difficulty', params.difficulty);
     if (params?.search) httpParams = httpParams.set('search', params.search);
 
