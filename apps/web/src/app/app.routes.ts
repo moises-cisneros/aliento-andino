@@ -81,6 +81,11 @@ export const routes: Routes = [
           import('./features/business/business.routes').then((m) => m.businessRoutes),
       },
       {
+        path: 'analytics',
+        loadChildren: () =>
+          import('./features/analytics/analytics.routes').then((m) => m.analyticsRoutes),
+      },
+      {
         path: 'reports',
         loadChildren: () =>
           import('./features/reports/reports.routes').then((m) => m.reportsRoutes),

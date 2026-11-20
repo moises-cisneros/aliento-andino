@@ -13,6 +13,7 @@ import {
   LucideX,
   LucideDynamicIcon,
   LucideBarChart3,
+  LucideChartLine,
   LucideCreditCard,
   LucideMegaphone,
   LucideTrendingUp,
@@ -537,6 +538,12 @@ export class SidebarComponent {
       label: 'Negocio',
       icon: LucideTrendingUp,
       route: '/admin/business',
+    },
+    {
+      type: 'link',
+      label: 'Analítica',
+      icon: LucideChartLine,
+      route: '/admin/analytics',
     },
     {
       type: 'link',
