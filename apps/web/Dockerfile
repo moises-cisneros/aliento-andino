@@ -19,8 +19,12 @@ FROM nginx:alpine
 # Copiar artefactos compilados de Angular al directorio de Nginx
 COPY --from=builder /app/dist/web/browser /usr/share/nginx/html
 
-# Configuración de Nginx para SPA (Angular routing)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Configuración de Nginx para SPA (Angular routing). Se instala como plantilla:
+# la imagen oficial de nginx sustituye ${BACKEND_UPSTREAM} al arrancar.
+# Por defecto apunta al servicio `backend` de Docker Compose; en Cloud Run se
+# define con la URL pública del backend (https://<servicio>.run.app).
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+ENV BACKEND_UPSTREAM=http://backend:8000
 
 EXPOSE 80
 

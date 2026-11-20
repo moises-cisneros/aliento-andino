@@ -8,10 +8,10 @@
   },
   "vars": {
     // Lista separada por comas de URLs completas a consultar (ej. health checks).
-    // Backend:  https://<backend>.onrender.com/health
-    // ML:       https://<ml>.onrender.com/health
+    // Backend:  https://<backend>.run.app/health (Cloud Run)
+    // ML:       https://<ml>.run.app/health (Cloud Run)
     // Vacia por ahora: agregar las URLs al desplegar los servicios.
-    "TARGETS": "https://aliento-andino-backend.onrender.com/health,https://aliento-andino-ml.onrender.com/health,https://alientoandinoo.duckdns.org",
+    "TARGETS": "https://aliento-backend-788250326019.us-central1.run.app/health,https://aliento-ml-788250326019.us-central1.run.app/health,https://alientoandinoo.duckdns.org",
   },
   "observability": {
     "enabled": true,
