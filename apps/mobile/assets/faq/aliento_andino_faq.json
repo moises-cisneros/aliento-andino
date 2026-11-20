@@ -72,13 +72,12 @@
       "id": "modo_entrenamiento",
       "q": [
         "como cambio la velocidad bpm",
-        "practicar solo una mano",
         "repetir un fragmento",
         "modo entrenamiento con parametros",
         "como pongo el tempo mas lento o mas rapido",
         "cambiar la velocidad de la cancion para practicar"
       ],
-      "a": "En el modo entrenamiento podés ajustar la velocidad (BPM), elegir mano izquierda o derecha y repetir en bucle un fragmento, para practicar enfocado."
+      "a": "En el modo entrenamiento podés ajustar la velocidad (BPM) y repetir en bucle un fragmento, para practicar de forma enfocada y progresiva."
     },
     {
       "id": "guardar_leccion",
@@ -235,29 +234,89 @@
       "a": "Sí. Descargá una lección desde su pantalla para tenerla disponible sin internet, y usá los ejercicios básicos preempaquetados. Tu progreso se sincroniza cuando vuelva la conexión."
     },
     {
-      "id": "deteccion_acordes",
+      "id": "deteccion_notas",
       "q": [
-        "como detecta los acordes",
+        "como detecta las notas",
         "la app reconoce lo que toco",
         "deteccion de notas con ia",
         "como sabe si toco bien"
       ],
-      "a": "Aliento Andino usa el micrófono para analizar el audio: detecta las notas y acordes que tocás con un modelo de IA y te da retroalimentación de tu precisión en tiempo real."
+      "a": "Aliento Andino usa el micrófono para analizar el audio: detecta las notas que tocás con un modelo de IA y te da retroalimentación de tu precisión en tiempo real."
     },
     {
-      "id": "postura_manos",
+      "id": "postura_cuerpo",
       "q": [
         "analiza mi postura",
-        "como corrijo la posicion de mis manos",
+        "como corrijo la posicion de mi cuerpo",
         "deteccion de postura con la camara",
-        "tecnica de manos"
+        "tecnica de sujecion del instrumento"
       ],
-      "a": "En el modo de práctica, la cámara puede analizar la postura de tus manos y mostrarte alertas visuales para corregir la técnica y evitar lesiones."
+      "a": "En el modo de práctica, la cámara puede analizar la postura de tu cuerpo y la sujeción del instrumento, mostrándote alertas visuales para corregir la técnica y evitar lesiones."
     },
     {
       "id": "que_es_vivi",
       "q": ["quien es vivi", "para que sirve el asistente", "como pido ayuda", "que podes hacer"],
       "a": "Soy Vivi, tu tutor de Aliento Andino. Te ayudo a usar la app: puedo explicarte funciones, llevarte a una pantalla o resaltar un botón. Preguntame lo que necesites."
+    },
+    {
+      "id": "quena_sellado_orificios",
+      "q": [
+        "como se que estoy sellando bien los orificios",
+        "como sello los orificios de la quena",
+        "dedos en los orificios de la quena",
+        "fugas de aire en la quena"
+      ],
+      "a": "Para sellar bien los 7 orificios de la quena, apoya la yema del dedo (no la punta) de forma plana y firme sobre cada orificio. Si escuchas un sonido 'entrecortado' o débil, hay una fuga: ajusta la presión hasta obtener una nota limpia y clara."
+    },
+    {
+      "id": "quena_angulo_bisel",
+      "q": [
+        "cual es el angulo correcto del bisel de la quena",
+        "como inclino la quena",
+        "angulo de embocadura de la quena",
+        "donde pongo los labios en la quena"
+      ],
+      "a": "El bisel de la quena debe apoyarse sobre el borde inferior del labio inferior, con un ángulo de inclinación de aproximadamente 45° respecto al plano de la boca. Experimenta girando suavemente la quena hacia adentro o hacia afuera hasta que el sonido salga limpio y centrado."
+    },
+    {
+      "id": "zampona_alternancia_ira_arca",
+      "q": [
+        "como alterno entre hilera ira y arca",
+        "como uso las dos hileras de la zampona",
+        "diferencia entre ira y arca en la zampona",
+        "que es ira y arca"
+      ],
+      "a": "La zampoña tiene dos hileras de tubos: Ira (tubos más largos, notas graves) y Arca (tubos más cortos, notas agudas). La técnica tradicional implica alternar el soplo entre ambas hileras para completar la escala, como un diálogo entre dos voces. Practica soplar primero solo en Ira, luego solo en Arca, y luego alterna de forma fluida."
+    },
+    {
+      "id": "zampona_soplo_continuo",
+      "q": [
+        "debo soplar de forma continua o intermitente en la zampona",
+        "como es el soplo en la zampona",
+        "tecnica de soplo en la zampona",
+        "como controlo el aire en la zampona"
+      ],
+      "a": "El soplo en la zampoña debe ser continuo y bien dirigido hacia la boca del tubo, sin soplar demasiado fuerte ni demasiado suave. Mantén el flujo de aire constante y controla la intensidad para afinar: soplar más fuerte sube el tono, más suave lo baja."
+    },
+    {
+      "id": "tarka_timbre_rasgado",
+      "q": [
+        "como produzco el timbre rasgado de la tara",
+        "como suena el rasgado de la tarka",
+        "caracteristica del sonido de la tarka",
+        "como logro el sonido rasposo de la tarka"
+      ],
+      "a": "El timbre rasgado o 'tara' de la tarka se logra con una columna de aire firme y una presión de labios ligeramente mayor que en otros aerófonos. Experimenta tensando suavemente los labios y aumentando la velocidad del soplo hasta que el sonido adquiera ese carácter raspado y brillante característico del instrumento."
+    },
+    {
+      "id": "tarka_columna_aire",
+      "q": [
+        "como mantengo firme la columna de aire en la tarka",
+        "control del aire en la tarka",
+        "como soplo bien en la tarka",
+        "tecnica de respiracion para la tarka"
+      ],
+      "a": "Para mantener una columna de aire firme en la tarka, practica la respiración diafragmática: inhala profundo expandiendo el abdomen y exhala de forma controlada y constante. Mantén la espalda erguida y los hombros relajados para permitir que el diafragma trabaje libremente."
     }
   ]
 }

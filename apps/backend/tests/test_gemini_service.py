@@ -67,7 +67,7 @@ class TestBuildPrompt:
             }
         ]
         prompt = _build_prompt(skill_level="beginner", errors_detail=errors, **_BASE_KWARGS)
-        assert "TRACKING DE MANOS" in prompt
+        assert "TRACKING POSTURAL" in prompt
         assert "1200 frames" in prompt
 
     def test_legacy_dict_errors_supported(self):
