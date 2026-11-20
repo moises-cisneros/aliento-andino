@@ -210,7 +210,7 @@ pnpm docker:docs
 - **Decisión**: se retiró `apps/ml/chord_detector/` (script de dataset sintético, entrenamiento, artefactos y dependencias scikit-learn/pandas/joblib asociadas).
 - **Por qué**: Quena, Zampoña y Tarka son instrumentos de viento de emisión esencialmente monofónica (una nota a la vez); el reconocimiento de acordes, el dataset y sus clases estaban pensados para contenido no andino y no aplican al dominio (regla dura 1). Refactorizarlo a contenido andino no tendría datos ni caso de uso reales.
 - **Alternativa**: la retroalimentación acústica sigue siendo detección de frecuencia fundamental (YIN / SPICE) en el cliente móvil, sin acordes.
-- **Pendiente fuera de este cambio**: `apps/ml/server.py` (descripción) y la entrada `deteccion_acordes` del FAQ móvil aún mencionan acordes.
+- **Pendiente**: la entrada `deteccion_acordes` del FAQ semántico (`apps/ml/faq_semantic/semantic_faq.py` y su README) aún menciona acordes. `apps/ml/server.py` ya no.
 
 ### Modo cascada con digitación andina y pipeline monofónico en móvil (#150)
 

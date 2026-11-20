@@ -137,10 +137,10 @@ Esta tabla resume todos los ítems de trabajo del proyecto y enlaza directamente
 | #147  | Alternancia de instrumentos LessonsBloc      | mobile  | Cerrada |
 | #148  | Alinear NoteSequence con aerófonos andinos   | backend | Cerrada |
 | #149  | Unificar InstrumentType                      | mobile  | Cerrada |
-| #150  | Integrar digitaciones en cascada             | mobile  | Abierta |
-| #151  | Limpiar editor de notas docente              | web     | Abierta |
-| #152  | Contextualizar tutor pedagógico              | ml      | Abierta |
-| #153  | Sincronizar docs internos                    | docs    | Abierta |
+| #150  | Integrar digitaciones en cascada             | mobile  | Cerrada |
+| #151  | Limpiar editor de notas docente              | web     | Cerrada |
+| #152  | Contextualizar tutor pedagógico              | ml      | Cerrada |
+| #153  | Sincronizar docs internos                    | docs    | Cerrada |
 
 ---
 

@@ -141,6 +141,10 @@ Cubre `nginx -t` (unitaria), redirección HTTP→HTTPS y ráfaga contra `/api/au
 
 En esta topología, ningún servicio comparte máquina física con otro. Cada capa corre en la plataforma óptima para su naturaleza técnica:
 
+> **Estado de implementación**: esta topología es una guía de referencia; el repositorio aún no incluye `render.yaml`, `vercel.json`, `wrangler.toml` ni configuración de Supabase. La única automatización de despliegue existente es `.github/workflows/deploy.yml` (imágenes a GCP Artifact Registry y despliegue por SSH a una VM, ver Topología A) y `.github/workflows/docs.yml` (manual en GitHub Pages).
+>
+> **Herramientas de operación**: CLI `render` y `vercel`; MCP de Neon y plugin MCP de Render (requieren autenticación); `wrangler` (Cloudflare), `neonctl` y `supabase` deben instalarse antes de usarlos. Cloudflare D1 no sirve como base de datos (es SQLite y los modelos SQLAlchemy/Alembic son PostgreSQL). El servicio ML escucha en el puerto 8001 del contenedor (8051 en el host por defecto) y nunca debe recibir audio ni video crudos.
+
 ### 1. Panel Administrativo Web (`apps/web`) -> Cloudflare Pages / Vercel
 
 - **Plataforma recomendada**: Cloudflare Pages (Ancho de banda ilimitado y protección DDoS global).
