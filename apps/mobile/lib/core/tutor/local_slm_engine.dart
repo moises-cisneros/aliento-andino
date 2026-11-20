@@ -114,18 +114,23 @@ class LocalSlmEngine {
   final SlmRuntime? _runtime;
   final RuleBasedTutorFallback _fallback;
   final int Function()? _freeRamProvider;
+  final Duration _generationTimeout;
 
   bool _isModelInitialized = false;
   bool _fallbackActive = false;
   String? _loadedModelPath;
 
+  /// [generationTimeout] defaults to [maxGenerationTimeout]; real devices
+  /// running a 0.5B+ model on CPU need a larger budget than the 3 s default.
   LocalSlmEngine({
     SlmRuntime? runtime,
     RuleBasedTutorFallback fallback = const RuleBasedTutorFallback(),
     int Function()? freeRamProvider,
+    Duration generationTimeout = maxGenerationTimeout,
   }) : _runtime = runtime,
        _fallback = fallback,
-       _freeRamProvider = freeRamProvider;
+       _freeRamProvider = freeRamProvider,
+       _generationTimeout = generationTimeout;
 
   /// Indica si el modelo SLM se encuentra activo y listo para inferir.
   bool get isModelInitialized => _isModelInitialized && !_fallbackActive;
@@ -182,7 +187,7 @@ class LocalSlmEngine {
     try {
       final feedback = await _runtime
           .generateResponse(prompt)
-          .timeout(maxGenerationTimeout);
+          .timeout(_generationTimeout);
 
       if (feedback.trim().isEmpty) {
         return _fallback.generateFeedback(prompt);
