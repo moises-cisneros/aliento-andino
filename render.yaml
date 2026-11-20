@@ -9,9 +9,9 @@ services:
     rootDir: apps/backend
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    # El entrypoint ejecuta `alembic upgrade head` antes de iniciar uvicorn.
+    # dockerCommand reemplaza ENTRYPOINT y CMD: se invoca entrypoint.sh (alembic upgrade head) explicitamente.
     # Un solo worker para respetar los 512 MB del plan free.
-    dockerCommand: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
+    dockerCommand: ./entrypoint.sh uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
     healthCheckPath: /health
     autoDeploy: true
     envVars:
