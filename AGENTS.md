@@ -17,7 +17,7 @@ Tutor virtual interactivo y red social de aprendizaje para **instrumentos de vie
 | `apps/backend/` | API REST central (FastAPI), servicios de negocio, modelos SQLAlchemy 2 async y Alembic          |
 | `apps/web/`     | Panel administrativo web (Angular 21 standalone, Signals, Material, Lucide)                     |
 | `apps/mobile/`  | Aplicación móvil para estudiantes (Flutter 3.x, BLoC, GoRouter, Dio, Drift SQLite)              |
-| `apps/ml/`      | Microservicio ML de inferencia acústica, modelos de acordes y asistente semántico offline       |
+| `apps/ml/`      | Microservicio ML de inferencia acústica y asistente semántico offline (FAQ y tutor pedagógico)  |
 | `apps/docs/`    | Manual de usuario oficial y guías interactivas (Docusaurus 3)                                   |
 | `infra/`        | Configuraciones de infraestructura (VPS / Multi-Cloud), Nginx reverse proxy y scripts de backup |
 | `docs/`         | Documentación técnica, modelo C4, estándares de calidad (`QUALITY_STANDARDS.md`) y codificación |
