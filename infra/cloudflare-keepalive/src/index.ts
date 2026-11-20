@@ -79,10 +79,10 @@ export default {
     )
   },
 
-  async fetch(_request, env): Promise<Response> {
-    const targets = parseTargets(env.TARGETS)
-    // Si aun no hubo ejecucion de cron en este isolate, hacer un ping bajo demanda.
-    const results = lastResults.length > 0 ? lastResults : await pingAll(targets)
-    return Response.json({ targets, results })
+  async fetch(): Promise<Response> {
+    // Endpoint publico: solo expone un resumen, sin URLs internas ni pings bajo demanda.
+    const checked = lastResults.length
+    const healthy = lastResults.filter((r) => r.ok).length
+    return Response.json({ ok: checked === 0 || healthy === checked, checked, healthy })
   },
 } satisfies ExportedHandler<Env>
