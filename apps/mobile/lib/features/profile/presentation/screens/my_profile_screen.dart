@@ -218,6 +218,11 @@ class _MyProfileViewState extends State<_MyProfileView>
                           onTap: () => context.push('/recordings'),
                         ),
                         ProfileMenuItem(
+                          icon: Icons.accessibility_new_rounded,
+                          title: 'Postura con cámara',
+                          onTap: () => context.push('/posture'),
+                        ),
+                        ProfileMenuItem(
                           key: TutorTargets.keyFor('profile_settings'),
                           icon: Icons.settings,
                           title: 'Configuración',

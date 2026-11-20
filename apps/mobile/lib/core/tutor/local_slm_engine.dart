@@ -114,18 +114,24 @@ class LocalSlmEngine {
   final SlmRuntime? _runtime;
   final RuleBasedTutorFallback _fallback;
   final int Function()? _freeRamProvider;
+  final Duration _generationTimeout;
 
   bool _isModelInitialized = false;
   bool _fallbackActive = false;
+  bool _lastFeedbackFromModel = false;
   String? _loadedModelPath;
 
+  /// [generationTimeout] defaults to [maxGenerationTimeout]; real devices
+  /// running a 0.5B+ model on CPU need a larger budget than the 3 s default.
   LocalSlmEngine({
     SlmRuntime? runtime,
     RuleBasedTutorFallback fallback = const RuleBasedTutorFallback(),
     int Function()? freeRamProvider,
+    Duration generationTimeout = maxGenerationTimeout,
   }) : _runtime = runtime,
        _fallback = fallback,
-       _freeRamProvider = freeRamProvider;
+       _freeRamProvider = freeRamProvider,
+       _generationTimeout = generationTimeout;
 
   /// Indica si el modelo SLM se encuentra activo y listo para inferir.
   bool get isModelInitialized => _isModelInitialized && !_fallbackActive;
@@ -175,6 +181,7 @@ class LocalSlmEngine {
   /// Si ocurre un timeout, una excepción o el fallback está activo, retorna
   /// la recomendación del motor determinista.
   Future<String> generatePedagogicalFeedback({required String prompt}) async {
+    _lastFeedbackFromModel = false;
     if (_fallbackActive || !_isModelInitialized || _runtime == null) {
       return _fallback.generateFeedback(prompt);
     }
@@ -182,21 +189,25 @@ class LocalSlmEngine {
     try {
       final feedback = await _runtime
           .generateResponse(prompt)
-          .timeout(maxGenerationTimeout);
+          .timeout(_generationTimeout);
 
       if (feedback.trim().isEmpty) {
         return _fallback.generateFeedback(prompt);
       }
 
+      _lastFeedbackFromModel = true;
       return feedback.trim();
     } on TimeoutException {
-      // Si la inferencia excede los 3 segundos, degradar inmediatamente a fallback
+      // Si la inferencia excede el tiempo permitido, degradar a fallback
       return _fallback.generateFeedback(prompt);
     } catch (_) {
       // Error de inferencia capturado limpiamente sin propagar fallos a la UI
       return _fallback.generateFeedback(prompt);
     }
   }
+
+  /// `true` si el último consejo lo generó el modelo y no el fallback.
+  bool get lastFeedbackFromModel => _lastFeedbackFromModel;
 
   /// Libera recursos del modelo si el runtime está cargado.
   void dispose() {

@@ -217,3 +217,12 @@ pnpm docker:docs
 - **Decisión**: la práctica en cascada (`FallingNotesView`) se compone con `ActiveInstrumentFingeringWidget` en `CascadeFingeringPanel` (`cascade_fingering_panel.dart`), que muestra los orificios de Quena/Tarka o los tubos de Zampoña de la nota esperada. Se purgó el pipeline polifónico del cliente (`chord_detector.dart`, `isChord`/`chordGroup` en modelo, DAO y SQLite; migración Drift v5 que elimina las columnas) y la regla de dedos en cúpula (`PostureAnalyzer`).
 - **Tolerancia en cents**: `InstrumentType.defaultToleranceCents` (Quena 15, Zampoña 20, Tarka 25) alimenta la cascada y `NoteDetector`, que descarta notas fuera de tolerancia.
 - **Biomecánica**: en Quena y Tarka los orificios se sellan con el contacto plano del pulpejo; la guía de cámara (`andean_camera_guide_painter.dart`) lo indica y la app ya no envía `fingers_flat_pct`.
+
+### IA local en móvil: pose y SLM tutor
+
+- **Pose (33 landmarks)**: `MediaPipePoseService` abre la cámara frontal y alimenta el detector BlazePose de ML Kit (`google_mlkit_pose_detection`, modelo embebido, sin red). `pose_landmark_mapper.dart` normaliza los landmarks y `PostureBloc` los evalúa. Las manos las sigue cubriendo `hand_landmarker` (solo Android).
+- **SLM tutor**: `EdgeAiSlmRuntime` (`flutter_edge_ai` + motor MediaPipe LLM) implementa `SlmRuntime` y `LocalTutorService` lo conecta a `LocalSlmEngine`. Modelo por defecto: Qwen2.5-0.5B-Instruct int8 (`.task`, ~520 MB, público). Se descarga una sola vez y **solo por acción explícita del usuario**; sin modelo, RAM baja, timeout o error, responde `RuleBasedTutorFallback`. Para usar Gemma 3 1B (repositorio con licencia) se compila con `--dart-define=SLM_MODEL_URL=... --dart-define=HUGGINGFACE_TOKEN=...`.
+- **Android**: `hand_landmarker` y el motor SLM traen las mismas clases de MediaPipe Vision; `android/app/build.gradle.kts` excluye `tasks-vision` y deja `tasks-vision-image-generator` (superconjunto, misma versión).
+- **iOS**: los plugins exigen iOS 16.0 (`IPHONEOS_DEPLOYMENT_TARGET`); los modelos `.task` corren en CPU. Sin verificar en dispositivo.
+- **Acceso en la app**: perfil → "Postura con cámara" (`/posture`). El tutor local aparece en la pantalla de resultados de práctica. `apps/mobile/tool/local_ai_demo.dart` es un arnés de humo (`flutter run -t tool/local_ai_demo.dart`) para probar ambos sin backend.
+- **No implementado**: SPICE/CREPE y el embedder TFLite MiniLM (el FAQ offline usa embeddings deterministas por hashing de n-gramas).

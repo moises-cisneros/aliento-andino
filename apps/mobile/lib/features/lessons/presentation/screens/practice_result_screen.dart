@@ -7,6 +7,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../instrument_select/bloc/active_instrument_bloc.dart';
+import '../../../tutor/presentation/widgets/local_tutor_section.dart';
+import '../../../../core/tutor/tutor_prompt_builder.dart';
 import '../../../rankings/data/models/achievement_model.dart';
 import '../../../rankings/presentation/widgets/achievement_unlocked_dialog.dart';
 import '../../../rankings/presentation/widgets/xp_gained_popup.dart';
@@ -406,6 +409,27 @@ class _PracticeResultScreenState extends State<PracticeResultScreen> {
               onUpgrade: () => context.push('/subscription/paywall'),
             ),
           ],
+
+          // Tutor pedagógico ON-DEVICE (SLM local, sin red). Gratis para todos:
+          // corre en el dispositivo y no consume cuota de Gemini.
+          const SizedBox(height: 20),
+          LocalTutorSection(
+            summary: PracticeSummary(
+              score: score,
+              correctNotes: correctNotes,
+              totalNotes: totalNotes,
+              wrongNotes: wrongNotes,
+              missedNotes: missedNotes,
+              averageTempo: averageTempo,
+              totalTimeSeconds:
+                  (widget.resultData['elapsedSeconds'] as num?)?.toDouble() ??
+                  0.0,
+            ),
+            instrument: context
+                .read<ActiveInstrumentBloc>()
+                .state
+                .activeInstrument,
+          ),
 
           // Reproductor de la grabación (si se grabó la interpretación).
           if ((widget.resultData['recordingPath'] as String?) != null) ...[

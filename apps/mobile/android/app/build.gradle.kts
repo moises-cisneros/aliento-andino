@@ -48,3 +48,11 @@ flutter {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
+
+// hand_landmarker (MediaPipe Hands) y flutter_edge_ai_mediapipe (SLM local)
+// traen las mismas clases de MediaPipe Vision: `tasks-vision` y
+// `tasks-vision-image-generator` (superconjunto de la primera, misma versión).
+// Dejamos solo la segunda para evitar "Duplicate class" en el merge de dex.
+configurations.configureEach {
+    exclude(group = "com.google.mediapipe", module = "tasks-vision")
+}
