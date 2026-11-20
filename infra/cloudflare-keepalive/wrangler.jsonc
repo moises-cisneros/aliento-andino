@@ -11,7 +11,7 @@
     // Backend:  https://<backend>.onrender.com/health
     // ML:       https://<ml>.onrender.com/health
     // Vacia por ahora: agregar las URLs al desplegar los servicios.
-    "TARGETS": "",
+    "TARGETS": "https://aliento-andino-backend.onrender.com/health,https://aliento-andino-ml.onrender.com/health,https://alientoandinoo.duckdns.org",
   },
   "observability": {
     "enabled": true,
