@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormArray, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -9,7 +9,7 @@ import {
   LucideSave,
   LucidePlus,
   LucidePause,
-  LucideMusic,
+  LucideWind,
   LucideTrash2,
   LucideCopy,
   LucideGripVertical,
@@ -17,7 +17,28 @@ import {
 } from '@lucide/angular';
 
 import { LessonService } from '../../../core/services/lesson.service';
-import { NoteSequence, NoteSequenceCreate } from '../../../core/models/lesson.model';
+import { FingeringAdminService } from '../../../core/services/fingering-admin.service';
+import {
+  AndeanInstrument,
+  NoteSequence,
+  NoteSequenceCreate,
+} from '../../../core/models/lesson.model';
+import { Fingering } from '../../../core/models/fingering.model';
+
+const FLAT_TO_SHARP: Record<string, string> = {
+  Db: 'C#',
+  Eb: 'D#',
+  Gb: 'F#',
+  Ab: 'G#',
+  Bb: 'A#',
+};
+
+/** Etiquetas legibles de los instrumentos andinos aerófonos. */
+const INSTRUMENT_LABELS: Record<AndeanInstrument, string> = {
+  quena: 'Quena',
+  zampona: 'Zampoña',
+  tarka: 'Tarka',
+};
 
 @Component({
   selector: 'app-notes-editor',
@@ -30,7 +51,7 @@ import { NoteSequence, NoteSequenceCreate } from '../../../core/models/lesson.mo
     LucideSave,
     LucidePlus,
     LucidePause,
-    LucideMusic,
+    LucideWind,
     LucideTrash2,
     LucideCopy,
     LucideGripVertical,
@@ -41,7 +62,9 @@ import { NoteSequence, NoteSequenceCreate } from '../../../core/models/lesson.mo
       <div class="header-row">
         <div>
           <h2>Editor de Notas</h2>
-          <p class="subtitle">{{ lessonTitle() }} — {{ notesArray.length }} notas</p>
+          <p class="subtitle">
+            {{ lessonTitle() }} — {{ instrumentLabel() }} — {{ notesArray.length }} notas
+          </p>
         </div>
         <div class="header-actions">
           <button class="btn btn-ghost" (click)="goBack()">
@@ -64,8 +87,8 @@ import { NoteSequence, NoteSequenceCreate } from '../../../core/models/lesson.mo
         <button class="btn" (click)="addRest()">
           <svg lucidePause [size]="16"></svg> Silencio
         </button>
-        <button class="btn" (click)="addChord()">
-          <svg lucideMusic [size]="16"></svg> Acorde (3 notas)
+        <button class="btn" (click)="addBreath()" [disabled]="notesArray.length === 0">
+          <svg lucideWind [size]="16"></svg> Respiración
         </button>
         <button class="btn btn-danger" (click)="clearAll()" [disabled]="notesArray.length === 0">
           <svg lucideTrash2 [size]="16"></svg> Limpiar Todo
@@ -78,13 +101,42 @@ import { NoteSequence, NoteSequenceCreate } from '../../../core/models/lesson.mo
           <div
             class="preview-note"
             [class.preview-rest]="ctrl.get('is_rest')?.value"
-            [class.preview-chord]="ctrl.get('is_chord')?.value"
+            [class.preview-breath]="ctrl.get('breath_mark')?.value"
             [class.preview-current]="$index === selectedIndex()"
-            (click)="selectedIndex.set($index)"
+            (click)="selectNote($index)"
             [title]="ctrl.get('note')?.value + ' (' + ctrl.get('duration')?.value + ')'"
           >
             {{ ctrl.get('is_rest')?.value ? '—' : ctrl.get('note')?.value }}
+            @if (ctrl.get('breath_mark')?.value) {
+              <span class="breath-glyph" aria-label="Marca de respiración">&#8217;</span>
+            }
           </div>
+        }
+      </div>
+
+      <!-- Visor de digitación andina de la nota seleccionada -->
+      <div class="fingering-panel" aria-live="polite">
+        <span class="panel-title">Digitación — {{ instrumentLabel() }}</span>
+        @if (selectedNote(); as sel) {
+          <span class="panel-note">{{ sel }}</span>
+          @if (selectedFingering(); as f) {
+            <div class="holes-row">
+              @for (h of f.holes_covered; track $index) {
+                <span
+                  class="hole"
+                  [class.covered]="h === 1"
+                  [title]="'Orificio ' + ($index + 1) + ': ' + (h === 1 ? 'Cubierto' : 'Destapado')"
+                ></span>
+              }
+            </div>
+            @if (f.description) {
+              <small class="hint">{{ f.description }}</small>
+            }
+          } @else {
+            <small class="hint">Sin digitación registrada en el catálogo para esta nota.</small>
+          }
+        } @else {
+          <small class="hint">Selecciona una nota para ver su digitación.</small>
         }
       </div>
 
@@ -95,7 +147,7 @@ import { NoteSequence, NoteSequenceCreate } from '../../../core/models/lesson.mo
             class="note-row"
             cdkDrag
             [class.selected-row]="i === selectedIndex()"
-            (click)="selectedIndex.set(i)"
+            (click)="selectNote(i)"
           >
             <div class="drag-handle" cdkDragHandle>
               <svg lucideGripVertical [size]="16"></svg>
@@ -108,6 +160,7 @@ import { NoteSequence, NoteSequenceCreate } from '../../../core/models/lesson.mo
                 <input
                   class="form-input"
                   formControlName="note"
+                  (input)="syncSelectedNote()"
                   [readonly]="ctrl.get('is_rest')?.value"
                   placeholder="C4"
                 />
@@ -124,54 +177,14 @@ import { NoteSequence, NoteSequenceCreate } from '../../../core/models/lesson.mo
                 </select>
               </div>
 
-              <div class="form-group field-sm">
-                <input
-                  class="form-input"
-                  formControlName="velocity"
-                  type="number"
-                  placeholder="Vel"
-                />
-              </div>
-
-              <div class="form-group field-xs">
-                <select class="form-select" formControlName="finger">
-                  <option [ngValue]="null">—</option>
-                  <option [value]="1">1</option>
-                  <option [value]="2">2</option>
-                  <option [value]="3">3</option>
-                  <option [value]="4">4</option>
-                  <option [value]="5">5</option>
-                </select>
-              </div>
-
-              <div class="form-group field-xs">
-                <select class="form-select" formControlName="hand">
-                  <option [ngValue]="null">—</option>
-                  <option value="left">Izq</option>
-                  <option value="right">Der</option>
-                  <option value="both">Ambas</option>
-                </select>
-              </div>
-
               <label class="checkbox">
                 <input type="checkbox" formControlName="is_rest" (change)="onRestChange(i)" />
                 <span>Sil</span>
               </label>
               <label class="checkbox">
-                <input type="checkbox" formControlName="is_chord" />
-                <span>Aco</span>
+                <input type="checkbox" formControlName="breath_mark" />
+                <span>Resp</span>
               </label>
-
-              @if (ctrl.get('is_chord')?.value) {
-                <div class="form-group field-xs">
-                  <input
-                    class="form-input"
-                    formControlName="chord_group"
-                    type="number"
-                    placeholder="Grp"
-                  />
-                </div>
-              }
             </div>
 
             <div class="row-actions">
@@ -262,9 +275,46 @@ import { NoteSequence, NoteSequenceCreate } from '../../../core/models/lesson.mo
         background: rgba(100, 116, 139, 0.15);
         color: var(--text-dimmed);
       }
-      .preview-chord {
-        background: rgba(124, 58, 237, 0.15);
-        color: var(--color-purple);
+      .preview-breath {
+        font-weight: 600;
+      }
+      .breath-glyph {
+        margin-left: 2px;
+      }
+      .fingering-panel {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 10px 12px;
+        margin-bottom: 16px;
+        background: var(--bg-surface-alt);
+        border-radius: 8px;
+      }
+      .panel-title {
+        color: var(--text-muted);
+        font-size: 12px;
+      }
+      .panel-note {
+        color: var(--color-primary);
+        font-weight: 600;
+      }
+      .holes-row {
+        display: flex;
+        gap: 6px;
+      }
+      .hole {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid var(--color-primary);
+      }
+      .hole.covered {
+        background: var(--color-primary);
+      }
+      .hint {
+        color: var(--text-muted);
+        font-size: 12px;
       }
       .preview-current {
         outline: 2px solid var(--color-primary);
@@ -359,8 +409,14 @@ export class NotesEditorComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly fingeringService = inject(FingeringAdminService);
 
   readonly lessonTitle = signal('');
+  readonly instrument = signal<AndeanInstrument>('quena');
+  readonly instrumentLabel = computed(() => INSTRUMENT_LABELS[this.instrument()]);
+  /** Nota (p. ej. "G4") de la fila seleccionada; null si es silencio o no hay fila. */
+  readonly selectedNote = signal<string | null>(null);
+  readonly selectedFingering = computed(() => this.findFingering(this.selectedNote()));
   readonly saving = signal(false);
   readonly selectedIndex = signal(0);
 
@@ -381,12 +437,20 @@ export class NotesEditorComponent implements OnInit {
     this.lessonId = this.route.snapshot.paramMap.get('id')!;
 
     this.lessonService.getLesson(this.lessonId).subscribe({
-      next: (lesson) => this.lessonTitle.set(lesson.title),
+      next: (lesson) => {
+        this.lessonTitle.set(lesson.title);
+        this.instrument.set(lesson.instrument ?? 'quena');
+        // El error real queda expuesto en fingeringService.error().
+        this.fingeringService
+          .getFingerings(this.instrument())
+          .subscribe({ error: () => undefined });
+      },
     });
 
     this.lessonService.getLessonNotes(this.lessonId).subscribe({
       next: (notes) => {
         notes.forEach((n) => this.notesArray.push(this.createNoteGroup(n)));
+        this.syncSelectedNote();
       },
     });
   }
@@ -396,40 +460,32 @@ export class NotesEditorComponent implements OnInit {
       note: [data?.note ?? 'C4', [Validators.required, Validators.pattern(this.notePattern)]],
       duration: [data?.duration ?? 1, Validators.required],
       is_rest: [data?.is_rest ?? false],
-      is_chord: [data?.is_chord ?? false],
-      chord_group: [data?.chord_group ?? null],
-      velocity: [data?.velocity ?? 80, [Validators.min(1), Validators.max(127)]],
-      finger: [data?.finger ?? null],
-      hand: [data?.hand ?? null],
+      breath_mark: [data?.breath_mark ?? false],
     });
   }
 
   addNote(): void {
     this.notesArray.push(this.createNoteGroup());
-    this.selectedIndex.set(this.notesArray.length - 1);
+    this.selectNote(this.notesArray.length - 1);
   }
 
   addRest(): void {
     this.notesArray.push(this.createNoteGroup({ note: 'REST', is_rest: true }));
-    this.selectedIndex.set(this.notesArray.length - 1);
+    this.selectNote(this.notesArray.length - 1);
   }
 
-  addChord(): void {
-    const group =
-      this.notesArray.length > 0
-        ? Math.max(...this.notesArray.controls.map((c) => c.get('chord_group')?.value ?? 0)) + 1
-        : 1;
-    const notes = ['C4', 'E4', 'G4'];
-    notes.forEach((n) => {
-      this.notesArray.push(this.createNoteGroup({ note: n, is_chord: true, chord_group: group }));
-    });
-    this.selectedIndex.set(this.notesArray.length - 1);
+  addBreath(): void {
+    const last = this.notesArray.length - 1;
+    if (last < 0) return;
+    this.getGroup(last).patchValue({ breath_mark: true });
   }
 
   removeNote(index: number): void {
     this.notesArray.removeAt(index);
     if (this.selectedIndex() >= this.notesArray.length) {
-      this.selectedIndex.set(Math.max(0, this.notesArray.length - 1));
+      this.selectNote(Math.max(0, this.notesArray.length - 1));
+    } else {
+      this.syncSelectedNote();
     }
   }
 
@@ -437,7 +493,7 @@ export class NotesEditorComponent implements OnInit {
     const original = this.notesArray.at(index) as FormGroup;
     const clone = this.createNoteGroup(original.value);
     this.notesArray.insert(index + 1, clone);
-    this.selectedIndex.set(index + 1);
+    this.selectNote(index + 1);
   }
 
   onRestChange(index: number): void {
@@ -447,18 +503,42 @@ export class NotesEditorComponent implements OnInit {
     } else {
       group.patchValue({ note: 'C4' });
     }
+    this.syncSelectedNote();
   }
 
   clearAll(): void {
     if (confirm('¿Eliminar todas las notas?')) {
       this.notesArray.clear();
-      this.selectedIndex.set(0);
+      this.selectNote(0);
     }
   }
 
   onDrop(event: CdkDragDrop<string[]>): void {
     moveItemInArray(this.notesArray.controls, event.previousIndex, event.currentIndex);
-    this.selectedIndex.set(event.currentIndex);
+    this.selectNote(event.currentIndex);
+  }
+
+  selectNote(index: number): void {
+    this.selectedIndex.set(index);
+    this.syncSelectedNote();
+  }
+
+  /** Busca la digitación del catálogo para una nota científica (p. ej. "F#5"). */
+  findFingering(note: string | null): Fingering | null {
+    const match = /^([A-G][#b]?)([0-8])$/.exec(note ?? '');
+    if (!match) return null;
+    const symbol = FLAT_TO_SHARP[match[1]] ?? match[1];
+    const octave = Number(match[2]);
+    const candidates = this.fingeringService
+      .fingerings()
+      .filter((f) => f.note === symbol && f.octave === octave);
+    return candidates.find((f) => !f.is_alternate) ?? candidates[0] ?? null;
+  }
+
+  syncSelectedNote(): void {
+    const ctrl = this.notesArray.at(this.selectedIndex());
+    const value = ctrl && !ctrl.get('is_rest')?.value ? (ctrl.get('note')?.value ?? null) : null;
+    this.selectedNote.set(value);
   }
 
   getGroup(i: number): FormGroup {
@@ -467,10 +547,17 @@ export class NotesEditorComponent implements OnInit {
 
   saveNotes(): void {
     this.saving.set(true);
-    const notes: NoteSequenceCreate[] = this.notesArray.controls.map((ctrl, idx) => ({
-      ...ctrl.value,
-      sequence_order: idx,
-    }));
+    const notes: NoteSequenceCreate[] = this.notesArray.controls.map((ctrl, idx) => {
+      const { note, duration, is_rest, breath_mark } = ctrl.value;
+      return {
+        position: idx,
+        note,
+        duration: Number(duration),
+        is_rest,
+        breath_mark,
+        fingering_id: is_rest ? null : (this.findFingering(note)?.id ?? null),
+      };
+    });
 
     this.lessonService.updateNotes(this.lessonId, notes).subscribe({
       next: () => {
