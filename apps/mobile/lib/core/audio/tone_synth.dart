@@ -61,22 +61,57 @@ class ToneSynth {
 
     final freq = _freq(note) ?? 440.0;
     final n = (_sampleRate * seconds).round();
-    // Fade-out lineal en los últimos ~6 ms: evita el "click" al cortar la nota
-    // (notorio en timbres sostenidos como el órgano, que no decae solo).
-    final fadeLen = math.min(n, (_sampleRate * 0.006).round());
+    // Ataque de soplo y liberación suave: timbre real de aerófono andino
+    // (quena, zampoña o tarka) en lugar de golpe percusivo de piano.
+    final attackLen = math.max(
+      1,
+      math.min(n ~/ 3, (_sampleRate * voice.attackSeconds).round()),
+    );
+    final releaseLen = math.max(
+      1,
+      math.min(n ~/ 3, (_sampleRate * 0.045).round()),
+    );
+    final rng = math.Random(note.hashCode ^ instrument.index);
+    var breathFilter = 0.0;
+    var phase = 0.0;
     final samples = Int16List(n);
     for (var i = 0; i < n; i++) {
       final t = i / _sampleRate;
-      final env = math.exp(-voice.decay * t / seconds);
+      // Envolvente de aliento: ataque suave + cuerpo sostenido + liberación suave
+      var env = math.exp(-voice.decay * t / math.max(seconds, 0.1));
+      if (i < attackLen) {
+        final a = i / attackLen;
+        env *= a * a * (3.0 - 2.0 * a); // smoothstep
+      }
+      final tail = n - i;
+      if (tail < releaseLen) {
+        env *= tail / releaseLen;
+      }
+
+      // Vibrato natural que entra progresivamente tras el ataque
+      final vibScale = (t / 0.18).clamp(0.0, 1.0);
+      final instFreq =
+          freq *
+          (1.0 +
+              voice.vibratoDepth *
+                  vibScale *
+                  math.sin(2 * math.pi * voice.vibratoHz * t));
+      phase += 2 * math.pi * instFreq / _sampleRate;
+
       var v = 0.0;
       for (var h = 0; h < harmonics.length; h++) {
         final w = harmonics[h];
         if (w == 0) continue;
-        v += w * math.sin(2 * math.pi * freq * (h + 1) * t);
+        v += w * math.sin(phase * (h + 1));
       }
-      var amp = v / weightSum * env * voice.gain;
-      final tail = n - i;
-      if (fadeLen > 0 && tail < fadeLen) amp *= tail / fadeLen;
+
+      // Ruido de aire filtrado (más presente en el ataque del bisel / tubo)
+      final white = rng.nextDouble() * 2.0 - 1.0;
+      breathFilter = 0.78 * breathFilter + 0.22 * white;
+      final chiffBoost = i < attackLen * 2 ? 1.8 : 1.0;
+      final air = breathFilter * voice.breathNoise * chiffBoost;
+
+      final amp = ((v / weightSum) + air) * env * voice.gain;
       samples[i] = (amp * 32767).round().clamp(-32768, 32767);
     }
     final bytes = _wrapWav(samples);
