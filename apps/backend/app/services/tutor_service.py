@@ -25,7 +25,7 @@ _CLIENT_ACTIONS = {"navigate_to", "highlight_element", "start_lesson"}
 
 # Rutas válidas de la app (deben coincidir con core/router/app_router.dart).
 _ROUTES = {
-    "/lessons": "Inicio de lecciones (escalas, acordes, melodías, ritmo)",
+    "/lessons": "Inicio de lecciones (escalas, melodías, ritmo, embocadura, soplo)",
     "/progress": "Mi progreso (estadísticas de práctica)",
     "/rankings": "Rankings / tablas de clasificación",
     "/achievements": "Logros desbloqueables",
@@ -50,7 +50,7 @@ _TARGETS_BY_SCREEN = {
     },
     "/lessons (Lecciones)": {
         "lessons_search": "Buscador de lecciones",
-        "lessons_categories": "Fila de categorías (Escalas/Acordes/Melodías/Ritmo)",
+        "lessons_categories": "Fila de categorías (Embocadura/Soplo/Digitación/Postura/Ritmo)",
         "first_lesson_card": "Primera lección de la lista (tócala para abrirla)",
     },
     "/rankings (Rankings)": {
@@ -177,7 +177,7 @@ def _function_declarations():
                 name="list_lessons",
                 description=(
                     "Lista lecciones disponibles. Filtra por categoría opcional "
-                    "(Escalas, Acordes, Melodías, Ritmo)."
+                    "(Embocadura, Soplo, Digitación, Postura, Ritmo)."
                 ),
                 parameters=types.Schema(
                     type="OBJECT",
@@ -333,7 +333,7 @@ def _smart_tutor_fallback(message: str, current_route: str | None, user: User) -
         }
     elif any(k in msg for k in ["social", "feed", "publica", "publicó", "comunidad", "post"]):
         return {
-            "reply": "En la Red Social puedes interactuar con otros pianistas, ver sus avances y publicar tus propias prácticas.",
+            "reply": "En la Red Social puedes interactuar con otros estudiantes de Aliento Andino, ver sus avances y publicar tus propias prácticas.",
             "actions": [
                 {"tool": "navigate_to", "args": {"route": "/social"}},
                 {

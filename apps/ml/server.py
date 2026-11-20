@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import math
 import time
-from typing import Optional
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
@@ -26,7 +26,7 @@ class HealthResponse(BaseModel):
 
 class FAQQuery(BaseModel):
     query: str
-    top_k: Optional[int] = 3
+    top_k: int | None = 3
 
 
 class FAQMatch(BaseModel):
@@ -40,7 +40,7 @@ class AcousticBenchmarkRequest(BaseModel):
     instrument: str
     target_hz: float
     detected_hz: float
-    tolerance_cents: Optional[float] = 15.0
+    tolerance_cents: float | None = 15.0
 
 
 class AcousticBenchmarkResponse(BaseModel):
@@ -55,8 +55,8 @@ class AcousticBenchmarkResponse(BaseModel):
 
 class PedagogicalFeedbackRequest(BaseModel):
     prompt: str
-    instrument: Optional[str] = "quena"
-    max_tokens: Optional[int] = 128
+    instrument: str | None = "quena"
+    max_tokens: int | None = 128
 
 
 class PedagogicalFeedbackResponse(BaseModel):
@@ -126,22 +126,104 @@ def pedagogical_feedback(req: PedagogicalFeedbackRequest):
         )
 
     lower_prompt = req.prompt.lower()
-    if "orificio" in lower_prompt or "digitacion" in lower_prompt:
-        feedback = "Asegúrate de cubrir completamente los orificios con la yema del dedo para evitar fugas de aire."
-    elif (
-        "desafinad" in lower_prompt
-        or "cents" in lower_prompt
-        or "afinacion" in lower_prompt
-    ):
-        feedback = "Controla el ángulo de la embocadura y mantén un soplo suave y constante para estabilizar la afinación."
-    elif (
-        "postura" in lower_prompt
-        or "hombros" in lower_prompt
-        or "espalda" in lower_prompt
-    ):
-        feedback = "Mantén la espalda erguida y los hombros relajados para permitir una respiración diafragmática fluida."
+
+    # --- Contexto pedagógico específico por instrumento ---
+    if inst == "quena":
+        if "orificio" in lower_prompt or "digitacion" in lower_prompt:
+            feedback = (
+                "Asegúrate de sellar herméticamente los 7 orificios con la yema del dedo "
+                "para evitar fugas de aire y obtener una nota limpia."
+            )
+        elif (
+            "desafinad" in lower_prompt
+            or "cents" in lower_prompt
+            or "afinacion" in lower_prompt
+        ):
+            feedback = (
+                "Controla el ángulo del bisel y el quiebre del pulgar para estabilizar la afinación; "
+                "un soplo suave y constante sobre la embocadura ayuda a centrar la nota."
+            )
+        elif (
+            "postura" in lower_prompt
+            or "hombros" in lower_prompt
+            or "espalda" in lower_prompt
+        ):
+            feedback = (
+                "Mantén la espalda erguida y los hombros relajados; "
+                "sujeta la quena con pulgares opuestos y dedos planos sobre los orificios."
+            )
+        else:
+            feedback = (
+                "¡Buen esfuerzo! Revisa la embocadura y el ángulo del bisel, "
+                "y verifica que el sellado de los 7 orificios sea hermético."
+            )
+
+    elif inst == "zampona":
+        if (
+            "desafinad" in lower_prompt
+            or "cents" in lower_prompt
+            or "afinacion" in lower_prompt
+        ):
+            feedback = (
+                "Mantén un flujo continuo de soplo y cuida el ángulo de incidencia en cada tubo "
+                "para estabilizar la afinación."
+            )
+        elif (
+            "postura" in lower_prompt
+            or "hombros" in lower_prompt
+            or "espalda" in lower_prompt
+        ):
+            feedback = (
+                "Adopta la sujeción bimanual lateral y cuida no ocluir las bocas de los tubos; "
+                "mantén los hombros relajados para favorecer una respiración diafragmática fluida."
+            )
+        elif "ira" in lower_prompt or "arca" in lower_prompt or "alternancia" in lower_prompt:
+            feedback = (
+                "Practica la alternancia y el diálogo entre las hileras Ira y Arca; "
+                "un soplo continuo y bien dirigido es clave para la fluidez melódica."
+            )
+        else:
+            feedback = (
+                "¡Buen esfuerzo! Recuerda mantener el flujo continuo de soplo "
+                "y practicar la alternancia entre la hilera Ira y la hilera Arca."
+            )
+
+    elif inst == "tarka":
+        if "orificio" in lower_prompt or "digitacion" in lower_prompt:
+            feedback = (
+                "Asegúrate de cubrir completamente los 6 orificios de la tarka; "
+                "una digitación precisa permite una emisión limpia y un timbre definido."
+            )
+        elif (
+            "desafinad" in lower_prompt
+            or "cents" in lower_prompt
+            or "afinacion" in lower_prompt
+        ):
+            feedback = (
+                "Mantén una columna de aire firme y constante para estabilizar la afinación; "
+                "la embocadura debe favorecer la articulación del timbre rasgado de la tara."
+            )
+        elif (
+            "postura" in lower_prompt
+            or "hombros" in lower_prompt
+            or "espalda" in lower_prompt
+        ):
+            feedback = (
+                "Sujeta la tarka verticalmente con pulgares opuestos y dedos planos sobre los 6 orificios; "
+                "mantén la espalda erguida y los hombros relajados."
+            )
+        else:
+            feedback = (
+                "¡Buen esfuerzo! Recuerda mantener una columna de aire firme "
+                "y buscar la articulación del timbre rasgado característico de la tara."
+            )
+
     else:
-        feedback = "¡Buen esfuerzo! Recuerda mantener el flujo de aire constante y los hombros relajados."
+        # Fallback genérico — instrumento no reconocido (no debería llegar aquí por la validación previa)
+        feedback = (
+            "¡Buen trabajo! Mantén una respiración diafragmática constante, "
+            "cuida la postura y practica lentamente para consolidar la técnica."
+        )
 
     return PedagogicalFeedbackResponse(
         feedback=feedback,

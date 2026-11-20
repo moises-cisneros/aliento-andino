@@ -40,8 +40,9 @@ def _build_prompt(
     tempo_accuracy: float,
     total_time_seconds: float,
     errors_detail: list | dict | None,
+    instrument: str = "quena",
 ) -> str:
-    """Construir el prompt de feedback personalizado."""
+    """Construir el prompt de feedback personalizado con ergonomía andina contextualizada."""
     nivel_es = {
         "beginner": "principiante",
         "intermediate": "intermedio",
@@ -49,8 +50,20 @@ def _build_prompt(
     }.get(skill_level or "", "principiante")
 
     errors_summary = ""
-    hand_tracking_summary = ""
-    hand_tracking_instruction = ""
+    posture_tracking_summary = ""
+    posture_tracking_instruction = ""
+
+    # Ergonomía andina contextualizada según instrumento
+    inst = (instrument or "quena").lower()
+    if inst == "zampona":
+        ergonomia_andina = (
+            "sujeción bimanual lateral con ambas manos, sin ocluir las bocas de los tubos"
+        )
+    else:
+        # quena y tarka comparten sujeción vertical
+        ergonomia_andina = (
+            "sujeción vertical con pulgares opuestos y dedos planos sobre los orificios"
+        )
 
     if errors_detail:
         # errors_detail puede ser list (mobile actual) o dict (legacy).
@@ -76,34 +89,27 @@ def _build_prompt(
                     pieces.append(f"pos{pos}:{expected}→{played}")
                 errors_summary = "\nMuestra de errores: " + ", ".join(pieces)
 
-            # Sección de tracking de manos
+            # Sección de tracking postural
             if hand_entry:
-                left_pct = hand_entry.get("left_hand_pct", 0)
-                right_pct = hand_entry.get("right_hand_pct", 0)
                 detection_pct = hand_entry.get("frames_with_hand_pct", 0)
                 frames_total = hand_entry.get("frames_total", 0)
                 flat_pct = hand_entry.get("fingers_flat_pct")
-                hand_tracking_summary = (
-                    f"\n\nTRACKING DE MANOS (cámara, {frames_total} frames):"
-                    f"\n- Mano izquierda: {left_pct}% de actividad"
-                    f"\n- Mano derecha: {right_pct}% de actividad"
-                    f"\n- Frames con detección de mano: {detection_pct}%"
+                posture_tracking_summary = (
+                    f"\n\nTRACKING POSTURAL (cámara, {frames_total} frames):"
+                    f"\n- Frames con detección de postura: {detection_pct}%"
                 )
                 # Postura: curvatura de los dedos (cuando viene del análisis).
                 if flat_pct is not None:
-                    hand_tracking_summary += (
+                    posture_tracking_summary += (
                         f"\n- Dedos planos (poca curvatura): {flat_pct}% del tiempo"
                     )
-                hand_tracking_instruction = (
-                    "\nSi el seguimiento muestra un desbalance marcado entre manos, "
-                    "menciona una práctica breve para la mano que necesita refuerzo. "
-                    "Si la detección es baja, sugiere ajustar la postura frente a la cámara."
+                posture_tracking_instruction = (
+                    "\nSi la detección postural es baja, sugiere ajustar la postura frente a la cámara."
                 )
                 if flat_pct is not None and flat_pct >= 40:
-                    hand_tracking_instruction += (
-                        " Los dedos estuvieron planos buena parte del tiempo: "
-                        "recomienda con tacto curvar más los dedos (mano en forma "
-                        "de cúpula, como sosteniendo una pelotita)."
+                    posture_tracking_instruction += (
+                        f" Los dedos estuvieron planos buena parte del tiempo: "
+                        f"recomienda adoptar la {ergonomia_andina}."
                     )
         elif isinstance(errors_detail, dict):
             sample = list(errors_detail.items())[:10]
@@ -122,12 +128,12 @@ DATOS DE LA SESIÓN:
 - Notas omitidas: {missed_notes}
 - Tempo promedio del alumno: {average_tempo:.1f} BPM
 - Precisión de tempo: {tempo_accuracy:.1f}%
-- Duración total: {total_time_seconds:.1f} segundos{errors_summary}{hand_tracking_summary}
+- Duración total: {total_time_seconds:.1f} segundos{errors_summary}{posture_tracking_summary}
 
 INSTRUCCIONES:
 1. Empieza felicitando el avance con una frase breve.
 2. Si hubo errores, incluye solo una recomendación simple y positiva para mejorar; si fue perfecto, invita a continuar avanzando.
-3. Cierra con una frase motivadora y concreta.{hand_tracking_instruction}
+3. Cierra con una frase motivadora y concreta.{posture_tracking_instruction}
 
 Máximo 3 oraciones cortas y 45 palabras en total. Sin emojis, sin viñetas y sin párrafos separados.
 """
@@ -148,6 +154,7 @@ async def generate_practice_feedback(
     tempo_accuracy: float,
     total_time_seconds: float,
     errors_detail: list | dict | None = None,
+    instrument: str = "quena",
 ) -> str | None:
     """Generar el feedback IA. Retorna None si falla (no bloquea al usuario)."""
     if not settings.vertex_project_id:
@@ -179,6 +186,7 @@ async def generate_practice_feedback(
             tempo_accuracy=tempo_accuracy,
             total_time_seconds=total_time_seconds,
             errors_detail=errors_detail,
+            instrument=instrument,
         )
 
         config = types.GenerateContentConfig(
