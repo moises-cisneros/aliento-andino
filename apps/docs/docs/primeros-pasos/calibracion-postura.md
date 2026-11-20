@@ -10,7 +10,7 @@ La correcta ejecución de los instrumentos de viento andinos requiere una alinea
 
 ## Puntos de Observación del Tutor
 
-El sistema de visión por computadora on-device evalúa tres aspectos clave:
+El sistema de visión por computadora de tu teléfono evalúa tres aspectos clave:
 
 - **Alineación de la Columna y Cuello**: Evita inclinar la cabeza hacia abajo para buscar la embocadura; eleva el instrumento hacia tus labios manteniendo la columna erguida.
 - **Ángulo de los Codos**: Los codos deben permanecer despegados del torso (ángulo aproximado de 45 a 60 grados) para expandir la caja torácica.

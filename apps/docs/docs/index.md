@@ -11,8 +11,7 @@ Bienvenido a la documentación oficial de **Aliento Andino**, el tutor virtual i
 
 El sistema democratiza y preserva la enseñanza musical andina combinando:
 
-- Inferencia acústica y postural **100% on-device (Edge AI)**.
-- Calibración de dinámica pulmonar (_Soplo Suave_).
-- Retroalimentación pedagógica en lenguaje natural mediante SLM local.
-- Aplicación móvil para estudiantes (Flutter) y panel administrativo web (Angular 21).
-- Backend asíncrono en FastAPI y persistencia relacional con PostgreSQL 16.
+- Un afinador y una guía de postura que funcionan **directamente en tu teléfono**, sin enviar tu audio ni tu video a ningún servidor.
+- Calibración de tu soplo (_Soplo Suave_) para que la aplicación se adapte a ti.
+- Consejos personalizados del tutor virtual después de cada práctica.
+- Una **aplicación móvil** para estudiantes y un **panel web** para docentes.

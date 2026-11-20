@@ -46,7 +46,7 @@ const config: Config = {
           type: "docSidebar",
           sidebarId: "defaultSidebar",
           position: "left",
-          label: "Guía de Usuario y Arquitectura",
+          label: "Manual de Usuario",
         },
         {
           href: "https://github.com/moises-cisneros/aliento-andino",

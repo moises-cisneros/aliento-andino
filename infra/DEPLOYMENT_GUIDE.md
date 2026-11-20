@@ -159,7 +159,7 @@ En esta topología, ningún servicio comparte máquina física con otro. Cada ca
 
 - **Proyecto**: `aliento-andino-web` (plan Hobby). URL: `https://aliento-andino-web.vercel.app`.
 - **Configuración**: `apps/web/vercel.json` (install `pnpm install --frozen-lockfile`, build `pnpm build`, salida `dist/web/browser`).
-- **Backend (único lugar a cambiar)**: el rewrite `/api/:path*` de `apps/web/vercel.json` apunta al marcador `https://aliento-andino-backend.onrender.com/api/:path*`. Al desplegar el backend con otra URL, edítese solo ese `destination`. El fallback SPA (`/(.*)` -> `/index.html`) va después.
+- **Backend (único lugar a cambiar)**: el rewrite `/api/:path*` de `apps/web/vercel.json` apunta al backend de Cloud Run (`https://aliento-backend-788250326019.us-central1.run.app/api/:path*`). Para cambiar de backend, edítese solo ese `destination` (el fallback SPA `/(.*)` -> `/index.html` va después) y vuelva a desplegarse la web.
 - **CORS**: el backend debe incluir `https://aliento-andino-web.vercel.app` en `CORS_ORIGINS`.
 - **Despliegue manual**: `cd apps/web && vercel deploy --prod --yes` (el directorio `.vercel/` está ignorado por git).
 
@@ -181,6 +181,61 @@ En esta topología, ningún servicio comparte máquina física con otro. Cada ca
 - **Blueprint**: `render.yaml` (raíz) define `aliento-andino-backend` (plan free, región Ohio, health check `/health`, puerto 8000). `SECRET_KEY` se genera automáticamente; `DATABASE_URL` y `CORS_ORIGINS` se cargan manualmente (`sync: false`).
 - **Migraciones**: `entrypoint.sh` ejecuta `alembic upgrade head` en cada arranque. Con el pooler de Neon (PgBouncer) pueden fallar; usá la URL directa para la primera migración.
 
+#### Despliegue en Google Cloud Run (activo, en paralelo a Render)
+
+El backend, el microservicio ML y el panel web corren en GCP; el backend de Cloud Run es el que usa la web de Vercel. El manual de usuario no se despliega aquí: se publica en GitHub Pages. Render sigue desplegado como respaldo (suspendido solo cuando ya no haya clientes con su URL) y ambos **comparten la misma base de Neon**.
+
+- **Proyecto**: `aliento-andino-prod`, región `us-central1` (región elegible para la capa gratuita).
+- **Servicios** (se despliegan desde el `Dockerfile` de cada app, sin imagen previa):
+
+  | Servicio          | URL                                                        | Recursos                         |
+  | :---------------- | :--------------------------------------------------------- | :------------------------------- |
+  | `aliento-backend` | `https://aliento-backend-788250326019.us-central1.run.app` | 512 MiB, 0 a 2 instancias, :8000 |
+  | `aliento-ml`      | `https://aliento-ml-788250326019.us-central1.run.app`      | 1 GiB, 0 a 1 instancia, :8001    |
+
+| `aliento-web` | `https://aliento-web-788250326019.us-central1.run.app` | 256 MiB, 0 a 2 instancias, :80 |
+
+- **Secretos** (Secret Manager, montados como variables): `DATABASE_URL` (URL directa asyncpg de Neon, igual que en Render) y `SECRET_KEY`. `CORS_ORIGINS` y `FRONTEND_URL` son variables de entorno normales; como `CORS_ORIGINS` lleva comas, en `--set-env-vars` hay que declarar otro delimitador (`^@^`).
+- **Comandos**:
+
+  ```bash
+  gcloud run deploy aliento-backend --source apps/backend --project aliento-andino-prod --region us-central1     --port 8000 --allow-unauthenticated --min-instances 0 --max-instances 2 --memory 512Mi     --command ./entrypoint.sh --args "uvicorn,app.main:app,--host,0.0.0.0,--port,8000,--workers,1"     --set-secrets "DATABASE_URL=DATABASE_URL:latest,SECRET_KEY=SECRET_KEY:latest"     --set-env-vars "^@^CORS_ORIGINS=<origen1>,<origen2>@FRONTEND_URL=<url del front>"
+
+  gcloud run deploy aliento-web --source apps/web --project aliento-andino-prod --region us-central1 \n    --port 80 --allow-unauthenticated --min-instances 0 --max-instances 2 --memory 256Mi \n    --set-env-vars "BACKEND_UPSTREAM=https://aliento-backend-788250326019.us-central1.run.app"
+
+  gcloud run deploy aliento-ml --source apps/ml --project aliento-andino-prod --region us-central1     --port 8001 --allow-unauthenticated --min-instances 0 --max-instances 1 --memory 1Gi
+  ```
+
+- **Panel web (nginx)**: `apps/web/nginx.conf` se instala como plantilla de nginx y `BACKEND_UPSTREAM` define el destino de `/api/` (por defecto `http://backend:8000`, para Docker Compose). En Cloud Run apunta a la URL del backend. La web de Cloud Run convive con la de Vercel.
+- **Verificación**: `gcloud run services list --project aliento-andino-prod` y `GET /health` en cada URL. Cloud Run no aparece en `gcloud compute instances list`, que solo lista máquinas virtuales.
+- **Límites**: un solo worker de uvicorn para respetar los 512 MiB (el `CMD` del Dockerfile usa 4). Arranque en frío de unos segundos con `--min-instances 0`.
+- **Pendiente en esta copia**: `GOOGLE_CLIENT_ID` no está configurado, así que el inicio de sesión con Google no funciona hasta cargarlo.
+
+#### Reconexión de Render a Cloud Run
+
+Cambiar de proveedor obliga a actualizar todo lo que apuntaba al backend de Render. Estado de cada punto de conexión:
+
+| Pieza que apunta al backend | Dónde                                                    | Estado                                                                                                                                  |
+| :-------------------------- | :------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
+| Panel web (Vercel)          | `apps/web/vercel.json` (rewrite `/api`)                  | Hecho: apunta a Cloud Run y la web se desplegó en producción (`vercel deploy --prod --yes`).                                            |
+| Keep-alive (Cloudflare)     | `TARGETS` en `infra/cloudflare-keepalive/wrangler.jsonc` | Hecho: consulta `/health` del backend y del ML en Cloud Run y el front. El Worker se desplegó con `npx wrangler deploy`.                |
+| CORS del backend            | Variable `CORS_ORIGINS` del servicio                     | Hecho: cargada en Cloud Run con los orígenes del front (duckdns, los dos de Vercel y el de `aliento-web`).                              |
+| Base de datos               | `DATABASE_URL`                                           | Hecho: Cloud Run usa la misma base de Neon (URL directa, secreto en Secret Manager).                                                    |
+| App móvil                   | `--dart-define=API_BASE_URL=...`                         | **Pendiente**: compilar una nueva versión con `API_BASE_URL=https://aliento-backend-788250326019.us-central1.run.app/api` y publicarla. |
+| Microservicio ML            | Ninguna                                                  | Nada lo referencia por configuración; solo cambia su URL pública.                                                                       |
+| Blueprint de Render         | `render.yaml`                                            | Se conserva como referencia y respaldo.                                                                                                 |
+
+**Comprobación de la web**: una petición a `/api/...` del front devuelve el encabezado `X-Cloud-Trace-Context`, propio de GCP (por ejemplo, `POST /api/auth/login` con credenciales falsas responde `401`).
+
+**Retiro de Render**: mantener sus servicios encendidos mientras haya instalaciones móviles con la URL anterior; después, suspenderlos (no eliminarlos).
+
+**Reversión**: volver a poner el `destination` de Render (`https://aliento-andino-backend.onrender.com/api/:path*`) en `vercel.json`, redesplegar la web y restaurar `TARGETS`.
+
+**Advertencias**:
+
+- Ambos backends ejecutan `alembic upgrade head` al arrancar sobre la misma base. Mientras convivan, no desplegar versiones distintas del código en cada proveedor.
+- Cada despliegue tiene su propio `SECRET_KEY`: los tokens emitidos por Render no valen en Cloud Run, así que los usuarios deben iniciar sesión de nuevo tras el cambio.
+
 ### 4. Base de Datos Relacional -> Neon Serverless Postgres / Supabase
 
 - **Plataforma recomendada**: Neon (PostgreSQL 16 nativo con autoscaling y branching de base de datos para staging).
@@ -194,6 +249,7 @@ En esta topología, ningún servicio comparte máquina física con otro. Cada ca
 - **Tipo de entorno**: Dockerfile (`apps/ml/Dockerfile`).
 - Expone el puerto `8001` con endpoints `/health` y matching semántico.
 - Definido como `aliento-andino-ml` en `render.yaml` (plan free, región Ohio, `PORT=8001`).
+- También desplegado en Google Cloud Run como `aliento-ml` (ver el apartado de la API REST).
 
 ### 6. Aplicación Móvil (`apps/mobile`) -> Google Play / App Store
 
@@ -202,9 +258,9 @@ En esta topología, ningún servicio comparte máquina física con otro. Cada ca
 
 ### 5. Keep-alive de servicios free-tier -> Cloudflare Worker (Cron Trigger)
 
-Los web services gratuitos de Render se duermen tras ~15 min sin tráfico. El Worker `aliento-keepalive` (`infra/cloudflare-keepalive/`) los consulta cada 10 minutos (`*/10 * * * *`, plan gratuito de Cloudflare) con `GET` y `User-Agent: aliento-keepalive`, timeout de 10 s.
+Los web services gratuitos de Render se duermen tras ~15 min sin tráfico. El Worker `aliento-keepalive` (`infra/cloudflare-keepalive/`) consulta los servicios cada 10 minutos (`*/10 * * * *`, plan gratuito de Cloudflare) con `GET` y `User-Agent: aliento-keepalive`, timeout de 10 s. Hoy sus targets son el backend y el ML de Cloud Run y el front; en Cloud Run (escala a cero, facturación por solicitud) sirve como monitor de salud más que como keep-alive.
 
-- **Targets**: variable `TARGETS` (URLs completas separadas por comas) en `infra/cloudflare-keepalive/wrangler.jsonc`. Salud del backend: `/health`; del ML: `/health` (puerto 8001 en el contenedor). Ejemplo: `https://<backend>.onrender.com/health,https://<ml>.onrender.com/health`.
+- **Targets**: variable `TARGETS` (URLs completas separadas por comas) en `infra/cloudflare-keepalive/wrangler.jsonc`. Salud del backend: `/health`; del ML: `/health` (puerto 8001 en el contenedor). Ejemplo: `https://<backend>.run.app/health,https://<ml>.run.app/health`.
 - **Despliegue**: `cd infra/cloudflare-keepalive && pnpm install && npx wrangler deploy` (requiere `npx wrangler login` o `CLOUDFLARE_API_TOKEN`).
 - **Verificación**: `GET` a la URL `workers.dev` del Worker devuelve el JSON con los últimos resultados; `npx wrangler tail` muestra los logs del cron.
 - **Pruebas**: `pnpm test` en el mismo directorio.

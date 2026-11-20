@@ -51,5 +51,5 @@ encadenar las notas sin cortar la melodía.
 ## 5. Cómo te ayuda Aliento Andino
 
 La app muestra una **matriz de dos filas** resaltando el tubo activo, y evalúa
-on-device la afinación (escala diatónica en Sol Mayor / Mi menor) y el ritmo de
+en tu teléfono la afinación (escala diatónica en Sol Mayor / Mi menor) y el ritmo de
 tu encadenado, para que corrijas el diálogo Ira–Arca en tiempo real.
